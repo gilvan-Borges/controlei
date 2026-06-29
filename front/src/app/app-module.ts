@@ -5,6 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { CoreModule } from './core/core.module';
+import { AuthModule } from './core/auth/auth.module';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { CoreModule } from './core/core.module';
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
-    CoreModule
+    CoreModule,
+    AuthModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),

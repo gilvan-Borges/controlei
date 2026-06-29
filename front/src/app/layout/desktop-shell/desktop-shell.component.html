@@ -1,9 +1,9 @@
-<div class="d-flex min-vh-100">
-  <nav class="bg-dark text-white p-3" style="width: 240px; min-height: 100vh;">
+<div class="desktop-shell">
+  <nav class="sidebar text-white p-3">
     <h5 class="mb-4">Controlei</h5>
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a class="nav-link text-white" routerLink="/app/dashboard" routerLinkActive="active">Dashboard</a>
+        <a class="nav-link" routerLink="/app/dashboard" routerLinkActive="active">Dashboard</a>
       </li>
     </ul>
     <div class="mt-auto pt-4">
@@ -11,7 +11,7 @@
     </div>
   </nav>
 
-  <main class="flex-grow-1 bg-light p-4">
+  <main class="desktop-content">
     <router-outlet></router-outlet>
   </main>
 </div>

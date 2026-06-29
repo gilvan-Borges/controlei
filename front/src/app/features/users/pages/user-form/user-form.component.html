@@ -1,9 +1,9 @@
-<div class="container-fluid px-0">
-  <div class="d-flex align-items-center mb-3">
-    <a routerLink="/app/users" class="btn btn-outline-secondary btn-sm me-2">
+<div class="user-form-page">
+  <div class="form-header">
+    <a routerLink="/app/users" class="btn btn-sm btn-outline-light">
       <i class="bi bi-arrow-left"></i>
     </a>
-    <h5 class="mb-0">{{ isEdit ? 'Editar Membro' : 'Novo Membro' }}</h5>
+    <h5>{{ isEdit ? 'Editar Membro' : 'Novo Membro' }}</h5>
   </div>
 
   @if (loading) {
@@ -15,81 +15,85 @@
   }
 
   @if (!loading) {
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label for="name" class="form-label">Nome</label>
-        <input
-          type="text"
-          id="name"
-          class="form-control"
-          formControlName="name"
-          placeholder="Nome do membro"
-          [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
-        />
-        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
-          <div class="invalid-feedback">Nome é obrigatório.</div>
-        }
-        @if (form.get('name')?.touched && form.get('name')?.hasError('minlength')) {
-          <div class="invalid-feedback">Nome deve ter no mínimo 2 caracteres.</div>
-        }
-      </div>
-
-      <div class="mb-3">
-        <label for="email" class="form-label">E-mail</label>
-        <input
-          type="email"
-          id="email"
-          class="form-control"
-          formControlName="email"
-          placeholder="email@exemplo.com"
-          [class.is-invalid]="form.get('email')?.touched && form.get('email')?.invalid"
-        />
-        @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
-          <div class="invalid-feedback">E-mail é obrigatório.</div>
-        }
-        @if (form.get('email')?.touched && form.get('email')?.hasError('email')) {
-          <div class="invalid-feedback">E-mail inválido.</div>
-        }
-      </div>
-
-      <div class="mb-3">
-        <label for="password" class="form-label">Senha {{ isEdit ? '(deixe vazio para manter)' : '' }}</label>
-        <input
-          type="password"
-          id="password"
-          class="form-control"
-          formControlName="password"
-          placeholder="Senha"
-          [class.is-invalid]="form.get('password')?.touched && form.get('password')?.invalid"
-        />
-        @if (form.get('password')?.touched && form.get('password')?.hasError('required')) {
-          <div class="invalid-feedback">Senha é obrigatória.</div>
-        }
-        @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
-          <div class="invalid-feedback">Senha deve ter no mínimo 6 caracteres.</div>
-        }
-      </div>
-
-      @if (!isEdit) {
+    <div class="form-card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="mb-3">
-          <label for="role" class="form-label">Papel</label>
-          <select id="role" class="form-select" formControlName="role">
-            <option value="MEMBER">Membro</option>
-            <option value="RESPONSIBLE">Responsável</option>
-          </select>
+          <label for="name" class="form-label">Nome</label>
+          <input
+            type="text"
+            id="name"
+            class="form-control"
+            formControlName="name"
+            placeholder="Nome do membro"
+            [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
+          />
+          @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+            <div class="invalid-feedback d-block">Nome obrigatorio.</div>
+          }
+          @if (form.get('name')?.touched && form.get('name')?.hasError('minlength')) {
+            <div class="invalid-feedback d-block">Nome deve ter no minimo 2 caracteres.</div>
+          }
         </div>
-      }
 
-      <div class="d-flex gap-2">
-        <app-action-button
-          type="submit"
-          label="Salvar"
-          icon="bi-check-lg"
-          [loading]="saving"
-          [disabled]="form.invalid"
-        ></app-action-button>
-        <a routerLink="/app/users" class="btn btn-outline-secondary">Cancelar</a>
-      </div>
-    </form>
+        <div class="mb-3">
+          <label for="email" class="form-label">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            formControlName="email"
+            placeholder="email@exemplo.com"
+            [class.is-invalid]="form.get('email')?.touched && form.get('email')?.invalid"
+          />
+          @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
+            <div class="invalid-feedback d-block">E-mail obrigatorio.</div>
+          }
+          @if (form.get('email')?.touched && form.get('email')?.hasError('email')) {
+            <div class="invalid-feedback d-block">E-mail invalido.</div>
+          }
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">
+            Senha {{ isEdit ? '(deixe vazio para manter a atual)' : '' }}
+          </label>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            formControlName="password"
+            placeholder="Senha"
+            [class.is-invalid]="form.get('password')?.touched && form.get('password')?.invalid"
+          />
+          @if (form.get('password')?.touched && form.get('password')?.hasError('required')) {
+            <div class="invalid-feedback d-block">Senha obrigatoria.</div>
+          }
+          @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
+            <div class="invalid-feedback d-block">Senha deve ter no minimo 6 caracteres.</div>
+          }
+        </div>
+
+        @if (!isEdit) {
+          <div class="mb-3">
+            <label for="role" class="form-label">Papel</label>
+            <select id="role" class="form-select" formControlName="role">
+              <option value="MEMBER">Membro</option>
+              <option value="RESPONSIBLE">Responsavel</option>
+            </select>
+          </div>
+        }
+
+        <div class="form-actions">
+          <app-action-button
+            type="submit"
+            label="Salvar"
+            icon="bi-check-lg"
+            [loading]="saving"
+            [disabled]="form.invalid"
+          ></app-action-button>
+          <a routerLink="/app/users" class="btn btn-outline-light">Cancelar</a>
+        </div>
+      </form>
+    </div>
   }
 </div>

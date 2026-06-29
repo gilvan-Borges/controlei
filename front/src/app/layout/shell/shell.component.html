@@ -1,15 +1,19 @@
 @if (isMobile) {
   <div class="app-shell app-shell-mobile">
-    <div class="aurora-layer"></div>
 
     <header class="mobile-topbar">
       <div>
         <span class="eyebrow">online</span>
         <h5>Controlei</h5>
       </div>
-      <button class="icon-action" type="button" aria-label="Sair" (click)="logout()">
-        <i class="bi bi-box-arrow-right"></i>
-      </button>
+      <div style="display:flex;align-items:center;gap:0.4rem;">
+        <button class="icon-action" type="button" aria-label="Alternar tema" (click)="toggleTheme()">
+          <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+        </button>
+        <button class="icon-action" type="button" aria-label="Sair" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
     </header>
 
     <main class="mobile-content">
@@ -32,7 +36,6 @@
   </div>
 } @else {
   <div class="app-shell app-shell-desktop">
-    <div class="aurora-layer"></div>
 
     <aside class="sidebar">
       <div class="brand-block">
@@ -67,6 +70,10 @@
             <span>JWT ativo</span>
           </div>
         </div>
+        <button class="theme-toggle" type="button" (click)="toggleTheme()" aria-label="Alternar tema">
+          <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+          <span>{{ isDark ? 'Modo claro' : 'Modo escuro' }}</span>
+        </button>
         <button class="btn btn-outline-light w-100" type="button" (click)="logout()">
           <i class="bi bi-box-arrow-right me-2"></i>
           Sair

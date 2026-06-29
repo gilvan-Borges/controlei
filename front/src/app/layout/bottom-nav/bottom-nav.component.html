@@ -1,15 +1,13 @@
-<nav class="fixed-bottom bg-white border-top d-md-none">
-  <div class="d-flex justify-content-around py-2">
-    @for (item of navItems; track item.route) {
-      <a
-        class="text-center text-decoration-none"
-        [routerLink]="item.route"
-        routerLinkActive="text-primary"
-        [routerLinkActiveOptions]="{ exact: item.route === '/app/dashboard' }"
-      >
-        <i class="bi d-block" [ngClass]="item.icon" style="font-size: 1.25rem;"></i>
-        <small>{{ item.label }}</small>
-      </a>
-    }
-  </div>
+<nav class="bottom-nav">
+  @for (item of navItems; track item.route) {
+    <a
+      class="nav-item"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.route === '/app/dashboard' }"
+    >
+      <i class="bi" [ngClass]="item.icon"></i>
+      <span>{{ item.label }}</span>
+    </a>
+  }
 </nav>

@@ -1,29 +1,46 @@
 .desktop-shell {
+  display: flex;
   min-height: 100dvh;
 
   .sidebar {
-    width: 250px;
-    transition: width 0.2s;
+    width: 220px;
     flex-shrink: 0;
+    background: var(--controlei-surface);
+    border-right: 1px solid var(--controlei-border);
+    transition: width 0.2s;
 
     &.collapsed {
-      width: 60px;
+      width: 56px;
     }
 
     .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.4rem 0.55rem;
+      color: var(--controlei-muted);
+      border-radius: var(--controlei-radius-sm);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: all 0.12s ease;
+
       &.active {
-        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        background: rgba(var(--controlei-primary-rgb), 0.2);
         font-weight: 600;
       }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.05);
+        color: var(--controlei-text);
+        background: rgba(255, 255, 255, 0.04);
       }
     }
   }
 
   .desktop-content {
-    padding: 1.5rem;
+    flex: 1;
+    padding: 1rem 1.25rem;
     overflow-y: auto;
+    background: var(--controlei-bg);
   }
 }

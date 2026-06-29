@@ -10,6 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class ShellComponent {
   isMobile = true;
+  isDark = true;
 
   navItems = [
     { label: 'Inicio', icon: 'bi-house', route: '/app/dashboard' },
@@ -32,11 +33,30 @@ export class ShellComponent {
     private router: Router
   ) {
     this.checkScreen();
+    this.initTheme();
   }
 
   @HostListener('window:resize')
   onResize(): void {
     this.checkScreen();
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    const theme = this.isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('controlei-theme', theme);
+  }
+
+  private initTheme(): void {
+    const saved = localStorage.getItem('controlei-theme');
+    if (saved === 'light') {
+      this.isDark = false;
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      this.isDark = true;
+      document.documentElement.removeAttribute('data-theme');
+    }
   }
 
   logout(): void {

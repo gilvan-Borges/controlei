@@ -1,0 +1,164 @@
+<main class="register-page">
+  <!-- Ambient glow orbs -->
+  <div class="glow-orb glow-orb--primary glow-orb--lg" style="top:-10%;right:-5%;"></div>
+  <div class="glow-orb glow-orb--secondary glow-orb--md" style="bottom:-8%;left:-5%;"></div>
+
+  <section class="register-hero">
+    <div class="hero-copy">
+      <a routerLink="/login" class="back-link">
+        <i class="bi bi-arrow-left"></i> Voltar ao login
+      </a>
+      <span class="eyebrow">comece agora</span>
+      <h1>Criar sua conta</h1>
+      <p>Cadastre-se gratuitamente e comece a gerenciar as financas da sua familia.</p>
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <i class="bi bi-shield-check"></i>
+        <div>
+          <strong>Gratuito e seguro</strong>
+          <span>Dados protegidos com criptografia</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-people"></i>
+        <div>
+          <strong>Gestao familiar</strong>
+          <span>Convide membros da sua familia</span>
+        </div>
+      </div>
+      <div class="feature-item">
+        <i class="bi bi-graph-up-arrow"></i>
+        <div>
+          <strong>Controle total</strong>
+          <span>Receitas, despesas, dividas e investimentos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="register-card" aria-label="Criar conta no Controlei">
+    <div class="register-title">
+      <span class="eyebrow">cadastro</span>
+      <h2>Preencha os dados</h2>
+      <p>Crie sua conta em menos de 1 minuto.</p>
+    </div>
+
+    @if (successMessage) {
+      <div class="alert alert-success" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ successMessage }}
+      </div>
+    }
+
+    @if (errorMessage && !successMessage) {
+      <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ errorMessage }}
+      </div>
+    }
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="name" class="form-label">Nome completo</label>
+        <div class="input-shell">
+          <i class="bi bi-person"></i>
+          <input
+            type="text"
+            id="name"
+            class="form-control"
+            formControlName="name"
+            placeholder="Seu nome completo"
+            [class.is-invalid]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
+          />
+        </div>
+        @if (registerForm.get('name')?.touched && registerForm.get('name')?.hasError('required')) {
+          <div class="invalid-feedback d-block">Nome obrigatorio.</div>
+        }
+        @if (registerForm.get('name')?.touched && registerForm.get('name')?.hasError('minlength')) {
+          <div class="invalid-feedback d-block">Nome deve ter no minimo 2 caracteres.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">E-mail</label>
+        <div class="input-shell">
+          <i class="bi bi-envelope"></i>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            formControlName="email"
+            placeholder="seu@email.com"
+            [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+          />
+        </div>
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')) {
+          <div class="invalid-feedback d-block">E-mail obrigatorio.</div>
+        }
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')) {
+          <div class="invalid-feedback d-block">E-mail invalido.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <div class="input-shell">
+          <i class="bi bi-lock"></i>
+          <input
+            type="password"
+            id="password"
+            class="form-control"
+            formControlName="password"
+            placeholder="Minimo 6 caracteres"
+            [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+          />
+        </div>
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.hasError('required')) {
+          <div class="invalid-feedback d-block">Senha obrigatoria.</div>
+        }
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.hasError('minlength')) {
+          <div class="invalid-feedback d-block">Senha deve ter no minimo 6 caracteres.</div>
+        }
+      </div>
+
+      <div class="mb-4">
+        <label for="confirmPassword" class="form-label">Confirmar senha</label>
+        <div class="input-shell">
+          <i class="bi bi-lock-fill"></i>
+          <input
+            type="password"
+            id="confirmPassword"
+            class="form-control"
+            formControlName="confirmPassword"
+            placeholder="Repita a senha"
+            [class.is-invalid]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid"
+          />
+        </div>
+        @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('required')) {
+          <div class="invalid-feedback d-block">Confirmacao obrigatoria.</div>
+        }
+        @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')) {
+          <div class="invalid-feedback d-block">Senhas nao conferem.</div>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary w-100 register-submit"
+        [disabled]="registerForm.invalid || loading"
+      >
+        @if (loading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        }
+        <i class="bi bi-person-plus me-2"></i>
+        Criar conta
+      </button>
+    </form>
+
+    <p class="login-link">
+      Ja tem uma conta? <a routerLink="/login">Faca login</a>
+    </p>
+  </section>
+</main>

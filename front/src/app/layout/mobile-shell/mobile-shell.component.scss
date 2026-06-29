@@ -7,12 +7,14 @@
     position: sticky;
     top: 0;
     z-index: 1020;
+    background: var(--controlei-surface);
+    border-bottom: 1px solid var(--controlei-border);
   }
 
   .mobile-content {
     flex: 1;
-    padding: 1rem;
-    padding-bottom: 4.5rem; // space for bottom nav
+    padding: 0.75rem;
+    padding-bottom: 4.5rem;
     overflow-y: auto;
   }
 }

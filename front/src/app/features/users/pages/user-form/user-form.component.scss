@@ -1,3 +1,38 @@
 :host {
   display: block;
 }
+
+.user-form-page {
+  max-width: 600px;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+
+  h5 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+}
+
+.form-card {
+  padding: 1.4rem 1.5rem;
+  background: var(--controlei-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--controlei-border);
+  border-radius: var(--controlei-radius-xl);
+  box-shadow: var(--controlei-shadow-lg), var(--controlei-shadow-glow);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+

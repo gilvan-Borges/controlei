@@ -1,10 +1,5 @@
 <main class="login-page">
   <section class="login-hero">
-    <div class="hero-orbit" aria-hidden="true">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
 
     <div class="hero-copy">
       <span class="eyebrow">family finance system</span>
@@ -29,14 +24,20 @@
   </section>
 
   <section class="login-card" aria-label="Entrar no Controlei">
-    <div class="card-glow" aria-hidden="true"></div>
     <div class="login-title">
       <span class="eyebrow">acesso seguro</span>
       <h2>Entrar</h2>
       <p>Use seu e-mail e senha para acessar o painel.</p>
     </div>
 
-    @if (errorMessage) {
+    @if (successMessage) {
+      <div class="alert alert-success" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ successMessage }}
+      </div>
+    }
+
+    @if (errorMessage && !successMessage) {
       <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         {{ errorMessage }}
@@ -95,5 +96,9 @@
         Entrar no painel
       </button>
     </form>
+
+    <p class="register-link">
+      Nao tem uma conta? <a routerLink="/register">Criar conta gratuita</a>
+    </p>
   </section>
 </main>
