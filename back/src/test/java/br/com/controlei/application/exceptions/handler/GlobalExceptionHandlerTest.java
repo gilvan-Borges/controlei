@@ -87,7 +87,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldReturn400WhenValidatedRequestParamFails() throws Exception {
-        mockMvc.perform(get("/api/v1/test/validated-param"))
+        mockMvc.perform(get("/api/v1/test/validated-param").param("name", ""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
