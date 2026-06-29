@@ -1,6 +1,7 @@
 package br.com.controlei.application.services;
 
 import br.com.controlei.domain.contracts.AuthenticatedUserContext;
+import br.com.controlei.domain.contracts.repositories.UserRepositoryPort;
 import br.com.controlei.domain.models.dtos.auth.AuthenticatedUser;
 import br.com.controlei.domain.models.enums.Role;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,12 @@ import java.util.UUID;
 public class AuthorizationService {
 
     private final AuthenticatedUserContext authenticatedUserContext;
+    private final UserRepositoryPort userRepository;
 
-    public AuthorizationService(AuthenticatedUserContext authenticatedUserContext) {
+    public AuthorizationService(AuthenticatedUserContext authenticatedUserContext,
+                                UserRepositoryPort userRepository) {
         this.authenticatedUserContext = authenticatedUserContext;
+        this.userRepository = userRepository;
     }
 
     public AuthenticatedUser requireCurrentUser() {
@@ -34,12 +38,21 @@ public class AuthorizationService {
         AuthenticatedUser current = requireCurrentUser();
 
         if (current.role() == Role.RESPONSIBLE) {
+            if (resourceUserId != null) {
+                requireUserBelongsToFamily(resourceUserId, resourceFamilyId);
+            }
             return;
         }
 
         if (!Objects.equals(current.userId(), resourceUserId)) {
             throw new br.com.controlei.application.exceptions.ForbiddenException("Acesso negado");
         }
+    }
+
+    public void requireUserBelongsToFamily(UUID userId, UUID familyId) {
+        userRepository.findByIdAndDeletedAtIsNull(userId)
+                .filter(u -> Objects.equals(u.getFamilyId(), familyId) && u.isActive())
+                .orElseThrow(() -> new br.com.controlei.application.exceptions.NotFoundException("Usuario nao encontrado"));
     }
 
     public boolean isResponsible() {
