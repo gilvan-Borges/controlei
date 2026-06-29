@@ -6,7 +6,7 @@ import { Component, Input } from '@angular/core';
   template: `
     <button
       [type]="type"
-      [class]="'btn btn-' + variant + ' ' + sizeClass + ' ' + extraClass"
+      [class]="'btn btn-' + variant + ' action-button ' + sizeClass + ' ' + extraClass"
       [disabled]="disabled || loading"
     >
       @if (loading) {
@@ -17,7 +17,16 @@ import { Component, Input } from '@angular/core';
       }
       {{ label }}
     </button>
-  `
+  `,
+  styles: [`
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      letter-spacing: 0.01em;
+    }
+  `]
 })
 export class ActionButtonComponent {
   @Input() label = '';

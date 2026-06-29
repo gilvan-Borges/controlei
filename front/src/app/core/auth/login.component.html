@@ -1,17 +1,53 @@
-<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-  <div class="card shadow-sm" style="width: 100%; max-width: 400px;">
-    <div class="card-body p-4">
-      <h3 class="card-title text-center mb-4">Controlei</h3>
+<main class="login-page">
+  <section class="login-hero">
+    <div class="hero-orbit" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
 
-      @if (errorMessage) {
-        <div class="alert alert-danger" role="alert">
-          {{ errorMessage }}
-        </div>
-      }
+    <div class="hero-copy">
+      <span class="eyebrow">family finance system</span>
+      <h1>Controlei</h1>
+      <p>Organize receitas, gastos, dividas e investimentos com uma visao clara da familia inteira.</p>
+    </div>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <div class="mb-3">
-          <label for="email" class="form-label">E-mail</label>
+    <div class="metric-panel">
+      <div>
+        <span>Saldo previsto</span>
+        <strong>R$ 12.840</strong>
+      </div>
+      <div>
+        <span>Saude mensal</span>
+        <strong>92%</strong>
+      </div>
+      <div>
+        <span>Parcelas mapeadas</span>
+        <strong>18</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="login-card" aria-label="Entrar no Controlei">
+    <div class="card-glow" aria-hidden="true"></div>
+    <div class="login-title">
+      <span class="eyebrow">acesso seguro</span>
+      <h2>Entrar</h2>
+      <p>Use seu e-mail e senha para acessar o painel.</p>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ errorMessage }}
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="email" class="form-label">E-mail</label>
+        <div class="input-shell">
+          <i class="bi bi-envelope"></i>
           <input
             type="email"
             id="email"
@@ -20,16 +56,19 @@
             placeholder="seu@email.com"
             [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
           />
-          @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')) {
-            <div class="invalid-feedback">E-mail é obrigatório.</div>
-          }
-          @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('email')) {
-            <div class="invalid-feedback">E-mail inválido.</div>
-          }
         </div>
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')) {
+          <div class="invalid-feedback d-block">E-mail obrigatorio.</div>
+        }
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('email')) {
+          <div class="invalid-feedback d-block">E-mail invalido.</div>
+        }
+      </div>
 
-        <div class="mb-3">
-          <label for="password" class="form-label">Senha</label>
+      <div class="mb-4">
+        <label for="password" class="form-label">Senha</label>
+        <div class="input-shell">
+          <i class="bi bi-lock"></i>
           <input
             type="password"
             id="password"
@@ -38,25 +77,23 @@
             placeholder="Sua senha"
             [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
           />
-          @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
-            <div class="invalid-feedback">Senha é obrigatória.</div>
-          }
-          @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')) {
-            <div class="invalid-feedback">Senha deve ter no mínimo 6 caracteres.</div>
-          }
         </div>
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
+          <div class="invalid-feedback d-block">Senha obrigatoria.</div>
+        }
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')) {
+          <div class="invalid-feedback d-block">Senha deve ter no minimo 6 caracteres.</div>
+        }
+      </div>
 
-        <button
-          type="submit"
-          class="btn btn-primary w-100"
-          [disabled]="loading"
-        >
-          @if (loading) {
-            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-          }
-          Entrar
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
+      <button type="submit" class="btn btn-primary w-100 login-submit" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+        } @else {
+          <i class="bi bi-lightning-charge me-2"></i>
+        }
+        Entrar no painel
+      </button>
+    </form>
+  </section>
+</main>

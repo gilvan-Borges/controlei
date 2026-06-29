@@ -1,6 +1,6 @@
 import { Component, HostListener } from '@angular/core';
-import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-shell',
@@ -12,9 +12,9 @@ export class ShellComponent {
   isMobile = true;
 
   navItems = [
-    { label: 'Início', icon: 'bi-house', route: '/app/dashboard' },
-    { label: 'Transações', icon: 'bi-arrow-left-right', route: '/app/transactions' },
-    { label: 'Dívidas', icon: 'bi-credit-card', route: '/app/debts' },
+    { label: 'Inicio', icon: 'bi-house', route: '/app/dashboard' },
+    { label: 'Transacoes', icon: 'bi-arrow-left-right', route: '/app/transactions' },
+    { label: 'Dividas', icon: 'bi-credit-card', route: '/app/debts' },
     { label: 'Parcelas', icon: 'bi-calendar-check', route: '/app/installments' },
     { label: 'Investimentos', icon: 'bi-graph-up', route: '/app/investments' },
     { label: 'Contas', icon: 'bi-wallet2', route: '/app/accounts' },
@@ -22,6 +22,10 @@ export class ShellComponent {
     { label: 'Membros', icon: 'bi-people', route: '/app/users' },
     { label: 'Perfil', icon: 'bi-person', route: '/app/profile' }
   ];
+
+  mobileNavItems = this.navItems.filter(item =>
+    ['/app/dashboard', '/app/transactions', '/app/debts', '/app/investments', '/app/profile'].includes(item.route)
+  );
 
   constructor(
     private authService: AuthService,

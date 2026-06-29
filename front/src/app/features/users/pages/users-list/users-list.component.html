@@ -1,12 +1,18 @@
-<div class="container-fluid px-0">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Membros da Família</h5>
+<section class="users-page">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">familia</span>
+      <h2>Membros</h2>
+      <p>Gerencie quem participa da organizacao financeira familiar.</p>
+    </div>
+
     @if (permissions.canCreateMember()) {
       <a routerLink="new" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Novo Membro
+        <i class="bi bi-plus-lg me-1"></i>
+        Novo membro
       </a>
     }
-  </div>
+  </header>
 
   @if (loading) {
     <app-loading message="Carregando membros..."></app-loading>
@@ -21,28 +27,32 @@
   }
 
   @if (!loading && !errorMessage && users.length > 0) {
-    <div class="list-group">
+    <div class="members-grid">
       @for (user of users; track user.id) {
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-medium">{{ user.name }}</div>
-            <small class="text-muted">{{ user.email }}</small>
+        <article class="member-card">
+          <div class="member-main">
+            <div class="avatar">{{ user.name.charAt(0) }}</div>
+            <div>
+              <strong>{{ user.name }}</strong>
+              <span>{{ user.email }}</span>
+            </div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge" [class.bg-primary]="user.role === 'RESPONSIBLE'" [class.bg-secondary]="user.role === 'MEMBER'">
+
+          <div class="member-actions">
+            <span class="chip" [class.owner]="user.role === 'RESPONSIBLE'">
               {{ getRoleLabel(user.role) }}
             </span>
-            <span class="badge" [class.bg-success]="user.active" [class.bg-danger]="!user.active">
+            <span class="chip" [class.active]="user.active" [class.inactive]="!user.active">
               {{ user.active ? 'Ativo' : 'Inativo' }}
             </span>
             @if (permissions.canEditMember()) {
-              <a [routerLink]="[user.id, 'edit']" class="btn btn-outline-primary btn-sm">
+              <a [routerLink]="[user.id, 'edit']" class="icon-button" aria-label="Editar membro">
                 <i class="bi bi-pencil"></i>
               </a>
             }
           </div>
-        </div>
+        </article>
       }
     </div>
   }
-</div>
+</section>

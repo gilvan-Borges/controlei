@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../../../core/services/user.service';
-import { PermissionHelper } from '../../../../core/services/permission.helper';
+import { finalize, take } from 'rxjs/operators';
 import { User } from '../../../../core/models/user.model';
+import { PermissionHelper } from '../../../../core/services/permission.helper';
+import { UserService } from '../../../../core/services/user.service';
 
 @Component({
   selector: 'app-users-list',
@@ -26,19 +27,23 @@ export class UsersListComponent implements OnInit {
   loadUsers(): void {
     this.loading = true;
     this.errorMessage = '';
-    this.userService.listUsers().subscribe({
-      next: (users) => {
-        this.users = users;
+
+    this.userService.listUsers().pipe(
+      take(1),
+      finalize(() => {
         this.loading = false;
+      })
+    ).subscribe({
+      next: (users) => {
+        this.users = Array.isArray(users) ? users : [];
       },
       error: (err) => {
         this.errorMessage = err?.message || 'Erro ao carregar membros.';
-        this.loading = false;
       }
     });
   }
 
   getRoleLabel(role: string): string {
-    return role === 'RESPONSIBLE' ? 'Responsável' : 'Membro';
+    return role === 'RESPONSIBLE' ? 'Responsavel' : 'Membro';
   }
 }

@@ -9,12 +9,19 @@ import br.com.controlei.domain.models.enums.TransactionStatus;
 import br.com.controlei.domain.models.enums.TransactionType;
 import br.com.controlei.infrastructure.persistence.entities.DebtEntity;
 import br.com.controlei.infrastructure.persistence.entities.InstallmentEntity;
+import br.com.controlei.infrastructure.persistence.entities.TransactionEntity;
 import br.com.controlei.infrastructure.persistence.entities.UserEntity;
 import br.com.controlei.infrastructure.repositories.DebtRepository;
 import br.com.controlei.infrastructure.repositories.InstallmentRepository;
 import br.com.controlei.infrastructure.repositories.InvestmentRepository;
 import br.com.controlei.infrastructure.repositories.TransactionRepository;
 import br.com.controlei.infrastructure.repositories.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +42,9 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
     private final InvestmentRepository investmentRepository;
     private final UserRepository userRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public DashboardRepositoryAdapter(TransactionRepository transactionRepository,
                                        DebtRepository debtRepository,
                                        InstallmentRepository installmentRepository,
@@ -49,14 +59,14 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
 
     @Override
     public BigDecimal sumIncomeByUser(UUID familyId, UUID userId, LocalDate startDate, LocalDate endDate) {
-        return transactionRepository.sumAmountByFilters(familyId, userId, TransactionType.INCOME,
-                TransactionStatus.PAID, startDate, endDate);
+        return sumTransactionAmount(familyId, userId, TransactionType.INCOME, TransactionStatus.PAID,
+                startDate, endDate);
     }
 
     @Override
     public BigDecimal sumExpenseByUser(UUID familyId, UUID userId, LocalDate startDate, LocalDate endDate) {
-        return transactionRepository.sumAmountByFilters(familyId, userId, TransactionType.EXPENSE,
-                TransactionStatus.PAID, startDate, endDate);
+        return sumTransactionAmount(familyId, userId, TransactionType.EXPENSE, TransactionStatus.PAID,
+                startDate, endDate);
     }
 
     @Override
@@ -66,8 +76,7 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
 
     @Override
     public BigDecimal sumPendingInstallmentsByUser(UUID familyId, UUID userId, LocalDate startDate, LocalDate endDate) {
-        return installmentRepository.sumAmountByFilters(familyId, userId, InstallmentStatus.PENDING,
-                startDate, endDate);
+        return sumInstallmentAmount(familyId, userId, InstallmentStatus.PENDING, startDate, endDate);
     }
 
     @Override
@@ -107,14 +116,14 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
 
     @Override
     public BigDecimal sumIncomeByFamily(UUID familyId, LocalDate startDate, LocalDate endDate) {
-        return transactionRepository.sumAmountByFilters(familyId, null, TransactionType.INCOME,
-                TransactionStatus.PAID, startDate, endDate);
+        return sumTransactionAmount(familyId, null, TransactionType.INCOME, TransactionStatus.PAID,
+                startDate, endDate);
     }
 
     @Override
     public BigDecimal sumExpenseByFamily(UUID familyId, LocalDate startDate, LocalDate endDate) {
-        return transactionRepository.sumAmountByFilters(familyId, null, TransactionType.EXPENSE,
-                TransactionStatus.PAID, startDate, endDate);
+        return sumTransactionAmount(familyId, null, TransactionType.EXPENSE, TransactionStatus.PAID,
+                startDate, endDate);
     }
 
     @Override
@@ -124,8 +133,7 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
 
     @Override
     public BigDecimal sumPendingInstallmentsByFamily(UUID familyId, LocalDate startDate, LocalDate endDate) {
-        return installmentRepository.sumAmountByFilters(familyId, null, InstallmentStatus.PENDING,
-                startDate, endDate);
+        return sumInstallmentAmount(familyId, null, InstallmentStatus.PENDING, startDate, endDate);
     }
 
     @Override
@@ -158,5 +166,60 @@ public class DashboardRepositoryAdapter implements DashboardRepositoryPort {
         }
 
         return details;
+    }
+
+    private BigDecimal sumTransactionAmount(UUID familyId, UUID userId, TransactionType type,
+                                            TransactionStatus status, LocalDate startDate, LocalDate endDate) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BigDecimal> query = cb.createQuery(BigDecimal.class);
+        Root<TransactionEntity> root = query.from(TransactionEntity.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get("familyId"), familyId));
+        predicates.add(cb.isNull(root.get("deletedAt")));
+        predicates.add(cb.equal(root.get("type"), type));
+        predicates.add(cb.equal(root.get("status"), status));
+
+        if (userId != null) {
+            predicates.add(cb.equal(root.get("userId"), userId));
+        }
+        if (startDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("transactionDate"), startDate));
+        }
+        if (endDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("transactionDate"), endDate));
+        }
+
+        query.select(cb.coalesce(cb.sum(root.get("amount")), BigDecimal.ZERO));
+        query.where(predicates.toArray(Predicate[]::new));
+
+        return entityManager.createQuery(query).getSingleResult();
+    }
+
+    private BigDecimal sumInstallmentAmount(UUID familyId, UUID userId, InstallmentStatus status,
+                                            LocalDate startDate, LocalDate endDate) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<BigDecimal> query = cb.createQuery(BigDecimal.class);
+        Root<InstallmentEntity> root = query.from(InstallmentEntity.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get("familyId"), familyId));
+        predicates.add(cb.isNull(root.get("deletedAt")));
+        predicates.add(cb.equal(root.get("status"), status));
+
+        if (userId != null) {
+            predicates.add(cb.equal(root.get("userId"), userId));
+        }
+        if (startDate != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("dueDate"), startDate));
+        }
+        if (endDate != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("dueDate"), endDate));
+        }
+
+        query.select(cb.coalesce(cb.sum(root.get("amount")), BigDecimal.ZERO));
+        query.where(predicates.toArray(Predicate[]::new));
+
+        return entityManager.createQuery(query).getSingleResult();
     }
 }

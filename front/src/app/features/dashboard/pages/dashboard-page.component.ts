@@ -73,6 +73,10 @@ export class DashboardPageComponent implements OnInit {
     return this.months.find(m => m.value === this.month)?.label || '';
   }
 
+  get currentBalance(): number {
+    return (this.view === 'individual' ? this.individualData?.balance : this.familyData?.balance) || 0;
+  }
+
   private loadData(): void {
     this.loading = true;
     this.errorMessage = '';
