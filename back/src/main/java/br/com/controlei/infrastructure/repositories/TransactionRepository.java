@@ -6,8 +6,11 @@ import br.com.controlei.infrastructure.persistence.entities.TransactionEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +19,19 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID>, JpaSpecificationExecutor<TransactionEntity> {
 
     Optional<TransactionEntity> findByIdAndDeletedAtIsNull(UUID id);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM TransactionEntity t " +
+           "WHERE t.familyId = :familyId AND t.deletedAt IS NULL " +
+           "AND t.type = :type AND t.status = :status " +
+           "AND (:userId IS NULL OR t.userId = :userId) " +
+           "AND (:startDate IS NULL OR t.transactionDate >= :startDate) " +
+           "AND (:endDate IS NULL OR t.transactionDate <= :endDate)")
+    BigDecimal sumAmountByFilters(@Param("familyId") UUID familyId,
+                                   @Param("userId") UUID userId,
+                                   @Param("type") TransactionType type,
+                                   @Param("status") TransactionStatus status,
+                                   @Param("startDate") LocalDate startDate,
+                                   @Param("endDate") LocalDate endDate);
 
     static Specification<TransactionEntity> byFamilyId(UUID familyId) {
         return (root, query, cb) -> cb.equal(root.get("familyId"), familyId);

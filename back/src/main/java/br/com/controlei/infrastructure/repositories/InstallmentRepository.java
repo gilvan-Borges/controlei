@@ -5,8 +5,11 @@ import br.com.controlei.infrastructure.persistence.entities.InstallmentEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +21,18 @@ public interface InstallmentRepository extends JpaRepository<InstallmentEntity, 
     Optional<InstallmentEntity> findByIdAndDeletedAtIsNull(UUID id);
 
     List<InstallmentEntity> findAllByDebtIdAndDeletedAtIsNullOrderByInstallmentNumberAsc(UUID debtId);
+
+    @Query("SELECT COALESCE(SUM(i.amount), 0) FROM InstallmentEntity i " +
+           "WHERE i.familyId = :familyId AND i.deletedAt IS NULL " +
+           "AND i.status = :status " +
+           "AND (:userId IS NULL OR i.userId = :userId) " +
+           "AND (:startDate IS NULL OR i.dueDate >= :startDate) " +
+           "AND (:endDate IS NULL OR i.dueDate <= :endDate)")
+    BigDecimal sumAmountByFilters(@Param("familyId") UUID familyId,
+                                   @Param("userId") UUID userId,
+                                   @Param("status") InstallmentStatus status,
+                                   @Param("startDate") LocalDate startDate,
+                                   @Param("endDate") LocalDate endDate);
 
     static Specification<InstallmentEntity> byFamilyId(UUID familyId) {
         return (root, query, cb) -> cb.equal(root.get("familyId"), familyId);

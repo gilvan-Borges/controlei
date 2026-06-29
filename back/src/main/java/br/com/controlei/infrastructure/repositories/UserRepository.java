@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     List<UserEntity> findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtAsc(UUID familyId);
 
     boolean existsByEmailAndDeletedAtIsNull(String email);
+
+    List<UserEntity> findAllByFamilyIdAndDeletedAtIsNullAndActiveTrue(UUID familyId);
 }

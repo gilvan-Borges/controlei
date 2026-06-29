@@ -224,6 +224,39 @@ class AccountCategoryIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void recreateCategoryAfterSoftDelete() throws Exception {
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+
+        CreateCategoryRequest request = new CreateCategoryRequest(
+                "Alimentacao", CategoryType.EXPENSE, "#FF0000", "food");
+
+        MvcResult result = mockMvc.perform(post("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        CategoryResponse category = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CategoryResponse.class);
+
+        mockMvc.perform(delete("/api/v1/categories/" + category.id())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        CreateCategoryRequest recreateRequest = new CreateCategoryRequest(
+                "Alimentacao", CategoryType.EXPENSE, "#00FF00", "food-new");
+
+        mockMvc.perform(post("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(recreateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Alimentacao"))
+                .andExpect(jsonPath("$.type").value("EXPENSE"));
+    }
+
     private String registerFamily(String familyName, String name, String email, String password) throws Exception {
         RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, name, email, password);
         String response = mockMvc.perform(post("/api/v1/auth/register-family")

@@ -34,8 +34,7 @@ CREATE TABLE IF NOT EXISTS categories (
     updated_by VARCHAR(255),
     deleted_at TIMESTAMP,
     deleted_by VARCHAR(255),
-    CONSTRAINT fk_categories_family FOREIGN KEY (family_id) REFERENCES families(id),
-    CONSTRAINT uq_categories_family_type_name UNIQUE (family_id, type, name)
+    CONSTRAINT fk_categories_family FOREIGN KEY (family_id) REFERENCES families(id)
 );
 
 CREATE INDEX idx_accounts_family_id ON accounts(family_id);
