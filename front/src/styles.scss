@@ -1,0 +1,14 @@
+:root {
+  --controlei-primary: #0d6efd;
+  --controlei-success: #198754;
+  --controlei-danger: #dc3545;
+  --controlei-warning: #ffc107;
+  --controlei-bg: #f8f9fa;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--controlei-bg);
+}

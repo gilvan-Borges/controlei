@@ -1,0 +1,18 @@
+.mobile-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+  }
+
+  .mobile-content {
+    flex: 1;
+    padding: 1rem;
+    padding-bottom: 4.5rem; // space for bottom nav
+    overflow-y: auto;
+  }
+}
