@@ -1,6 +1,7 @@
 import { User } from './user.model';
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
+  tokenType: string;
   user: User;
 }

@@ -1,0 +1,129 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Transações</h5>
+    <div class="d-flex gap-1">
+      <a routerLink="new-income" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Receita
+      </a>
+      <a routerLink="new-expense" class="btn btn-danger btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Despesa
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row g-2 mb-3">
+    <div class="col-6">
+      <label class="form-label small mb-1">Data início</label>
+      <input type="date" class="form-control form-control-sm" [value]="filterStartDate" (change)="filterStartDate = $any($event.target).value; onFilterChange()">
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Data fim</label>
+      <input type="date" class="form-control form-select-sm" [value]="filterEndDate" (change)="filterEndDate = $any($event.target).value; onFilterChange()">
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Tipo</label>
+      <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (t of transactionTypes; track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Status</label>
+      <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (s of transactionStatuses; track s.value) {
+          <option [value]="s.value">{{ s.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Membro</label>
+      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Categoria</label>
+      <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()">
+        <option value="">Todas</option>
+        @for (cat of categories; track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando transações..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && transactions.length === 0) {
+    <app-empty-state icon="bi-arrow-left-right" message="Nenhuma transação encontrada."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && transactions.length > 0) {
+    <div class="list-group">
+      @for (tx of transactions; track tx.id) {
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-medium">{{ tx.description }}</div>
+              <small class="text-muted">
+                {{ getUserName(tx.userId) }}
+                &middot; {{ getAccountName(tx.accountId) }}
+                &middot; {{ tx.transactionDate | date: 'dd/MM/yyyy' }}
+              </small>
+            </div>
+            <div class="text-end">
+              <div [class]="tx.type === 'INCOME' ? 'text-primary fw-bold' : 'text-danger fw-bold'">
+                {{ tx.type === 'INCOME' ? '+' : '-' }} R$ {{ tx.amount | number: '1.2-2' }}
+              </div>
+              <span class="badge" [ngClass]="getStatusBadgeClass(tx.status)">
+                {{ getStatusLabel(tx.status) }}
+              </span>
+            </div>
+          </div>
+          @if (canEditTransaction(tx)) {
+            <div class="mt-2 d-flex gap-1">
+              <a [routerLink]="[tx.id, 'edit']" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil"></i>
+              </a>
+              @if (tx.status === 'PENDING' || tx.status === 'OVERDUE') {
+                <button class="btn btn-outline-success btn-sm" (click)="payTransaction(tx)">
+                  <i class="bi bi-check-lg"></i> Pagar
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="cancelTransaction(tx)">
+                  <i class="bi bi-x-lg"></i> Cancelar
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (totalElements > pageSize) {
+      <div class="d-flex justify-content-center mt-3">
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            @for (page of pages; track page) {
+              <li class="page-item" [class.active]="page === currentPage">
+                <button class="page-link" (click)="currentPage = page; loadTransactions()">{{ page + 1 }}</button>
+              </li>
+            }
+          </ul>
+        </nav>
+      </div>
+    }
+  }
+</div>

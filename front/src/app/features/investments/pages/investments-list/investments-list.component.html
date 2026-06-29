@@ -1,0 +1,95 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Investimentos</h5>
+    <a routerLink="new" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Novo
+    </a>
+  </div>
+
+  <div class="row g-2 mb-3">
+    <div class="col-4">
+      <label class="form-label small mb-1">Tipo</label>
+      <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (type of investmentTypes; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-4">
+      <label class="form-label small mb-1">Membro</label>
+      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-4">
+      <label class="form-label small mb-1">Categoria</label>
+      <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()">
+        <option value="">Todas</option>
+        @for (category of categories; track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando investimentos..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && investments.length === 0) {
+    <app-empty-state icon="bi-graph-up" message="Nenhum investimento encontrado."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && investments.length > 0) {
+    <div class="list-group">
+      @for (investment of investments; track investment.id) {
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between gap-3">
+            <div>
+              <div class="fw-medium">{{ investment.name }}</div>
+              <small class="text-muted">
+                {{ getUserName(investment.userId) }}
+                &middot; {{ getTypeLabel(investment.type) }}
+                &middot; {{ getCategoryName(investment.categoryId) }}
+              </small>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold text-primary">R$ {{ investment.currentAmount | number: '1.2-2' }}</div>
+              @if (investment.referenceDate) {
+                <small class="text-muted">{{ investment.referenceDate | date: 'dd/MM/yyyy' }}</small>
+              }
+            </div>
+          </div>
+          @if (canEditInvestment(investment)) {
+            <div class="d-flex gap-2 mt-2">
+              <a [routerLink]="[investment.id, 'edit']" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button class="btn btn-outline-danger btn-sm" type="button" (click)="confirmDelete(investment)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <app-confirm-modal
+    [visible]="showDeleteConfirm"
+    title="Excluir investimento"
+    [message]="'Tem certeza que deseja excluir o investimento ' + (investmentToDelete?.name || '') + '?'"
+    confirmVariant="danger"
+    confirmLabel="Excluir"
+    (confirmed)="onDeleteConfirm()"
+    (cancelled)="onDeleteCancel()"
+  ></app-confirm-modal>
+</div>

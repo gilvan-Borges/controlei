@@ -1,14 +1,19 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-
-const routes: Routes = [];
+import { DebtsRoutingModule } from './debts-routing.module';
+import { DebtsListComponent } from './pages/debts-list/debts-list.component';
+import { DebtFormComponent } from './pages/debt-form/debt-form.component';
+import { DebtDetailComponent } from './pages/debt-detail/debt-detail.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    DebtsListComponent,
+    DebtFormComponent,
+    DebtDetailComponent
+  ],
   imports: [
     SharedModule,
-    RouterModule.forChild(routes)
+    DebtsRoutingModule
   ]
 })
 export class DebtsModule {}

@@ -1,0 +1,88 @@
+<div class="container-fluid px-0">
+  <div class="d-flex align-items-center mb-3">
+    <a routerLink="/app/accounts" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">{{ isEdit ? 'Editar Conta' : 'Nova Conta' }}</h5>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="name" class="form-label">Nome</label>
+        <input
+          type="text"
+          id="name"
+          class="form-control"
+          formControlName="name"
+          placeholder="Nome da conta"
+          [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
+        />
+        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+          <div class="invalid-feedback">Nome é obrigatório.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="type" class="form-label">Tipo</label>
+        <select id="type" class="form-select" formControlName="type">
+          @for (t of accountTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="shared" formControlName="shared">
+          <label class="form-check-label" for="shared">Conta compartilhada</label>
+        </div>
+      </div>
+
+      @if (showUserField) {
+        <div class="mb-3">
+          <label for="userId" class="form-label">Usuário</label>
+          <select id="userId" class="form-select" formControlName="userId">
+            <option value="">Selecione um usuário</option>
+            @for (user of users; track user.id) {
+              <option [value]="user.id">{{ user.name }}</option>
+            }
+          </select>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label for="initialBalance" class="form-label">Saldo Inicial</label>
+        <app-money-input formControlName="initialBalance"></app-money-input>
+      </div>
+
+      @if (isEdit) {
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="active" formControlName="active">
+            <label class="form-check-label" for="active">Conta ativa</label>
+          </div>
+        </div>
+      }
+
+      <div class="d-flex gap-2">
+        <app-action-button
+          type="submit"
+          label="Salvar"
+          icon="bi-check-lg"
+          [loading]="saving"
+          [disabled]="form.invalid"
+        ></app-action-button>
+        <a routerLink="/app/accounts" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  }
+</div>

@@ -1,14 +1,15 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-
-const routes: Routes = [];
+import { InstallmentsRoutingModule } from './installments-routing.module';
+import { InstallmentsListComponent } from './pages/installments-list/installments-list.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    InstallmentsListComponent
+  ],
   imports: [
     SharedModule,
-    RouterModule.forChild(routes)
+    InstallmentsRoutingModule
   ]
 })
 export class InstallmentsModule {}

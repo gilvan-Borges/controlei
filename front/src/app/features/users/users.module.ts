@@ -1,14 +1,17 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-
-const routes: Routes = [];
+import { UsersRoutingModule } from './users-routing.module';
+import { UsersListComponent } from './pages/users-list/users-list.component';
+import { UserFormComponent } from './pages/user-form/user-form.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    UsersListComponent,
+    UserFormComponent
+  ],
   imports: [
     SharedModule,
-    RouterModule.forChild(routes)
+    UsersRoutingModule
   ]
 })
 export class UsersModule {}

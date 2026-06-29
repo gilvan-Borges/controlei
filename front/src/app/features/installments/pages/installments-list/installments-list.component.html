@@ -1,0 +1,80 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Parcelas</h5>
+  </div>
+
+  <div class="row g-2 mb-3">
+    <div class="col-6">
+      <label class="form-label small mb-1">Inicio</label>
+      <input type="date" class="form-control form-control-sm" [value]="filterStartDate" (change)="filterStartDate = $any($event.target).value; onFilterChange()">
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Fim</label>
+      <input type="date" class="form-control form-control-sm" [value]="filterEndDate" (change)="filterEndDate = $any($event.target).value; onFilterChange()">
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Status</label>
+      <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (status of statuses; track status.value) {
+          <option [value]="status.value">{{ status.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <label class="form-label small mb-1">Membro</label>
+      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
+        <option value="">Todos</option>
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando parcelas..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && installments.length === 0) {
+    <app-empty-state icon="bi-calendar-check" message="Nenhuma parcela encontrada."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && installments.length > 0) {
+    <div class="list-group">
+      @for (installment of installments; track installment.id) {
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between gap-3">
+            <div>
+              <div class="fw-medium">Parcela {{ installment.installmentNumber }}</div>
+              <small class="text-muted">
+                {{ getUserName(installment.userId) }}
+                &middot; Vence em {{ installment.dueDate | date: 'dd/MM/yyyy' }}
+              </small>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold">R$ {{ installment.amount | number: '1.2-2' }}</div>
+              <span class="badge" [ngClass]="getStatusBadgeClass(installment.status)">
+                {{ getStatusLabel(installment.status) }}
+              </span>
+            </div>
+          </div>
+          @if (installment.status === 'PENDING') {
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn btn-outline-success btn-sm" type="button" (click)="pay(installment)">
+                <i class="bi bi-check-lg me-1"></i>Pagar
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="cancel(installment)">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

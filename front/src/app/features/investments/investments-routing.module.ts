@@ -1,8 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { InvestmentsListComponent } from './pages/investments-list/investments-list.component';
+import { InvestmentFormComponent } from './pages/investment-form/investment-form.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+  { path: '', component: InvestmentsListComponent },
+  { path: 'new', component: InvestmentFormComponent },
+  { path: ':id/edit', component: InvestmentFormComponent }
 ];
 
 @NgModule({

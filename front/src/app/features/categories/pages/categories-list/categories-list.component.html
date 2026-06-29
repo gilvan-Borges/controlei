@@ -1,0 +1,73 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Categorias</h5>
+    <a routerLink="new" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Nova Categoria
+    </a>
+  </div>
+
+  <!-- Filter -->
+  <div class="mb-3">
+    <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
+      <option value="">Todos os tipos</option>
+      @for (t of categoryTypes; track t.value) {
+        <option [value]="t.value">{{ t.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando categorias..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && categories.length === 0) {
+    <app-empty-state icon="bi-tags" message="Nenhuma categoria encontrada."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && categories.length > 0) {
+    <div class="list-group">
+      @for (category of categories; track category.id) {
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            @if (category.color) {
+              <span
+                class="rounded-circle me-2"
+                style="width: 12px; height: 12px; display: inline-block;"
+                [style.background-color]="category.color"
+              ></span>
+            }
+            <div>
+              <div class="fw-medium">{{ category.name }}</div>
+              <small class="text-muted">{{ getTypeLabel(category.type) }}</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" [class.bg-success]="category.active" [class.bg-secondary]="!category.active">
+              {{ category.active ? 'Ativa' : 'Inativa' }}
+            </span>
+            <a [routerLink]="[category.id, 'edit']" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(category)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <app-confirm-modal
+    [visible]="showDeleteConfirm"
+    title="Excluir Categoria"
+    [message]="'Tem certeza que deseja excluir a categoria \'' + (categoryToDelete?.name || '') + '\'?'"
+    confirmLabel="Excluir"
+    confirmVariant="danger"
+    (confirmed)="onDeleteConfirm()"
+    (cancelled)="onDeleteCancel()"
+  ></app-confirm-modal>
+</div>

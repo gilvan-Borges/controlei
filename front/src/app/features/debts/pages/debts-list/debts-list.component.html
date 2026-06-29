@@ -1,0 +1,85 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Dívidas</h5>
+    <a routerLink="new" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Nova Dívida
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="row g-2 mb-3">
+    <div class="col-6">
+      <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()">
+        <option value="">Todos os status</option>
+        @for (s of debtStatuses; track s.value) {
+          <option [value]="s.value">{{ s.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
+        <option value="">Todos os membros</option>
+        @for (user of users; track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando dívidas..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && debts.length === 0) {
+    <app-empty-state icon="bi-credit-card" message="Nenhuma dívida encontrada."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && debts.length > 0) {
+    <div class="list-group">
+      @for (debt of debts; track debt.id) {
+        <a [routerLink]="[debt.id]" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-medium">{{ debt.description }}</div>
+              <small class="text-muted">
+                {{ getUserName(debt.userId) }}
+                &middot; {{ debt.purchaseDate | date: 'dd/MM/yyyy' }}
+                &middot; {{ debt.installmentCount }}x R$ {{ debt.installmentAmount | number: '1.2-2' }}
+              </small>
+            </div>
+            <div class="text-end">
+              <div class="fw-bold">R$ {{ debt.totalAmount | number: '1.2-2' }}</div>
+              <span class="badge" [ngClass]="getStatusBadgeClass(debt.status)">
+                {{ getStatusLabel(debt.status) }}
+              </span>
+            </div>
+          </div>
+          @if (canEditDebt(debt)) {
+            <div class="mt-2 d-flex gap-1" (click)="$event.preventDefault(); $event.stopPropagation()">
+              <a [routerLink]="[debt.id, 'edit']" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(debt)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          }
+        </a>
+      }
+    </div>
+  }
+
+  <app-confirm-modal
+    [visible]="showDeleteConfirm"
+    title="Excluir Dívida"
+    [message]="'Tem certeza que deseja excluir a dívida \'' + (debtToDelete?.description || '') + '\'?'"
+    confirmLabel="Excluir"
+    confirmVariant="danger"
+    (confirmed)="onDeleteConfirm()"
+    (cancelled)="onDeleteCancel()"
+  ></app-confirm-modal>
+</div>

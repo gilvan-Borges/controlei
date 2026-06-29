@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
 import { User } from '../models/user.model';
 import { AuthResponse } from '../models/auth-response.model';
 import { environment } from '../../../environments/environment';
@@ -34,9 +34,20 @@ export class AuthService {
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
       tap(response => {
-        localStorage.setItem(this.tokenKey, response.token);
-        localStorage.setItem(this.userKey, JSON.stringify(response.user));
-        this.currentUserSubject.next(response.user);
+        this.saveSession(response.accessToken, response.user);
+      })
+    );
+  }
+
+  loadCurrentUser(): Observable<User> {
+    return this.http.get<User>(`${environment.apiUrl}/me`).pipe(
+      tap(user => {
+        localStorage.setItem(this.userKey, JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      }),
+      catchError(() => {
+        this.logout();
+        return of(null as unknown as User);
       })
     );
   }
@@ -45,6 +56,12 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
     this.currentUserSubject.next(null);
+  }
+
+  private saveSession(token: string, user: User): void {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.currentUserSubject.next(user);
   }
 
   private loadStoredUser(): void {

@@ -1,0 +1,79 @@
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Contas</h5>
+    <a routerLink="new" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Nova Conta
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="row g-2 mb-3">
+    <div class="col-6">
+      <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
+        <option value="">Todos os tipos</option>
+        @for (t of accountTypes; track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-6">
+      <select class="form-select form-select-sm" [value]="filterShared" (change)="filterShared = $any($event.target).value; onFilterChange()">
+        <option value="">Todas</option>
+        <option value="true">Compartilhadas</option>
+        <option value="false">Individuais</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando contas..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading && !errorMessage && accounts.length === 0) {
+    <app-empty-state icon="bi-bank" message="Nenhuma conta encontrada."></app-empty-state>
+  }
+
+  @if (!loading && !errorMessage && accounts.length > 0) {
+    <div class="list-group">
+      @for (account of accounts; track account.id) {
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-medium">{{ account.name }}</div>
+            <small class="text-muted">
+              {{ getTypeLabel(account.type) }}
+              &middot;
+              {{ account.shared ? 'Compartilhada' : 'Individual' }}
+              &middot;
+              Saldo inicial: R$ {{ account.initialBalance | number: '1.2-2' }}
+            </small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" [class.bg-success]="account.active" [class.bg-secondary]="!account.active">
+              {{ account.active ? 'Ativa' : 'Inativa' }}
+            </span>
+            <a [routerLink]="[account.id, 'edit']" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(account)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <app-confirm-modal
+    [visible]="showDeleteConfirm"
+    title="Excluir Conta"
+    [message]="'Tem certeza que deseja excluir a conta \'' + (accountToDelete?.name || '') + '\'?'"
+    confirmLabel="Excluir"
+    confirmVariant="danger"
+    (confirmed)="onDeleteConfirm()"
+    (cancelled)="onDeleteCancel()"
+  ></app-confirm-modal>
+</div>

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
-import { MobileShellComponent } from './layout/mobile-shell/mobile-shell.component';
+import { ShellComponent } from './layout/shell/shell.component';
 
 const routes: Routes = [
   {
@@ -10,7 +10,7 @@ const routes: Routes = [
   },
   {
     path: 'app',
-    component: MobileShellComponent,
+    component: ShellComponent,
     canActivate: [AuthGuard],
     children: [
       {

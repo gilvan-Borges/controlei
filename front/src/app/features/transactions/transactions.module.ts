@@ -1,14 +1,17 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-
-const routes: Routes = [];
+import { TransactionsRoutingModule } from './transactions-routing.module';
+import { TransactionsListComponent } from './pages/transactions-list/transactions-list.component';
+import { TransactionFormComponent } from './pages/transaction-form/transaction-form.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    TransactionsListComponent,
+    TransactionFormComponent
+  ],
   imports: [
     SharedModule,
-    RouterModule.forChild(routes)
+    TransactionsRoutingModule
   ]
 })
 export class TransactionsModule {}

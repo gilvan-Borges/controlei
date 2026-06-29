@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Controlei API (local)",
+      "request": "launch",
+      "mainClass": "br.com.controlei.ControleiApiApplication",
+      "projectName": "api",
+      "cwd": "${workspaceFolder}/back",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "local",
+        "DB_HOST": "localhost",
+        "DB_PORT": "5432",
+        "DB_NAME": "controlei",
+        "DB_USER": "controlei",
+        "DB_PASSWORD": "controlei123"
+      }
+    }
+  ]
+}

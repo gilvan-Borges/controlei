@@ -1,0 +1,112 @@
+<div class="container-fluid px-0">
+  <div class="d-flex align-items-center mb-3">
+    <a routerLink="/app/debts" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">{{ isEdit ? 'Editar Dívida' : 'Nova Dívida Parcelada' }}</h5>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="userId" class="form-label">Membro</label>
+        <select id="userId" class="form-select" formControlName="userId" [class.is-invalid]="form.get('userId')?.touched && form.get('userId')?.invalid">
+          <option value="">Selecione</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+        @if (form.get('userId')?.touched && form.get('userId')?.hasError('required')) {
+          <div class="invalid-feedback">Membro é obrigatório.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="categoryId" class="form-label">Categoria (opcional)</label>
+        <select id="categoryId" class="form-select" formControlName="categoryId">
+          <option value="">Selecione</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Descrição</label>
+        <input
+          type="text"
+          id="description"
+          class="form-control"
+          formControlName="description"
+          placeholder="Ex: Geladeira"
+          [class.is-invalid]="form.get('description')?.touched && form.get('description')?.invalid"
+        />
+        @if (form.get('description')?.touched && form.get('description')?.hasError('required')) {
+          <div class="invalid-feedback">Descrição é obrigatória.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="purchaseDate" class="form-label">Data da compra</label>
+        <app-date-input formControlName="purchaseDate"></app-date-input>
+      </div>
+
+      <div class="mb-3">
+        <label for="totalAmount" class="form-label">Valor total</label>
+        <app-money-input formControlName="totalAmount"></app-money-input>
+      </div>
+
+      <div class="mb-3">
+        <label for="installmentCount" class="form-label">Quantidade de parcelas</label>
+        <input
+          type="number"
+          id="installmentCount"
+          class="form-control"
+          formControlName="installmentCount"
+          min="1"
+          [class.is-invalid]="form.get('installmentCount')?.touched && form.get('installmentCount')?.invalid"
+        />
+        @if (form.get('installmentCount')?.touched && form.get('installmentCount')?.hasError('required')) {
+          <div class="invalid-feedback">Quantidade é obrigatória.</div>
+        }
+      </div>
+
+      @if (!isEdit) {
+        <div class="mb-3">
+          <label for="firstDueDate" class="form-label">Primeira data de vencimento</label>
+          <app-date-input formControlName="firstDueDate"></app-date-input>
+        </div>
+      }
+
+      @if (estimatedInstallmentAmount > 0) {
+        <div class="alert alert-info py-2">
+          <small>Valor estimado por parcela: <strong>R$ {{ estimatedInstallmentAmount | number: '1.2-2' }}</strong></small>
+        </div>
+      }
+
+      <div class="mb-3">
+        <label for="notes" class="form-label">Observações (opcional)</label>
+        <textarea id="notes" class="form-control" formControlName="notes" rows="2" placeholder="Observações"></textarea>
+      </div>
+
+      <div class="d-flex gap-2">
+        <app-action-button
+          type="submit"
+          label="Salvar"
+          icon="bi-check-lg"
+          [loading]="saving"
+          [disabled]="form.invalid"
+        ></app-action-button>
+        <a routerLink="/app/debts" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  }
+</div>

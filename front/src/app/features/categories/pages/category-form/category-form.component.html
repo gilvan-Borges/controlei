@@ -1,0 +1,85 @@
+<div class="container-fluid px-0">
+  <div class="d-flex align-items-center mb-3">
+    <a routerLink="/app/categories" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">{{ isEdit ? 'Editar Categoria' : 'Nova Categoria' }}</h5>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="name" class="form-label">Nome</label>
+        <input
+          type="text"
+          id="name"
+          class="form-control"
+          formControlName="name"
+          placeholder="Nome da categoria"
+          [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
+        />
+        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+          <div class="invalid-feedback">Nome é obrigatório.</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="type" class="form-label">Tipo</label>
+        <select id="type" class="form-select" formControlName="type">
+          @for (t of categoryTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="color" class="form-label">Cor (opcional)</label>
+        <input
+          type="color"
+          id="color"
+          class="form-control form-control-color"
+          formControlName="color"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="icon" class="form-label">Ícone (opcional)</label>
+        <input
+          type="text"
+          id="icon"
+          class="form-control"
+          formControlName="icon"
+          placeholder="ex: bi-house"
+        />
+      </div>
+
+      @if (isEdit) {
+        <div class="mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="active" formControlName="active">
+            <label class="form-check-label" for="active">Categoria ativa</label>
+          </div>
+        </div>
+      }
+
+      <div class="d-flex gap-2">
+        <app-action-button
+          type="submit"
+          label="Salvar"
+          icon="bi-check-lg"
+          [loading]="saving"
+          [disabled]="form.invalid"
+        ></app-action-button>
+        <a routerLink="/app/categories" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  }
+</div>

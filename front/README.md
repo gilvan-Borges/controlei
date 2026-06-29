@@ -1,59 +1,98 @@
-# Front
+# Controlei Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+Frontend Angular do Controlei, com Bootstrap, organizacao por modulos e experiencia mobile first.
 
-## Development server
+## Requisitos
 
-To start a local development server, run:
+- Node.js compativel com Angular 21.
+- npm.
+- Backend rodando em `http://localhost:8080`.
 
-```bash
-ng serve
+## Instalar dependencias
+
+PowerShell:
+
+```powershell
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Rodar localmente
 
-## Code scaffolding
+PowerShell:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+A aplicacao abre em:
 
-```bash
-ng generate --help
+```text
+http://localhost:4200
 ```
 
-## Building
+## API
 
-To build the project run:
+O ambiente local usa:
 
-```bash
-ng build
+```text
+src/environments/environment.ts
+apiUrl: http://localhost:8080/api/v1
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+O build de producao usa:
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```text
+src/environments/environment.prod.ts
+apiUrl: /api/v1
 ```
 
-## Running end-to-end tests
+## Testes
 
-For end-to-end (e2e) testing, run:
+PowerShell:
 
-```bash
-ng e2e
+```powershell
+npm test -- --watch=false
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Build de producao
 
-## Additional Resources
+PowerShell:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```powershell
+npm run build
+```
+
+Saida do build:
+
+```text
+front/dist/front
+```
+
+Arquivos estaticos para servir em Nginx/CDN:
+
+```text
+front/dist/front/browser
+```
+
+## Docker
+
+Build da imagem:
+
+```powershell
+docker build -t controlei-front .
+```
+
+Rodar localmente:
+
+```powershell
+docker run --rm -p 4200:80 controlei-front
+```
+
+## Usuarios locais de teste
+
+Quando o backend estiver no profile `local`, o seeder cria:
+
+```text
+superadmin@controlei.local / Controlei@123
+gilvan.borges@controlei.local / Controlei@123
+```
