@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, of, throwError } from 'rxjs';
 import { User } from '../models/user.model';
 import { AuthResponse } from '../models/auth-response.model';
 import { environment } from '../../../environments/environment';
@@ -11,6 +11,7 @@ import { environment } from '../../../environments/environment';
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenKey = 'controlei_token';
+  private refreshTokenKey = 'controlei_refresh_token';
   private userKey = 'controlei_user';
 
   currentUser$ = this.currentUserSubject.asObservable();
@@ -31,10 +32,40 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenKey);
+  }
+
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
       tap(response => {
-        this.saveSession(response.accessToken, response.user);
+        this.saveSession(response.accessToken, response.refreshToken, response.user);
+      })
+    );
+  }
+
+  registerFamily(data: { familyName: string; responsibleName: string; email: string; password: string }): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register-family`, data).pipe(
+      tap(response => {
+        this.saveSession(response.accessToken, response.refreshToken, response.user);
+      })
+    );
+  }
+
+  refreshToken(): Observable<AuthResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.logout();
+      return throwError(() => new Error('Sem refresh token disponível'));
+    }
+
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        this.saveSession(response.accessToken, response.refreshToken, response.user);
+      }),
+      catchError(err => {
+        this.logout();
+        return throwError(() => err);
       })
     );
   }
@@ -53,15 +84,27 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.getRefreshToken();
+    if (refreshToken) {
+      this.http.post(`${environment.apiUrl}/auth/logout`, { refreshToken }).subscribe({
+        error: () => {}
+      });
+    }
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
     localStorage.removeItem(this.userKey);
     this.currentUserSubject.next(null);
   }
 
-  private saveSession(token: string, user: User): void {
+  private saveSession(token: string, refreshToken?: string, user?: User): void {
     localStorage.setItem(this.tokenKey, token);
-    localStorage.setItem(this.userKey, JSON.stringify(user));
-    this.currentUserSubject.next(user);
+    if (refreshToken) {
+      localStorage.setItem(this.refreshTokenKey, refreshToken);
+    }
+    if (user) {
+      localStorage.setItem(this.userKey, JSON.stringify(user));
+      this.currentUserSubject.next(user);
+    }
   }
 
   private loadStoredUser(): void {

@@ -3,6 +3,7 @@ package br.com.controlei.application.controllers;
 import br.com.controlei.application.services.AuthService;
 import br.com.controlei.domain.models.dtos.auth.LoginRequest;
 import br.com.controlei.domain.models.dtos.auth.LoginResponse;
+import br.com.controlei.domain.models.dtos.auth.RefreshRequest;
 import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -29,5 +30,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody(required = false) RefreshRequest request) {
+        if (request != null && request.refreshToken() != null) {
+            authService.logout(request.refreshToken());
+        }
+        return ResponseEntity.noContent().build();
     }
 }

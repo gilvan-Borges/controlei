@@ -20,18 +20,24 @@ import java.util.UUID;
 public class JwtUtil implements TokenProvider {
 
     private final Algorithm algorithm;
-    private final long expirationHours;
+    private final long expirationSeconds;
 
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration-hours}") long expirationHours) {
+            @Value("${jwt.expiration-minutes:15}") long expirationMinutes,
+            @Value("${jwt.expiration-hours:0}") long expirationHours) {
         this.algorithm = Algorithm.HMAC256(secret);
-        this.expirationHours = expirationHours;
+        if (expirationHours > 0 && expirationMinutes == 15) {
+            this.expirationSeconds = expirationHours * 3600;
+        } else {
+            this.expirationSeconds = expirationMinutes * 60;
+        }
     }
 
+    @Override
     public String generateToken(AuthenticatedUser user) {
         Instant now = Instant.now();
-        Instant expiration = now.plusSeconds(expirationHours * 3600);
+        Instant expiration = now.plusSeconds(expirationSeconds);
 
         return JWT.create()
                 .withSubject(user.email())
@@ -43,6 +49,7 @@ public class JwtUtil implements TokenProvider {
                 .sign(algorithm);
     }
 
+    @Override
     public Optional<AuthenticatedUser> validateToken(String token) {
         try {
             JWTVerifier verifier = JWT.require(algorithm).build();
@@ -57,5 +64,10 @@ public class JwtUtil implements TokenProvider {
         } catch (JWTVerificationException | IllegalArgumentException ex) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public long getExpirationSeconds() {
+        return expirationSeconds;
     }
 }

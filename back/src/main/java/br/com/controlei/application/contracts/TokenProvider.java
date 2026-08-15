@@ -9,4 +9,6 @@ public interface TokenProvider {
     String generateToken(AuthenticatedUser user);
 
     Optional<AuthenticatedUser> validateToken(String token);
+
+    long getExpirationSeconds();
 }
