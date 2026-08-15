@@ -1,0 +1,194 @@
+<div class="splits-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill warning">
+        <i class="bi bi-person-lines-fill"></i> GASTOS COMPARTILHADOS
+      </span>
+      <h1>Divisão de Contas & Simplificação de Dívidas</h1>
+      <p>Rache contas do mercado, aluguel ou viagens e veja o menor número de transferências para quitar tudo.</p>
+    </div>
+
+    <button class="btn btn-primary" (click)="openSettleModal()">
+      <i class="bi bi-arrow-left-right"></i>
+      <span>Registrar Acerto / PIX</span>
+    </button>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Suggested Settlements (Graph Simplification) -->
+  @if (familyBalance && familyBalance.suggestedSettlements && familyBalance.suggestedSettlements.length > 0) {
+    <div class="card-luxury mb-4 highlight-settlement-card">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="stat-icon-box" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; width: 36px; height: 36px; border-radius: 8px;">
+          <i class="bi bi-lightning-charge-fill"></i>
+        </div>
+        <div>
+          <h5 class="mb-0">Simplificação de Dívidas Sugerida (Menor número de PIX)</h5>
+          <small class="text-muted">Nosso algoritmo de fluxo máximo calcula a maneira mais rápida de zerar as pendências entre todos os membros.</small>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        @for (sug of familyBalance.suggestedSettlements; track sug.fromUserId + sug.toUserId) {
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="settlement-pill-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="user-name-tag">{{ sug.fromUserName }}</span>
+                <i class="bi bi-arrow-right text-warning fs-5"></i>
+                <span class="user-name-tag">{{ sug.toUserName }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="amount-value">R$ {{ sug.amount | number: '1.2-2' }}</span>
+                <button class="btn btn-primary btn-sm" (click)="openSettleModal(sug)">
+                  <i class="bi bi-check2"></i> Quitar PIX
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Member Balances Grid -->
+  @if (familyBalance && familyBalance.memberBalances) {
+    <h5 class="mb-3"><i class="bi bi-people text-primary me-2"></i> Balanço por Membro Familiar</h5>
+    <div class="row g-3 mb-4">
+      @for (mb of familyBalance.memberBalances; track mb.userId) {
+        <div class="col-12 col-md-4">
+          <div class="stat-widget">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold fs-6">{{ mb.userName }}</span>
+              <span class="badge-pill" [ngClass]="mb.netBalance > 0 ? 'success' : mb.netBalance < 0 ? 'danger' : 'indigo'">
+                {{ mb.netBalance > 0 ? 'A Receber' : mb.netBalance < 0 ? 'A Pagar' : 'Quitado' }}
+              </span>
+            </div>
+
+            <div class="stat-value" [style.color]="mb.netBalance > 0 ? '#10b981' : mb.netBalance < 0 ? '#ef4444' : '#94a3b8'">
+              R$ {{ mb.netBalance | number: '1.2-2' }}
+            </div>
+
+            <div class="d-flex justify-content-between text-muted small mt-2 pt-2 border-top">
+              <span>Pagou: R$ {{ mb.totalPaid | number: '1.2-2' }}</span>
+              <span>Deve: R$ {{ mb.totalOwed | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Splits List -->
+  <h5 class="mb-3"><i class="bi bi-receipt-cutoff text-primary me-2"></i> Histórico de Despesas Compartilhadas</h5>
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (splits.length === 0) {
+    <div class="card-luxury text-center py-5">
+      <i class="bi bi-person-lines-fill text-muted" style="font-size: 3rem;"></i>
+      <h4 class="mt-3">Nenhuma despesa dividida</h4>
+      <p class="text-muted">Ao criar uma transação no app, marque a opção de dividir entre membros familiares.</p>
+    </div>
+  } @else {
+    <div class="table-responsive">
+      <table class="table-luxury">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Pago por</th>
+            <th>Tipo de Divisão</th>
+            <th>Valor Total</th>
+            <th>Participantes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of splits; track s.id) {
+            <tr>
+              <td>{{ s.createdAt | date: 'dd/MM/yyyy' }}</td>
+              <td><strong>{{ s.paidByUserName || 'Membro' }}</strong></td>
+              <td>
+                <span class="badge-pill indigo">{{ s.splitType === 'EQUAL' ? 'Igualitária' : s.splitType === 'PERCENTAGE' ? 'Porcentagem' : 'Valor Exato' }}</span>
+              </td>
+              <td><strong>R$ {{ s.totalAmount | number: '1.2-2' }}</strong></td>
+              <td>
+                <div class="d-flex flex-wrap gap-1">
+                  @for (sh of s.shares; track sh.id) {
+                    <span class="badge-pill" [ngClass]="sh.settled ? 'success' : 'warning'">
+                      {{ sh.userName || 'Membro' }}: R$ {{ sh.shareAmount | number: '1.2-2' }}
+                    </span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Settle Modal -->
+  @if (showSettleModal) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-arrow-left-right text-primary me-2"></i> Registrar Acerto de Contas</h5>
+          <button class="btn-close-luxury" (click)="showSettleModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="mb-3">
+            <label class="form-label">Quem Pagou (Devedor)</label>
+            <select class="form-select" [(ngModel)]="settleRequest.fromUserId">
+              @for (u of users; track u.id) {
+                <option [value]="u.id">{{ u.name }} ({{ u.email }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Quem Recebeu (Credor)</label>
+            <select class="form-select" [(ngModel)]="settleRequest.toUserId">
+              @for (u of users; track u.id) {
+                <option [value]="u.id">{{ u.name }} ({{ u.email }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Valor do PIX / Acerto (R$)</label>
+              <input type="number" step="5" class="form-control" [(ngModel)]="settleRequest.amount" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Data do Acerto</label>
+              <input type="date" class="form-control" [(ngModel)]="settleRequest.settlementDate" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Observações / Comprovante</label>
+            <input type="text" class="form-control" [(ngModel)]="settleRequest.notes" placeholder="Ex: PIX do mercado de domingo" />
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showSettleModal = false">Cancelar</button>
+          <button class="btn btn-primary" (click)="submitSettlement()">Confirmar e Quitar</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

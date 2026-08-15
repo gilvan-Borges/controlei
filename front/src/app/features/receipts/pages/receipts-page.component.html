@@ -1,0 +1,166 @@
+<div class="receipts-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill primary">
+        <i class="bi bi-receipt-cutoff"></i> INTELIGÊNCIA ARTIFICIAL & OCR
+      </span>
+      <h1>Scanner de Cupons Fiscais & OCR</h1>
+      <p>Tire foto ou anexe comprovantes, cupons NFC-e e notas fiscais para preenchimento automático de gastos.</p>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- OCR Scanner Dropzone -->
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="card-luxury scan-dropzone-box">
+        <div class="dropzone-inner text-center py-4">
+          <div class="scan-camera-icon mb-3">
+            <i class="bi bi-camera-fill"></i>
+          </div>
+
+          <h4>Enviar Foto do Cupom / Comprovante</h4>
+          <p class="text-muted mb-3">Arraste a imagem ou clique para selecionar arquivo (JPG, PNG, PDF)</p>
+
+          <input type="file" id="receiptFileInput" class="d-none" accept="image/*,.pdf" (change)="onFileSelected($event)" />
+          
+          <button class="btn btn-primary" onclick="document.getElementById('receiptFileInput').click()" [disabled]="scanning">
+            @if (scanning) {
+              <span class="spinner-border spinner-border-sm me-2"></span> Processando OCR...
+            } @else {
+              <i class="bi bi-cloud-arrow-up-fill"></i> Selecionar Cupom Fiscal
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator Box -->
+    <div class="col-12 col-lg-5">
+      <div class="card-luxury">
+        <h5><i class="bi bi-cpu-fill text-primary me-2"></i> Teste Rápido de OCR</h5>
+        <p class="text-muted small">Teste o extrator regex/NLP inteligente colando o texto bruto de uma nota fiscal:</p>
+
+        <textarea class="form-control mb-3" rows="5" [(ngModel)]="simulatedText"></textarea>
+
+        <button class="btn btn-secondary w-100" (click)="runSimulatedScan()" [disabled]="scanning">
+          <i class="bi bi-lightning-charge"></i> Simular Extração Inteligente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan History -->
+  <h5 class="mb-3"><i class="bi bi-clock-history text-primary me-2"></i> Histórico de Leituras Realizadas</h5>
+  @if (loading) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (scans.length === 0) {
+    <div class="card-luxury text-center py-4">
+      <i class="bi bi-receipt text-muted" style="font-size: 2.5rem;"></i>
+      <p class="text-muted mt-2 mb-0">Nenhum cupom fiscal escaneado ainda.</p>
+    </div>
+  } @else {
+    <div class="table-responsive">
+      <table class="table-luxury">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Estabelecimento</th>
+            <th>Valor Identificado</th>
+            <th>Categoria Sugerida</th>
+            <th>Confiança OCR</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of scans; track s.id) {
+            <tr>
+              <td>{{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td><strong>{{ s.extractedMerchant || 'Não identificado' }}</strong></td>
+              <td><strong>R$ {{ s.extractedAmount | number: '1.2-2' }}</strong></td>
+              <td>
+                <span class="badge-pill indigo">{{ s.suggestedCategoryName || 'Alimentação' }}</span>
+              </td>
+              <td>
+                <span class="badge-pill success">{{ (s.confidenceScore || 0.95) * 100 | number: '1.0-0' }}%</span>
+              </td>
+              <td>
+                <button class="btn btn-primary btn-sm" (click)="openCreateTransFromScan(s)">
+                  <i class="bi bi-check2-circle"></i> Criar Transação
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Modal Create Transaction from OCR -->
+  @if (showCreateTransactionModal) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-check2-circle text-primary me-2"></i> Confirmar Transação do Cupom Fiscal</h5>
+          <button class="btn-close-luxury" (click)="showCreateTransactionModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="mb-3">
+            <label class="form-label">Descrição</label>
+            <input type="text" class="form-control" [(ngModel)]="transForm.description" />
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Valor (R$)</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="transForm.amount" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Data</label>
+              <input type="date" class="form-control" [(ngModel)]="transForm.date" />
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Conta</label>
+              <select class="form-select" [(ngModel)]="transForm.accountId">
+                @for (acc of accounts; track acc.id) {
+                  <option [value]="acc.id">{{ acc.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Categoria</label>
+              <select class="form-select" [(ngModel)]="transForm.categoryId">
+                @for (cat of categories; track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showCreateTransactionModal = false">Cancelar</button>
+          <button class="btn btn-primary" (click)="saveTransaction()">Confirmar e Lançar</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

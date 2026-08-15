@@ -1,0 +1,100 @@
+.open-finance-page {
+  display: block;
+}
+
+.bank-conn-card {
+  padding: 1.25rem;
+}
+
+.bank-catalog-card {
+  cursor: pointer;
+  padding: 1.25rem;
+  transition: all 0.25s ease;
+}
+.bank-catalog-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--c-border-hover);
+}
+
+.bank-logo-gem {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.4rem;
+}
+
+.consent-box {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--c-radius);
+}
+
+.font-xs {
+  font-size: 0.7rem;
+}
+
+/* Modal Luxury */
+.modal-backdrop-luxury {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-dialog-luxury {
+  width: 100%;
+  max-width: 520px;
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-xl);
+  box-shadow: var(--c-shadow-lg);
+  overflow: hidden;
+  animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header-luxury {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--c-border);
+}
+.modal-header-luxury h5 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.btn-close-luxury {
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-body-luxury {
+  padding: 1.5rem;
+}
+
+.modal-footer-luxury {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-top: 1px solid var(--c-border);
+  background: rgba(0, 0, 0, 0.1);
+}

@@ -30,9 +30,23 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['registered'] === 'true') {
-        this.successMessage = 'Conta criada com sucesso! Faca login para continuar.';
+        this.successMessage = 'Conta criada com sucesso! Faça login para continuar.';
       }
     });
+  }
+
+  fillDemo(role: 'admin' | 'member'): void {
+    if (role === 'admin') {
+      this.loginForm.patchValue({
+        email: 'superadmin@controlei.local',
+        password: 'Controlei@123'
+      });
+    } else {
+      this.loginForm.patchValue({
+        email: 'gilvan.borges@controlei.local',
+        password: 'Controlei@123'
+      });
+    }
   }
 
   onSubmit(): void {
@@ -53,7 +67,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err?.message || 'Erro ao fazer login. Tente novamente.';
+        this.errorMessage = err?.message || 'Erro ao fazer login. Verifique seu e-mail e senha.';
       }
     });
   }

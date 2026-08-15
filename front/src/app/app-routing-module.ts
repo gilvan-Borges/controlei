@@ -52,6 +52,42 @@ const routes: Routes = [
         loadChildren: () => import('./features/users/users.module').then(m => m.UsersModule)
       },
       {
+        path: 'budgets',
+        loadChildren: () => import('./features/budgets/budgets.module').then(m => m.BudgetsModule)
+      },
+      {
+        path: 'goals',
+        loadChildren: () => import('./features/goals/goals.module').then(m => m.GoalsModule)
+      },
+      {
+        path: 'cards',
+        loadChildren: () => import('./features/cards/cards.module').then(m => m.CardsModule)
+      },
+      {
+        path: 'splits',
+        loadChildren: () => import('./features/splits/splits.module').then(m => m.SplitsModule)
+      },
+      {
+        path: 'recurring',
+        loadChildren: () => import('./features/recurring/recurring.module').then(m => m.RecurringModule)
+      },
+      {
+        path: 'receipts',
+        loadChildren: () => import('./features/receipts/receipts.module').then(m => m.ReceiptsModule)
+      },
+      {
+        path: 'reports',
+        loadChildren: () => import('./features/reports/reports.module').then(m => m.ReportsModule)
+      },
+      {
+        path: 'open-finance',
+        loadChildren: () => import('./features/open-finance/open-finance.module').then(m => m.OpenFinanceModule)
+      },
+      {
+        path: 'notifications',
+        loadChildren: () => import('./features/notifications/notifications.module').then(m => m.NotificationsModule)
+      },
+      {
         path: 'profile',
         loadChildren: () => import('./features/profile/profile.module').then(m => m.ProfileModule)
       },

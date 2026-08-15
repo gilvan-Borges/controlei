@@ -1,0 +1,69 @@
+<div class="notifications-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill indigo">
+        <i class="bi bi-bell-fill"></i> CENTRAL DE ALERTAS
+      </span>
+      <h1>Notificações & Avisos Proativos</h1>
+      <p>Acompanhe vencimentos de parcelas, limites de orçamento, rendimentos e avisos familiares.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-secondary btn-sm" (click)="toggleFilter(!unreadOnly)">
+        <i class="bi" [ngClass]="unreadOnly ? 'bi-check2-all' : 'bi-filter'"></i>
+        {{ unreadOnly ? 'Exibindo: Não Lidas' : 'Exibindo: Todas' }}
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="markAllAsRead()">
+        <i class="bi bi-check2-all"></i> Marcar Todas como Lidas
+      </button>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Notifications List -->
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (notifications.length === 0) {
+    <div class="card-luxury text-center py-5">
+      <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
+      <h4 class="mt-3">Você não possui notificações</h4>
+      <p class="text-muted">Tudo em dia com suas contas, faturas e orçamentos.</p>
+    </div>
+  } @else {
+    <div class="notifications-container">
+      @for (notif of notifications; track notif.id) {
+        <div class="card-luxury notification-card-item mb-2" [class.unread]="!notif.read" (click)="markRead(notif)">
+          <div class="notif-icon-circle">
+            <i class="bi" [ngClass]="getIcon(notif.type)"></i>
+          </div>
+
+          <div class="notif-body">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong>{{ notif.title }}</strong>
+              <small class="text-muted">{{ notif.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+            <p class="mb-0 text-muted">{{ notif.message }}</p>
+          </div>
+
+          @if (!notif.read) {
+            <span class="unread-indicator-dot" title="Não lida"></span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

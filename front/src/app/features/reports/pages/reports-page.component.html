@@ -1,0 +1,198 @@
+<div class="reports-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill indigo">
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i> FISCAL & AUDITORIA
+      </span>
+      <h1>Relatórios Gerenciais & Apoio IRPF</h1>
+      <p>Exporte extratos completos em formato CSV e consolide saldos de contas, investimentos e dívidas para a Receita Federal.</p>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Section 1: CSV Export -->
+  <div class="card-luxury mb-5">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="stat-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 44px; height: 44px; border-radius: 10px;">
+        <i class="bi bi-filetype-csv fs-4"></i>
+      </div>
+      <div>
+        <h4 class="mb-0">Exportação de Extrato Mensal (CSV)</h4>
+        <small class="text-muted">Compatível com Excel, Google Sheets, Contabilidade e PowerBI.</small>
+      </div>
+    </div>
+
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-4">
+        <label class="form-label">Mês de Referência</label>
+        <select class="form-select" [(ngModel)]="selectedMonth">
+          @for (m of months; track m.value) {
+            <option [value]="m.value">{{ m.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label">Ano</label>
+        <select class="form-select" [(ngModel)]="selectedYear">
+          <option [value]="2025">2025</option>
+          <option [value]="2026">2026</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <button class="btn btn-primary w-100" (click)="downloadCsv()" [disabled]="downloadingCsv">
+          @if (downloadingCsv) {
+            <span class="spinner-border spinner-border-sm me-2"></span> Gerando CSV...
+          } @else {
+            <i class="bi bi-download"></i> Baixar Extrato CSV
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: IRPF Tax Declaration Helper -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3><i class="bi bi-shield-shaded text-primary me-2"></i> Informe Consolidado de Bens & Direitos (IRPF)</h3>
+      <p class="text-muted mb-0">Posição patrimonial consolidada da família em 31 de Dezembro.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <label class="text-muted small mb-0">Ano-Calendário:</label>
+      <select class="form-select w-auto" [(ngModel)]="taxYear" (change)="loadTaxDeclaration()">
+        <option [value]="2025">2025</option>
+        <option [value]="2026">2026</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loadingTax) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (taxReport) {
+    <!-- Net Worth KPI Summary -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-md-4">
+        <div class="stat-widget">
+          <div class="stat-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <span class="stat-label">Bens e Direitos (Ativos)</span>
+          <div class="stat-value text-success">R$ {{ taxReport.totalAssets | number: '1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="stat-widget">
+          <div class="stat-icon-box" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+            <i class="bi bi-bank"></i>
+          </div>
+          <span class="stat-label">Dívidas e Ônus Reais (Passivos)</span>
+          <div class="stat-value text-danger">R$ {{ taxReport.totalLiabilities | number: '1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="stat-widget">
+          <div class="stat-icon-box" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
+            <i class="bi bi-trophy"></i>
+          </div>
+          <span class="stat-label">Patrimônio Líquido Declarado</span>
+          <div class="stat-value">R$ {{ taxReport.netWorth | number: '1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="card-luxury mb-4">
+      <h5><i class="bi bi-wallet2 text-primary me-2"></i> 1. Saldos em Contas Correntes / Poupança</h5>
+      <table class="table-luxury">
+        <thead>
+          <tr>
+            <th>Instituição / Conta</th>
+            <th>Tipo de Conta</th>
+            <th>Saldo em 31/12 (R$)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (acc of taxReport.accounts; track acc.accountName) {
+            <tr>
+              <td><strong>{{ acc.accountName }}</strong></td>
+              <td><span class="badge-pill indigo">{{ acc.accountType }}</span></td>
+              <td><strong>R$ {{ acc.balance | number: '1.2-2' }}</strong></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Investments Table -->
+    <div class="card-luxury mb-4">
+      <h5><i class="bi bi-graph-up-arrow text-primary me-2"></i> 2. Aplicações Financeiras & Ações / FIIs</h5>
+      @if (taxReport.investments.length === 0) {
+        <p class="text-muted py-2 mb-0">Nenhum investimento com posição em custódia.</p>
+      } @else {
+        <table class="table-luxury">
+          <thead>
+            <tr>
+              <th>Ativo / Fundo</th>
+              <th>Classe de Investimento</th>
+              <th>Posição em 31/12 (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of taxReport.investments; track inv.investmentName) {
+              <tr>
+                <td><strong>{{ inv.investmentName }}</strong></td>
+                <td><span class="badge-pill primary">{{ inv.investmentType }}</span></td>
+                <td><strong>R$ {{ inv.currentAmount | number: '1.2-2' }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Debts Table -->
+    <div class="card-luxury">
+      <h5><i class="bi bi-building text-primary me-2"></i> 3. Dívidas, Empréstimos & Financiamentos</h5>
+      @if (taxReport.debts.length === 0) {
+        <p class="text-muted py-2 mb-0">Nenhuma dívida ou financiamento em aberto.</p>
+      } @else {
+        <table class="table-luxury">
+          <thead>
+            <tr>
+              <th>Credor / Contrato</th>
+              <th>Valor Original Contratado</th>
+              <th>Saldo Devedor em 31/12</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (debt of taxReport.debts; track debt.debtName) {
+              <tr>
+                <td><strong>{{ debt.debtName }}</strong></td>
+                <td>R$ {{ debt.totalAmount | number: '1.2-2' }}</td>
+                <td class="text-danger"><strong>R$ {{ debt.remainingAmount | number: '1.2-2' }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

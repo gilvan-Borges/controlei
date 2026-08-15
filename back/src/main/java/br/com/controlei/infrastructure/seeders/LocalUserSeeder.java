@@ -16,7 +16,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@Profile("local")
 public class LocalUserSeeder implements CommandLineRunner {
 
     private final FamilyRepository familyRepository;
