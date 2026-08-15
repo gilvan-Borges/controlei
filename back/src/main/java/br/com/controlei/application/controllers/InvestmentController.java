@@ -65,4 +65,22 @@ public class InvestmentController {
         investmentService.deleteInvestment(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/transactions")
+    public ResponseEntity<br.com.controlei.domain.models.dtos.investment.InvestmentTransactionResponse> addTransaction(
+            @PathVariable UUID id,
+            @Valid @RequestBody br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest request) {
+        return ResponseEntity.ok(investmentService.addTransaction(id, request));
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<br.com.controlei.domain.models.dtos.investment.InvestmentTransactionResponse>> listTransactions(
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(investmentService.listTransactions(id));
+    }
+
+    @GetMapping("/portfolio-summary")
+    public ResponseEntity<br.com.controlei.domain.models.dtos.investment.InvestmentPortfolioSummaryResponse> getPortfolioSummary() {
+        return ResponseEntity.ok(investmentService.getPortfolioSummary());
+    }
 }

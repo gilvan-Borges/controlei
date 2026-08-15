@@ -5,6 +5,7 @@ public enum InvestmentType {
     FIXED_INCOME,
     STOCK,
     FUND,
+    REAL_ESTATE_FUND,
     CRYPTO,
     OTHER
 }

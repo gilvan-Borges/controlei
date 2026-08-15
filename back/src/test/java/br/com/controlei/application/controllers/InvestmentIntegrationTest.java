@@ -267,6 +267,101 @@ class InvestmentIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void testInvestmentTransactionsAndPortfolioSummary() throws Exception {
+        String token = registerFamily("Familia Investidora", "Carlos Invest", "carlos.invest@email.com", "senha123");
+        String userId = getCurrentUserId(token);
+
+        CreateAccountRequest accReq = new CreateAccountRequest("Conta Rico", AccountType.INVESTMENT, true, null, BigDecimal.valueOf(20000));
+        String accRes = mockMvc.perform(post("/api/v1/accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accReq)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        UUID accountId = UUID.fromString(objectMapper.readTree(accRes).get("id").asText());
+
+        UUID investmentId = createInvestment(token, userId, "FII HGLG11", InvestmentType.REAL_ESTATE_FUND, BigDecimal.valueOf(5000));
+
+        // 1. Aporte (BUY) de R$ 3.000 -> Saldo deve ir para R$ 8.000
+        br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest buyReq =
+                new br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest(
+                        accountId,
+                        br.com.controlei.domain.models.enums.InvestmentTransactionType.BUY,
+                        BigDecimal.valueOf(20),
+                        BigDecimal.valueOf(150),
+                        BigDecimal.valueOf(3000),
+                        LocalDate.now(),
+                        "Compra de 20 cotas"
+                );
+
+        mockMvc.perform(post("/api/v1/investments/" + investmentId + "/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(buyReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(3000.0));
+
+        mockMvc.perform(get("/api/v1/investments/" + investmentId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentAmount").value(8000.0));
+
+        // 2. Proventos (DIVIDEND) de R$ 100
+        br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest divReq =
+                new br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest(
+                        accountId,
+                        br.com.controlei.domain.models.enums.InvestmentTransactionType.DIVIDEND,
+                        null,
+                        null,
+                        BigDecimal.valueOf(100),
+                        LocalDate.now(),
+                        "Rendimentos mensais"
+                );
+
+        mockMvc.perform(post("/api/v1/investments/" + investmentId + "/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(divReq)))
+                .andExpect(status().isOk());
+
+        // 3. Resgate (SELL) de R$ 2.000 -> Saldo deve ir para R$ 6.000
+        br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest sellReq =
+                new br.com.controlei.domain.models.dtos.investment.CreateInvestmentTransactionRequest(
+                        accountId,
+                        br.com.controlei.domain.models.enums.InvestmentTransactionType.SELL,
+                        BigDecimal.valueOf(13.33),
+                        BigDecimal.valueOf(150),
+                        BigDecimal.valueOf(2000),
+                        LocalDate.now(),
+                        "Venda parcial"
+                );
+
+        mockMvc.perform(post("/api/v1/investments/" + investmentId + "/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sellReq)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/investments/" + investmentId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentAmount").value(6000.0));
+
+        // 4. Histórico de transações
+        mockMvc.perform(get("/api/v1/investments/" + investmentId + "/history")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+
+        // 5. Portfolio summary
+        mockMvc.perform(get("/api/v1/investments/portfolio-summary")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPortfolioValue").value(6000.0))
+                .andExpect(jsonPath("$.totalInvestmentsCount").value(1));
+    }
+
     private String registerFamily(String familyName, String name, String email, String password) throws Exception {
         RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, name, email, password);
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
