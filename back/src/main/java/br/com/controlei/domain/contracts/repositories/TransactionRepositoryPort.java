@@ -6,12 +6,15 @@ import br.com.controlei.domain.models.enums.TransactionStatus;
 import br.com.controlei.domain.models.enums.TransactionType;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepositoryPort {
 
     Optional<Transaction> findByIdAndDeletedAtIsNull(UUID id);
+
+    List<Transaction> findAllByFamilyIdAndPeriod(UUID familyId, LocalDate startDate, LocalDate endDate);
 
     PageResult<Transaction> findAllByFamilyIdAndFilters(UUID familyId, LocalDate startDate, LocalDate endDate,
                                                        UUID userId, UUID accountId, UUID categoryId,

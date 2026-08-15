@@ -14,6 +14,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,6 +32,15 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     @Override
     public Optional<Transaction> findByIdAndDeletedAtIsNull(UUID id) {
         return repository.findByIdAndDeletedAtIsNull(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Transaction> findAllByFamilyIdAndPeriod(UUID familyId, LocalDate startDate, LocalDate endDate) {
+        Specification<TransactionEntity> spec = Specification.where(TransactionRepository.byFamilyId(familyId))
+                .and(TransactionRepository.deletedAtIsNull())
+                .and(TransactionRepository.transactionDateBetween(startDate, endDate));
+
+        return repository.findAll(spec).stream().map(mapper::toDomain).toList();
     }
 
     @Override

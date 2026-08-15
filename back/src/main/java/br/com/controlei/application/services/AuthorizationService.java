@@ -61,6 +61,12 @@ public class AuthorizationService {
                 .orElse(false);
     }
 
+    public void requireResponsible() {
+        if (!isResponsible()) {
+            throw new br.com.controlei.application.exceptions.ForbiddenException("Apenas o responsavel pode realizar esta operacao");
+        }
+    }
+
     public UUID currentUserId() {
         return requireCurrentUser().userId();
     }
