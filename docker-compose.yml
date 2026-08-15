@@ -1,9 +1,11 @@
 version: '3.8'
 
 services:
+  # 1. Banco de Dados Relacional
   postgres:
     image: postgres:16-alpine
     container_name: controlei-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-controlei}
       POSTGRES_USER: ${DB_USER:-controlei}
@@ -17,6 +19,84 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - controlei-network
+
+  # 2. Cache e Sessões Rápidas (Refresh Tokens, Rate Limiting, Cache de Dashboards)
+  redis:
+    image: redis:7-alpine
+    container_name: controlei-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - controlei-network
+
+  # 3. Backend Spring Boot (Java 21)
+  back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: controlei-back
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-controlei}
+      DB_USER: ${DB_USER:-controlei}
+      DB_PASSWORD: ${DB_PASSWORD:-controlei123}
+      JWT_SECRET: ${JWT_SECRET:-625a00bc-2eb5-4f36-ab38-ab0e353069a5-controlei-production-secret-key-32chars}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      APP_CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:4200}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - controlei-network
+
+  # 4. Frontend Angular SPA
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: controlei-front
+    restart: unless-stopped
+    depends_on:
+      - back
+    networks:
+      - controlei-network
+
+  # 5. Reverse Proxy / Gateway Nginx
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: controlei-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - front
+      - back
+    networks:
+      - controlei-network
 
 volumes:
   postgres_data:
+  redis_data:
+
+networks:
+  controlei-network:
+    driver: bridge
