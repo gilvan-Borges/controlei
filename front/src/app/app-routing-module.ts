@@ -14,7 +14,7 @@ const routes: Routes = [
   },
   {
     path: 'register',
-    component: RegisterComponent
+    component: LoginComponent
   },
   {
     path: '403',

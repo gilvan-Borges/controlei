@@ -1,179 +1,400 @@
-<div class="split-auth-page login-page-theme">
+<div class="auth-master-stage" [class.register-mode]="isRegister">
   <div class="split-layout-grid">
-    <!-- LEFT PANEL: Deep Pine Green Form Area -->
-    <div class="auth-panel-form auth-panel-green">
-      <div class="auth-form-inner auth-animate-left">
-        <!-- Brand Emblem Icon -->
-        <div class="auth-emblem-wrap">
-          <div class="emblem-shield">
-            <i class="bi bi-wallet2"></i>
-          </div>
-        </div>
 
-        <div class="auth-form-title-group">
-          <h2 class="auth-main-title">Bem-vindo de volta</h2>
-          <p class="auth-sub-title">Entre com suas credenciais para acessar o sistema</p>
-        </div>
-
-        @if (successMessage) {
-          <div class="auth-alert alert-success-custom mb-3" role="alert">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>{{ successMessage }}</span>
-          </div>
-        }
-
-        @if (errorMessage) {
-          <div class="auth-alert alert-danger-custom mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <span>{{ errorMessage }}</span>
-          </div>
-        }
-
-        <!-- Demo Quick Fill Buttons -->
-        <div class="demo-quick-bar mb-4">
-          <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
-          <div class="demo-pills-row">
-            <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
-              <i class="bi bi-shield-check"></i>
-              <span>Administrador</span>
-            </button>
-            <button type="button" class="btn-demo-tag" (click)="fillDemo('member')">
-              <i class="bi bi-person"></i>
-              <span>Membro</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Login Form -->
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="custom-auth-form">
-          <!-- Email Field -->
-          <div class="form-field-item mb-3">
-            <label for="email" class="field-label-custom">
-              E-mail ou username <span class="req-star">*</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <i class="bi bi-envelope field-leading-icon"></i>
-              <input
-                id="email"
-                type="email"
-                formControlName="email"
-                class="input-custom"
-                placeholder="seu.email@exemplo.com"
-                autocomplete="email"
-                [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-              />
+    <!-- ============================================================
+         LEFT HALF PANEL (Verde no Login -> Creme no Register)
+         ============================================================ -->
+    <div class="auth-half-panel left-panel">
+      <!-- 1A. Login Form Content (Visível quando isRegister === false) -->
+      <div class="panel-content-slot login-form-slot" [class.slot-active]="!isRegister">
+        <div class="auth-form-inner">
+          <div class="auth-emblem-wrap">
+            <div class="emblem-shield">
+              <i class="bi bi-wallet2"></i>
             </div>
-            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-              <span class="error-text">Informe um e-mail válido</span>
-            }
           </div>
 
-          <!-- Password Field -->
-          <div class="form-field-item mb-4">
-            <div class="field-label-row">
-              <label for="password" class="field-label-custom mb-0">
-                Senha <span class="req-star">*</span>
-              </label>
-              <span class="forgot-link">Esqueci minha senha</span>
+          <div class="auth-form-title-group">
+            <h2 class="auth-main-title">Bem-vindo de volta</h2>
+            <p class="auth-sub-title">Entre com suas credenciais para acessar o sistema</p>
+          </div>
+
+          @if (loginSuccess) {
+            <div class="auth-alert alert-success-custom mb-3" role="alert">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>{{ loginSuccess }}</span>
             </div>
-            <div class="input-icon-wrapper">
-              <i class="bi bi-lock field-leading-icon"></i>
-              <input
-                id="password"
-                [type]="showPassword ? 'text' : 'password'"
-                formControlName="password"
-                class="input-custom"
-                placeholder="••••••••••••"
-                autocomplete="current-password"
-                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-              />
-              <button
-                type="button"
-                class="btn-eye-toggle"
-                (click)="togglePasswordVisibility()"
-                [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Ver senha'"
-              >
-                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          }
+
+          @if (loginError) {
+            <div class="auth-alert alert-danger-custom mb-3" role="alert">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>{{ loginError }}</span>
+            </div>
+          }
+
+          <!-- Demo Quick Fill -->
+          <div class="demo-quick-bar mb-4">
+            <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
+            <div class="demo-pills-row">
+              <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
+                <i class="bi bi-shield-check"></i>
+                <span>Administrador</span>
+              </button>
+              <button type="button" class="btn-demo-tag" (click)="fillDemo('member')">
+                <i class="bi bi-person"></i>
+                <span>Membro</span>
               </button>
             </div>
-            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-              <span class="error-text">Informe sua senha</span>
-            }
           </div>
 
-          <!-- Submit Button -->
-          <button
-            type="submit"
-            class="btn-submit-action w-100"
-            [disabled]="loginForm.invalid || loading"
-          >
-            @if (loading) {
-              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              <span>Acessando...</span>
-            } @else {
-              <span>Entrar</span>
-              <i class="bi bi-arrow-right ms-2"></i>
-            }
-          </button>
-        </form>
+          <form [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()" class="custom-auth-form">
+            <div class="form-field-item mb-3">
+              <label for="loginEmail" class="field-label-custom">
+                E-mail ou username <span class="req-star">*</span>
+              </label>
+              <div class="input-icon-wrapper">
+                <i class="bi bi-envelope field-leading-icon"></i>
+                <input
+                  id="loginEmail"
+                  type="email"
+                  formControlName="email"
+                  class="input-custom"
+                  placeholder="seu.email@exemplo.com"
+                  autocomplete="email"
+                  [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+                />
+              </div>
+              @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                <span class="error-text">Informe um e-mail válido</span>
+              }
+            </div>
 
-        <div class="auth-bottom-switch mt-4 text-center">
-          <span class="switch-prompt">Não tem uma conta?</span>
-          <a routerLink="/register" class="switch-link ms-1">Cadastre-se agora</a>
+            <div class="form-field-item mb-4">
+              <div class="field-label-row">
+                <label for="loginPassword" class="field-label-custom mb-0">
+                  Senha <span class="req-star">*</span>
+                </label>
+                <span class="forgot-link">Esqueci minha senha</span>
+              </div>
+              <div class="input-icon-wrapper">
+                <i class="bi bi-lock field-leading-icon"></i>
+                <input
+                  id="loginPassword"
+                  [type]="showPassword ? 'text' : 'password'"
+                  formControlName="password"
+                  class="input-custom"
+                  placeholder="••••••••••••"
+                  autocomplete="current-password"
+                  [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                />
+                <button
+                  type="button"
+                  class="btn-eye-toggle"
+                  (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Ver senha'"
+                >
+                  <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+              @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                <span class="error-text">Informe sua senha</span>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit-action w-100"
+              [disabled]="loginForm.invalid || loading"
+            >
+              @if (loading) {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>Acessando...</span>
+              } @else {
+                <span>Entrar</span>
+                <i class="bi bi-arrow-right ms-2"></i>
+              }
+            </button>
+          </form>
+
+          <div class="auth-bottom-switch mt-4 text-center">
+            <span class="switch-prompt">Não tem uma conta?</span>
+            <a href="/register" (click)="goToRegister($event)" class="switch-link ms-1">Cadastre-se agora</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1B. Showcase Hero (Visível quando isRegister === true) -->
+      <div class="panel-content-slot register-hero-slot" [class.slot-active]="isRegister">
+        <div class="hero-content-inner">
+          <div class="hero-brand-header mb-4">
+            <div class="hero-logo-mark">
+              <i class="bi bi-wallet2"></i>
+            </div>
+            <span class="hero-brand-name">Controlei</span>
+          </div>
+
+          <h1 class="hero-headline mb-3">
+            Gestão Financeira<br>Familiar Inteligente
+          </h1>
+
+          <p class="hero-description mb-5">
+            Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
+          </p>
+
+          <div class="hero-features-list">
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-shield-check"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Segurança e Isolamento Total</h6>
+                <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
+              </div>
+            </div>
+
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-lightning-charge"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Agilidade Operacional</h6>
+                <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
+              </div>
+            </div>
+
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-pie-chart"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Controle de Tetos & Metas</h6>
+                <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT PANEL: Warm Cream Light Showcase Area -->
-    <div class="auth-panel-hero auth-panel-cream">
-      <div class="hero-content-inner auth-animate-right">
-        <div class="hero-brand-header mb-4">
-          <div class="hero-logo-mark">
-            <i class="bi bi-wallet2"></i>
-          </div>
-          <span class="hero-brand-name">Controlei</span>
-        </div>
-
-        <h1 class="hero-headline mb-3">
-          Gestão Financeira<br>Familiar Inteligente
-        </h1>
-
-        <p class="hero-description mb-5">
-          Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
-        </p>
-
-        <div class="hero-features-list">
-          <div class="hero-feature-row">
-            <div class="feature-icon-badge">
-              <i class="bi bi-shield-check"></i>
+    <!-- ============================================================
+         RIGHT HALF PANEL (Creme no Login -> Verde no Register)
+         ============================================================ -->
+    <div class="auth-half-panel right-panel">
+      <!-- 2A. Showcase Hero (Visível quando isRegister === false) -->
+      <div class="panel-content-slot login-hero-slot" [class.slot-active]="!isRegister">
+        <div class="hero-content-inner">
+          <div class="hero-brand-header mb-4">
+            <div class="hero-logo-mark">
+              <i class="bi bi-wallet2"></i>
             </div>
-            <div class="feature-detail">
-              <h6 class="feature-heading">Segurança e Isolamento Total</h6>
-              <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
-            </div>
+            <span class="hero-brand-name">Controlei</span>
           </div>
 
-          <div class="hero-feature-row">
-            <div class="feature-icon-badge">
-              <i class="bi bi-lightning-charge"></i>
-            </div>
-            <div class="feature-detail">
-              <h6 class="feature-heading">Agilidade Operacional</h6>
-              <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
-            </div>
-          </div>
+          <h1 class="hero-headline mb-3">
+            Gestão Financeira<br>Familiar Inteligente
+          </h1>
 
-          <div class="hero-feature-row">
-            <div class="feature-icon-badge">
-              <i class="bi bi-pie-chart"></i>
+          <p class="hero-description mb-5">
+            Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
+          </p>
+
+          <div class="hero-features-list">
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-shield-check"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Segurança e Isolamento Total</h6>
+                <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
+              </div>
             </div>
-            <div class="feature-detail">
-              <h6 class="feature-heading">Controle de Tetos & Metas</h6>
-              <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
+
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-lightning-charge"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Agilidade Operacional</h6>
+                <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
+              </div>
+            </div>
+
+            <div class="hero-feature-row">
+              <div class="feature-icon-badge">
+                <i class="bi bi-pie-chart"></i>
+              </div>
+              <div class="feature-detail">
+                <h6 class="feature-heading">Controle de Tetos & Metas</h6>
+                <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 2B. Register Form Card (Visível quando isRegister === true) -->
+      <div class="panel-content-slot register-form-slot" [class.slot-active]="isRegister">
+        <div class="register-floating-card">
+          <div class="register-card-header text-center mb-3">
+            <div class="register-emblem-icon">
+              <i class="bi bi-wallet2"></i>
+            </div>
+            <h2 class="register-title">Criar conta</h2>
+            <p class="register-subtitle">Preencha seus dados para acessar a plataforma</p>
+          </div>
+
+          @if (registerSuccess) {
+            <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>{{ registerSuccess }}</span>
+            </div>
+          }
+
+          @if (registerError && !registerSuccess) {
+            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span>{{ registerError }}</span>
+            </div>
+          }
+
+          <!-- Profile / Account Type Selector -->
+          <div class="account-type-group mb-3">
+            <label class="section-micro-label">Tipo de Cadastro</label>
+            <div class="type-selector-grid">
+              <div class="type-card selected">
+                <div class="type-icon">
+                  <i class="bi bi-house-door"></i>
+                </div>
+                <div class="type-text">
+                  <strong>Responsável</strong>
+                  <small>Administrador familiar</small>
+                </div>
+              </div>
+              <div class="type-card">
+                <div class="type-icon">
+                  <i class="bi bi-person"></i>
+                </div>
+                <div class="type-text">
+                  <strong>Membro</strong>
+                  <small>Gestão compartilhada</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="register-form">
+            <div class="form-group mb-3">
+              <label class="form-label-clean" for="regName">
+                Nome completo <span class="req-star">*</span>
+              </label>
+              <div class="input-wrap-clean">
+                <i class="bi bi-person leading-icon"></i>
+                <input
+                  id="regName"
+                  type="text"
+                  class="form-control-clean"
+                  formControlName="name"
+                  placeholder="Ex: João da Silva"
+                  [class.is-invalid]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
+                />
+              </div>
+              @if (registerForm.get('name')?.touched && registerForm.get('name')?.invalid) {
+                <span class="error-msg-clean">Nome é obrigatório (mínimo 2 caracteres).</span>
+              }
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label-clean" for="regEmail">
+                E-mail <span class="req-star">*</span>
+              </label>
+              <div class="input-wrap-clean">
+                <i class="bi bi-envelope leading-icon"></i>
+                <input
+                  id="regEmail"
+                  type="email"
+                  class="form-control-clean"
+                  formControlName="email"
+                  placeholder="seu.email@exemplo.com"
+                  [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+                />
+              </div>
+              @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+                <span class="error-msg-clean">E-mail válido é obrigatório.</span>
+              }
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label-clean" for="regPassword">
+                Senha <span class="req-star">*</span>
+              </label>
+              <div class="input-wrap-clean">
+                <i class="bi bi-lock leading-icon"></i>
+                <input
+                  id="regPassword"
+                  [type]="showRegPassword ? 'text' : 'password'"
+                  class="form-control-clean"
+                  formControlName="password"
+                  placeholder="Mínimo 6 caracteres"
+                  [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+                />
+                <button
+                  type="button"
+                  class="btn-eye-toggle-clean"
+                  (click)="toggleRegPasswordVisibility()"
+                  [attr.aria-label]="showRegPassword ? 'Ocultar senha' : 'Ver senha'"
+                >
+                  <i class="bi" [ngClass]="showRegPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+              @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+                <span class="error-msg-clean">A senha deve ter no mínimo 6 caracteres.</span>
+              }
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="form-label-clean" for="regConfirmPassword">
+                Confirmar Senha <span class="req-star">*</span>
+              </label>
+              <div class="input-wrap-clean">
+                <i class="bi bi-lock-fill leading-icon"></i>
+                <input
+                  id="regConfirmPassword"
+                  type="password"
+                  class="form-control-clean"
+                  formControlName="confirmPassword"
+                  placeholder="Repita a senha"
+                  [class.is-invalid]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')"
+                />
+              </div>
+              @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')) {
+                <span class="error-msg-clean">As senhas informadas não conferem.</span>
+              }
+            </div>
+
+            <button
+              type="submit"
+              class="btn-submit-action w-100"
+              [disabled]="registerForm.invalid || registerLoading"
+            >
+              @if (registerLoading) {
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <span>Criando espaço familiar...</span>
+              } @else {
+                <span>Criar Conta Familiar</span>
+                <i class="bi bi-arrow-right ms-2"></i>
+              }
+            </button>
+          </form>
+
+          <div class="register-footer text-center mt-4">
+            <a href="/login" (click)="goToLogin($event)" class="back-login-link">
+              <i class="bi bi-arrow-left me-1"></i> Já tem conta? Fazer login
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>

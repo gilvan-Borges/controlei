@@ -3,17 +3,17 @@
   min-height: 100vh;
 }
 
-.split-auth-page {
+.auth-master-stage {
   min-height: 100vh;
   position: relative;
-  background-color: #084335;
   overflow-x: hidden;
+  background-color: #084335;
 }
 
 /* ── Split Layout Grid ── */
 .split-layout-grid {
   display: grid;
-  grid-template-columns: 48% 52%;
+  grid-template-columns: 50% 50%;
   min-height: 100vh;
 
   @media (max-width: 960px) {
@@ -21,60 +21,99 @@
   }
 }
 
-/* ── Smooth Animations ── */
-.auth-animate-left {
-  animation: authSlideInLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.auth-animate-right {
-  animation: authSlideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes authSlideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes authSlideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 /* ============================================================
-   LEFT PANEL: DEEP PINE GREEN FORM AREA (#084335)
+   HALF PANELS WITH SMOOTH BACKGROUND MORPHING (0.55s)
    ============================================================ */
-.auth-panel-green {
-  background-color: #084335;
+.auth-half-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* LEFT PANEL:
+   - Login Mode (!register-mode): Background Verde Floresta (#084335)
+   - Register Mode (register-mode): Background Creme Suave (#f6f3eb)
+*/
+.left-panel {
+  background-color: #084335;
   padding: 3.5rem 2.5rem;
-  color: #ffffff;
-  transition: background-color 0.4s ease;
 
   @media (max-width: 560px) {
-    padding: 3rem 1.5rem;
+    padding: 3rem 1.25rem;
   }
 }
 
+.auth-master-stage.register-mode .left-panel {
+  background-color: #f6f3eb;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
+}
+
+/* RIGHT PANEL:
+   - Login Mode (!register-mode): Background Creme Suave (#f6f3eb)
+   - Register Mode (register-mode): Background Verde Floresta (#084335)
+*/
+.right-panel {
+  background-color: #f6f3eb;
+  padding: 3.5rem 2.5rem;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
+}
+
+.auth-master-stage.register-mode .right-panel {
+  background-color: #084335;
+  display: flex;
+  padding: 3rem 2rem;
+
+  @media (max-width: 560px) {
+    padding: 2rem 1rem;
+  }
+}
+
+/* ============================================================
+   PANEL CONTENT SLOTS & TRANSITIONS
+   ============================================================ */
+.panel-content-slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.94);
+  width: 100%;
+  max-width: 440px;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.4s ease;
+
+  &.slot-active {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transition-delay: 0.12s;
+  }
+}
+
+/* ── Form Inside Left (Login) ── */
 .auth-form-inner {
   width: 100%;
   max-width: 400px;
-  display: flex;
-  flex-direction: column;
+  margin: 0 auto;
+  color: #ffffff;
 }
 
 .auth-emblem-wrap {
@@ -185,7 +224,7 @@
   }
 }
 
-/* ── Inputs ── */
+/* ── Form Inputs (Login) ── */
 .form-field-item {
   display: flex;
   flex-direction: column;
@@ -326,6 +365,7 @@
     color: #fbbf24;
     text-decoration: none;
     transition: all 0.15s ease;
+    cursor: pointer;
 
     &:hover {
       text-decoration: underline;
@@ -335,26 +375,12 @@
 }
 
 /* ============================================================
-   RIGHT PANEL: WARM CREAM SHOWCASE AREA (#f6f3eb)
+   SHOWCASE HERO (Creme)
    ============================================================ */
-.auth-panel-cream {
-  background-color: #f6f3eb;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 3.5rem;
-  color: #18181b;
-  transition: background-color 0.4s ease;
-
-  @media (max-width: 960px) {
-    display: none;
-  }
-}
-
 .hero-content-inner {
   width: 100%;
   max-width: 480px;
+  color: #18181b;
 }
 
 .hero-brand-header {
@@ -436,5 +462,207 @@
       margin: 0;
       line-height: 1.4;
     }
+  }
+}
+
+/* ============================================================
+   REGISTER FLOATING CARD (Inside Right Panel on Green)
+   ============================================================ */
+.register-floating-card {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 2.25rem 2rem 1.85rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+
+  @media (max-width: 540px) {
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+.register-card-header {
+  .register-emblem-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #e2ede8;
+    color: #059669;
+    font-size: 1.45rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .register-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .register-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+  }
+}
+
+.account-type-group {
+  .section-micro-label {
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: #334155;
+    margin-bottom: 0.45rem;
+    display: block;
+  }
+
+  .type-selector-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+
+    .type-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #fafafa;
+
+      .type-icon {
+        font-size: 1.2rem;
+        color: #64748b;
+      }
+
+      .type-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+
+        strong {
+          font-size: 0.8rem;
+          color: #0f172a;
+        }
+
+        small {
+          font-size: 0.68rem;
+          color: #64748b;
+        }
+      }
+
+      &.selected {
+        border-color: #059669;
+        background: #f0fdf4;
+
+        .type-icon {
+          color: #059669;
+        }
+
+        .type-text strong {
+          color: #059669;
+        }
+      }
+    }
+  }
+}
+
+.form-label-clean {
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  display: block;
+
+  .req-star {
+    color: #ef4444;
+  }
+}
+
+.input-wrap-clean {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .leading-icon {
+    position: absolute;
+    left: 0.85rem;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .form-control-clean {
+    width: 100%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem 0.55rem 2.4rem;
+    color: #0f172a;
+    font-size: 0.88rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+    }
+
+    &.is-invalid {
+      border-color: #ef4444;
+    }
+  }
+
+  .btn-eye-toggle-clean {
+    position: absolute;
+    right: 0.65rem;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #334155;
+    }
+  }
+}
+
+.error-msg-clean {
+  font-size: 0.72rem;
+  color: #ef4444;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.back-login-link {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #059669;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    text-decoration: underline;
+    color: #047857;
   }
 }
