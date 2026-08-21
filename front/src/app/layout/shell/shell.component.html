@@ -3,25 +3,25 @@
     <header class="mobile-topbar">
       <div class="brand-group">
         <div class="brand-icon">
-          <i class="bi bi-shield-check"></i>
+          <i class="bi bi-wallet2" aria-hidden="true"></i>
         </div>
         <div class="brand-text">
-          <span class="brand-badge">PRO</span>
+          <span class="brand-badge">FAMÍLIA</span>
           <span class="brand-title">Controlei</span>
         </div>
       </div>
 
       <div class="mobile-actions">
+        <button class="action-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'">
+          <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+        </button>
         <button class="action-btn" (click)="toggleNotifications()" aria-label="Notificações">
-          <i class="bi bi-bell"></i>
+          <i class="bi bi-bell-fill"></i>
           @if (unreadCount > 0) {
             <span class="notification-dot">{{ unreadCount }}</span>
           }
         </button>
-        <button class="action-btn" (click)="toggleTheme()" aria-label="Tema">
-          <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
-        </button>
-        <button class="action-btn" (click)="logout()" aria-label="Sair">
+        <button class="action-btn" (click)="logout()" aria-label="Sair da conta">
           <i class="bi bi-box-arrow-right"></i>
         </button>
       </div>
@@ -31,7 +31,7 @@
       <router-outlet></router-outlet>
     </main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" aria-label="Navegação móvel principal">
       @for (item of mobileNavItems; track item.route) {
         <a
           class="bottom-nav-item"
@@ -39,7 +39,9 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: item.route === '/app/dashboard' }"
         >
-          <i class="bi" [ngClass]="item.icon"></i>
+          <div class="bottom-nav-icon">
+            <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
+          </div>
           <span>{{ item.label }}</span>
         </a>
       }
@@ -47,14 +49,14 @@
   </div>
 } @else {
   <div class="app-shell-desktop">
-    <!-- Sidebar -->
-    <aside class="sidebar-luxury">
+    <!-- Luxury Sidebar -->
+    <aside class="sidebar-luxury" aria-label="Navegação Lateral">
       <div class="sidebar-brand">
         <div class="brand-logo-gem">
-          <i class="bi bi-wallet-fill"></i>
+          <i class="bi bi-wallet2" aria-hidden="true"></i>
         </div>
         <div class="brand-info">
-          <span class="brand-tag">FAMILY OS</span>
+          <span class="brand-tag">GESTÃO FAMILIAR</span>
           <h4 class="brand-name">Controlei</h4>
         </div>
       </div>
@@ -72,7 +74,7 @@
                   [routerLinkActiveOptions]="{ exact: item.route === '/app/dashboard' }"
                 >
                   <div class="item-icon">
-                    <i class="bi" [ngClass]="item.icon"></i>
+                    <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
                   </div>
                   <span class="item-label">{{ item.label }}</span>
                 </a>
@@ -82,23 +84,24 @@
         }
       </div>
 
+      <!-- Sidebar User Footer -->
       <div class="sidebar-user-footer">
-        <div class="user-profile-badge" routerLink="/app/profile">
+        <div class="user-profile-badge" routerLink="/app/profile" title="Ver meu perfil">
           <div class="avatar-ring">
-            <span>{{ currentUser?.name ? currentUser.name.charAt(0) : 'U' }}</span>
+            <span>{{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}</span>
           </div>
           <div class="user-meta">
             <strong>{{ currentUser?.name || 'Usuário' }}</strong>
-            <small>{{ currentUser?.role === 'RESPONSIBLE' ? 'Responsável Familiar' : 'Membro' }}</small>
+            <small>{{ currentUser?.role === 'RESPONSIBLE' ? 'Responsável' : 'Membro' }}</small>
           </div>
         </div>
 
         <div class="footer-control-row">
-          <button class="footer-btn" (click)="toggleTheme()" title="Alternar Modo Claro/Escuro">
-            <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
-            <span>{{ isDark ? 'Claro' : 'Escuro' }}</span>
+          <button class="footer-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar tema limpo' : 'Ativar tema escuro'">
+            <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-fill text-primary'"></i>
+            <span>{{ isDark ? 'Tema Claro' : 'Tema Dark' }}</span>
           </button>
-          <button class="footer-btn logout" (click)="logout()" title="Sair da Conta">
+          <button class="footer-btn logout" (click)="logout()" aria-label="Encerrar sessão">
             <i class="bi bi-box-arrow-right"></i>
             <span>Sair</span>
           </button>
@@ -110,22 +113,27 @@
     <div class="main-workspace">
       <header class="topbar-luxury">
         <div class="topbar-left">
-          <div class="quick-status-pill">
-            <span class="status-indicator-dot"></span>
-            <span>Ambiente Seguro &middot; Multi-tenant Ativo</span>
+          <div class="family-tenant-pill">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Família Conectada &middot; Ambiente Seguro</span>
           </div>
         </div>
 
         <div class="topbar-right">
-          <!-- Quick Action Button -->
-          <a routerLink="/app/transactions" class="btn btn-primary btn-sm btn-quick-action">
+          <!-- Quick Action CTA -->
+          <a routerLink="/app/transactions" class="btn btn-primary btn-sm btn-quick-action shadow-sm">
             <i class="bi bi-plus-lg"></i>
             <span>Nova Transação</span>
           </a>
 
-          <!-- Notifications Bell -->
+          <!-- Theme Toggle Topbar Button -->
+          <button class="topbar-icon-btn" (click)="toggleTheme()" [title]="isDark ? 'Mudar para Tema Claro' : 'Mudar para Tema Dark'">
+            <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-stars-fill'"></i>
+          </button>
+
+          <!-- Notifications Bell & Dropdown -->
           <div class="notification-wrapper">
-            <button class="topbar-icon-btn" (click)="toggleNotifications()" aria-label="Ver Notificações">
+            <button class="topbar-icon-btn" (click)="toggleNotifications()" aria-label="Notificações">
               <i class="bi bi-bell-fill"></i>
               @if (unreadCount > 0) {
                 <span class="notification-badge-counter">{{ unreadCount }}</span>
@@ -133,14 +141,14 @@
             </button>
 
             @if (showNotificationsDrawer) {
-              <div class="notifications-dropdown-menu">
+              <div class="notifications-dropdown-menu animate-in">
                 <div class="dropdown-header">
                   <div>
-                    <h6>Notificações</h6>
-                    <small>{{ unreadCount }} não lidas</small>
+                    <h6 class="mb-0 fw-bold">Notificações</h6>
+                    <small class="text-muted">{{ unreadCount }} pendentes</small>
                   </div>
                   @if (unreadCount > 0) {
-                    <button class="btn-link-subtle" (click)="markAllNotificationsRead()">Marcar todas como lidas</button>
+                    <button class="btn-link-subtle" (click)="markAllNotificationsRead()">Marcar lidas</button>
                   }
                 </div>
 
@@ -154,14 +162,14 @@
                         <div class="notif-content">
                           <div class="notif-title">{{ notif.title }}</div>
                           <div class="notif-msg">{{ notif.message }}</div>
-                          <div class="notif-time">{{ notif.createdAt | date: 'dd/MM HH:mm' }}</div>
+                          <div class="notif-time font-mono">{{ notif.createdAt | date: 'dd/MM HH:mm' }}</div>
                         </div>
                       </div>
                     }
                   } @else {
-                    <div class="empty-notif">
-                      <i class="bi bi-bell-slash"></i>
-                      <span>Nenhuma notificação recente</span>
+                    <div class="empty-notif py-4 text-center">
+                      <i class="bi bi-bell-slash fs-3 text-muted mb-2 d-block"></i>
+                      <span class="text-muted small">Tudo em dia! Nenhuma notificação.</span>
                     </div>
                   }
                 </div>
@@ -174,11 +182,11 @@
           </div>
 
           <!-- User Quick Menu -->
-          <a routerLink="/app/profile" class="topbar-user-pill">
+          <a routerLink="/app/profile" class="topbar-user-pill" title="Meu Perfil">
             <div class="avatar-circle">
-              {{ currentUser?.name ? currentUser.name.charAt(0) : 'U' }}
+              {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
             </div>
-            <span class="user-display-name">{{ currentUser?.name || 'Minha Conta' }}</span>
+            <span class="user-display-name">{{ currentUser?.name || 'Minha Família' }}</span>
           </a>
         </div>
       </header>

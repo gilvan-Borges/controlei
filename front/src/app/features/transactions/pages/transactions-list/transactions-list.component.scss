@@ -1,3 +1,69 @@
 :host {
   display: block;
 }
+
+.transactions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.transaction-card-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.25rem;
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  box-shadow: var(--c-shadow-sm);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--c-border-hover);
+  }
+}
+
+.tx-icon-pill {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+
+  &.income {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+  }
+
+  &.expense {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+  }
+}
+
+.tx-value {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.page-link {
+  background: var(--c-surface);
+  border-color: var(--c-border);
+  color: var(--c-text);
+
+  &:hover {
+    background: rgba(var(--c-primary-rgb), 0.1);
+    color: var(--c-primary);
+    border-color: var(--c-border-hover);
+  }
+}
+
+.page-item.active .page-link {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #ffffff;
+}

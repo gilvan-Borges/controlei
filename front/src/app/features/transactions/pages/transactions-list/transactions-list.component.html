@@ -1,66 +1,76 @@
-<div class="container-fluid px-0">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Transações</h5>
-    <div class="d-flex gap-1">
-      <a routerLink="new-income" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Receita
+<div class="container-fluid px-0 animate-in">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">Transações</h3>
+      <p class="text-muted small mb-0">Extrato detalhado de receitas, despesas e transferências da família.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="new-income" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Nova Receita
       </a>
-      <a routerLink="new-expense" class="btn btn-danger btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Despesa
+      <a routerLink="new-expense" class="btn btn-danger btn-sm shadow-sm">
+        <i class="bi bi-dash-lg me-1"></i> Nova Despesa
       </a>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="row g-2 mb-3">
-    <div class="col-6">
-      <label class="form-label small mb-1">Data início</label>
-      <input type="date" class="form-control form-control-sm" [value]="filterStartDate" (change)="filterStartDate = $any($event.target).value; onFilterChange()">
+  <!-- Filters Card Panel -->
+  <div class="card-luxury p-3 mb-4">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="bi bi-funnel text-primary"></i>
+      <span class="fw-bold small text-uppercase" style="letter-spacing: 0.05em;">Filtros de Busca</span>
     </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Data fim</label>
-      <input type="date" class="form-control form-select-sm" [value]="filterEndDate" (change)="filterEndDate = $any($event.target).value; onFilterChange()">
-    </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Tipo</label>
-      <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
-        <option value="">Todos</option>
-        @for (t of transactionTypes; track t.value) {
-          <option [value]="t.value">{{ t.label }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Status</label>
-      <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()">
-        <option value="">Todos</option>
-        @for (s of transactionStatuses; track s.value) {
-          <option [value]="s.value">{{ s.label }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Membro</label>
-      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
-        <option value="">Todos</option>
-        @for (user of users; track user.id) {
-          <option [value]="user.id">{{ user.name }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Categoria</label>
-      <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()">
-        <option value="">Todas</option>
-        @for (cat of categories; track cat.id) {
-          <option [value]="cat.id">{{ cat.name }}</option>
-        }
-      </select>
+    <div class="row g-2">
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Data Início</label>
+        <input type="date" class="form-control form-control-sm" [value]="filterStartDate" (change)="filterStartDate = $any($event.target).value; onFilterChange()" aria-label="Data inicial">
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Data Fim</label>
+        <input type="date" class="form-control form-control-sm" [value]="filterEndDate" (change)="filterEndDate = $any($event.target).value; onFilterChange()" aria-label="Data final">
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Tipo</label>
+        <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()" aria-label="Filtrar por tipo">
+          <option value="">Todos os Tipos</option>
+          @for (t of transactionTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Status</label>
+        <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()" aria-label="Filtrar por status">
+          <option value="">Todos os Status</option>
+          @for (s of transactionStatuses; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Membro</label>
+        <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()" aria-label="Filtrar por membro">
+          <option value="">Todos os Membros</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+        <label class="form-label small mb-1">Categoria</label>
+        <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()" aria-label="Filtrar por categoria">
+          <option value="">Todas as Categorias</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
     </div>
   </div>
 
   @if (loading) {
-    <app-loading message="Carregando transações..."></app-loading>
+    <app-loading message="Carregando lançamentos da família..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
@@ -68,42 +78,52 @@
   }
 
   @if (!loading && !errorMessage && transactions.length === 0) {
-    <app-empty-state icon="bi-arrow-left-right" message="Nenhuma transação encontrada."></app-empty-state>
+    <app-empty-state 
+      icon="bi-arrow-left-right" 
+      message="Nenhuma transação encontrada"
+      description="Tente ajustar os filtros selecionados ou cadastre uma nova receita/despesa.">
+    </app-empty-state>
   }
 
   @if (!loading && !errorMessage && transactions.length > 0) {
-    <div class="list-group">
+    <div class="transactions-stack">
       @for (tx of transactions; track tx.id) {
-        <div class="list-group-item">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="fw-medium">{{ tx.description }}</div>
-              <small class="text-muted">
-                {{ getUserName(tx.userId) }}
-                &middot; {{ getAccountName(tx.accountId) }}
-                &middot; {{ tx.transactionDate | date: 'dd/MM/yyyy' }}
-              </small>
-            </div>
-            <div class="text-end">
-              <div [class]="tx.type === 'INCOME' ? 'text-primary fw-bold' : 'text-danger fw-bold'">
-                {{ tx.type === 'INCOME' ? '+' : '-' }} R$ {{ tx.amount | number: '1.2-2' }}
-              </div>
-              <span class="badge" [ngClass]="getStatusBadgeClass(tx.status)">
-                {{ getStatusLabel(tx.status) }}
-              </span>
+        <div class="transaction-card-row hover-lift">
+          <div class="tx-icon-pill" [class.income]="tx.type === 'INCOME'" [class.expense]="tx.type === 'EXPENSE'">
+            <i class="bi" [ngClass]="tx.type === 'INCOME' ? 'bi-arrow-down-left' : 'bi-arrow-up-right'" aria-hidden="true"></i>
+          </div>
+
+          <div class="tx-main-info flex-fill">
+            <div class="fw-bold text-truncate" style="max-width: 320px;">{{ tx.description }}</div>
+            <div class="tx-meta text-muted small">
+              <span><i class="bi bi-person me-1"></i>{{ getUserName(tx.userId) }}</span>
+              <span class="mx-1">&middot;</span>
+              <span><i class="bi bi-wallet2 me-1"></i>{{ getAccountName(tx.accountId) }}</span>
+              <span class="mx-1">&middot;</span>
+              <span class="font-mono"><i class="bi bi-calendar me-1"></i>{{ tx.transactionDate | date: 'dd/MM/yyyy' }}</span>
             </div>
           </div>
+
+          <div class="tx-amount-block text-end">
+            <div class="tx-value font-mono fw-bold" [class.text-success]="tx.type === 'INCOME'" [class.text-danger]="tx.type === 'EXPENSE'">
+              {{ tx.type === 'INCOME' ? '+' : '-' }} R$ {{ tx.amount | number: '1.2-2' }}
+            </div>
+            <span class="badge" [ngClass]="getStatusBadgeClass(tx.status)">
+              {{ getStatusLabel(tx.status) }}
+            </span>
+          </div>
+
           @if (canEditTransaction(tx)) {
-            <div class="mt-2 d-flex gap-1">
-              <a [routerLink]="[tx.id, 'edit']" class="btn btn-outline-primary btn-sm">
+            <div class="tx-actions d-flex gap-1 ms-2">
+              <a [routerLink]="[tx.id, 'edit']" class="btn btn-secondary btn-sm p-1 px-2" title="Editar lançamento" aria-label="Editar">
                 <i class="bi bi-pencil"></i>
               </a>
               @if (tx.status === 'PENDING' || tx.status === 'OVERDUE') {
-                <button class="btn btn-outline-success btn-sm" (click)="payTransaction(tx)">
-                  <i class="bi bi-check-lg"></i> Pagar
+                <button class="btn btn-outline-success btn-sm p-1 px-2" (click)="payTransaction(tx)" title="Marcar como pago" aria-label="Pagar">
+                  <i class="bi bi-check-lg"></i>
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" (click)="cancelTransaction(tx)">
-                  <i class="bi bi-x-lg"></i> Cancelar
+                <button class="btn btn-outline-secondary btn-sm p-1 px-2" (click)="cancelTransaction(tx)" title="Cancelar lançamento" aria-label="Cancelar">
+                  <i class="bi bi-x-lg"></i>
                 </button>
               }
             </div>
@@ -113,12 +133,12 @@
     </div>
 
     @if (totalElements > pageSize) {
-      <div class="d-flex justify-content-center mt-3">
-        <nav>
+      <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Paginação das transações">
           <ul class="pagination pagination-sm mb-0">
             @for (page of pages; track page) {
               <li class="page-item" [class.active]="page === currentPage">
-                <button class="page-link" (click)="currentPage = page; loadTransactions()">{{ page + 1 }}</button>
+                <button class="page-link font-mono" (click)="currentPage = page; loadTransactions()">{{ page + 1 }}</button>
               </li>
             }
           </ul>

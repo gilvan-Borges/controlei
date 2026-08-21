@@ -4,15 +4,15 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
       <div>
         <div class="badge-pill primary mb-2">
-          <i class="bi bi-cpu-fill"></i> FLUXO FINANCEIRO INTELIGENTE
+          <i class="bi bi-shield-check"></i> CONTROLE FINANCEIRO FAMILIAR
         </div>
         <h1 class="hero-title">Painel Geral da Família</h1>
-        <p class="text-muted mb-0">Acompanhamento consolidado de receitas, despesas, parcelamentos e patrimônio.</p>
+        <p class="text-muted mb-0">Visão consolidada de saldos, receitas, despesas compartilhadas e patrimônio.</p>
       </div>
 
       <!-- Controls: Period & View Switcher -->
       <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="view-pill-switcher">
+        <div class="view-pill-switcher" role="group" aria-label="Alternar visão de extrato">
           <button type="button" [class.active]="view === 'individual'" (click)="switchView('individual')">
             <i class="bi bi-person"></i> Meu Extrato
           </button>
@@ -22,12 +22,12 @@
         </div>
 
         <div class="period-select-wrapper">
-          <select class="form-select form-select-sm" [value]="month" (change)="onMonthChange($event)">
+          <select class="form-select form-select-sm" [value]="month" (change)="onMonthChange($event)" aria-label="Mês selecionado">
             @for (m of months; track m.value) {
               <option [value]="m.value">{{ m.label }}</option>
             }
           </select>
-          <select class="form-select form-select-sm" [value]="year" (change)="onYearChange($event)">
+          <select class="form-select form-select-sm" [value]="year" (change)="onYearChange($event)" aria-label="Ano selecionado">
             <option [value]="2025">2025</option>
             <option [value]="2026">2026</option>
           </select>
@@ -37,16 +37,11 @@
   </div>
 
   @if (loading) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="text-muted mt-2">Calculando métricas financeiras...</p>
-    </div>
+    <app-loading message="Calculando métricas financeiras da família..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
-    <div class="alert alert-danger mb-4">
-      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
-    </div>
+    <app-error-message [message]="errorMessage"></app-error-message>
   }
 
   @if (!loading && (view === 'individual' ? individualData : familyData)) {
@@ -54,81 +49,93 @@
     <div class="row g-3 mb-4">
       <!-- Saldo Líquido -->
       <div class="col-12 col-sm-6 col-lg-3">
-        <div class="stat-widget">
+        <div class="stat-widget hover-lift">
           <div class="stat-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
             <i class="bi bi-wallet2"></i>
           </div>
           <span class="stat-label">{{ view === 'individual' ? 'Meu Saldo Disponível' : 'Saldo Total Familiar' }}</span>
-          <div class="stat-value text-success">
+          <div class="stat-value font-mono text-success">
             R$ {{ (view === 'individual' ? individualData?.balance : familyData?.balance) | number: '1.2-2' }}
+          </div>
+          <div class="stat-subtext text-success">
+            <i class="bi bi-check2-circle"></i> Disponível em conta
           </div>
         </div>
       </div>
 
       <!-- Receitas do Mês -->
       <div class="col-12 col-sm-6 col-lg-3">
-        <div class="stat-widget">
+        <div class="stat-widget hover-lift">
           <div class="stat-icon-box" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
             <i class="bi bi-arrow-down-left-circle"></i>
           </div>
           <span class="stat-label">Receitas Recebidas</span>
-          <div class="stat-value">
+          <div class="stat-value font-mono" style="color: var(--c-accent);">
             R$ {{ (view === 'individual' ? individualData?.totalIncome : familyData?.totalIncome) | number: '1.2-2' }}
+          </div>
+          <div class="stat-subtext">
+            <i class="bi bi-calendar-check"></i> Entradas do mês
           </div>
         </div>
       </div>
 
       <!-- Despesas do Mês -->
       <div class="col-12 col-sm-6 col-lg-3">
-        <div class="stat-widget">
+        <div class="stat-widget hover-lift">
           <div class="stat-icon-box" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
             <i class="bi bi-arrow-up-right-circle"></i>
           </div>
           <span class="stat-label">Despesas Pagas</span>
-          <div class="stat-value text-danger">
+          <div class="stat-value font-mono text-danger">
             R$ {{ (view === 'individual' ? individualData?.totalExpense : familyData?.totalExpense) | number: '1.2-2' }}
+          </div>
+          <div class="stat-subtext text-danger">
+            <i class="bi bi-credit-card"></i> Saídas consolidadas
           </div>
         </div>
       </div>
 
       <!-- Investimentos Custodiados -->
       <div class="col-12 col-sm-6 col-lg-3">
-        <div class="stat-widget">
+        <div class="stat-widget hover-lift">
           <div class="stat-icon-box" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
             <i class="bi bi-graph-up-arrow"></i>
           </div>
           <span class="stat-label">Patrimônio Investido</span>
-          <div class="stat-value">
+          <div class="stat-value font-mono" style="color: var(--c-indigo);">
             R$ {{ (view === 'individual' ? individualData?.totalInvested : familyData?.totalInvested) | number: '1.2-2' }}
+          </div>
+          <div class="stat-subtext">
+            <i class="bi bi-piggy-bank"></i> Reserva e ativos
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Navigation Features Row -->
+    <!-- Quick Navigation Shortcuts -->
     <div class="quick-feature-shortcuts mb-4">
-      <a routerLink="/app/cards" class="shortcut-card">
-        <i class="bi bi-credit-card-2-front-fill" style="color: #818cf8;"></i>
+      <a routerLink="/app/cards" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #818cf8; background: rgba(99, 102, 241, 0.12);"><i class="bi bi-credit-card-2-front-fill"></i></div>
         <span>Cartões & Faturas</span>
       </a>
-      <a routerLink="/app/budgets" class="shortcut-card">
-        <i class="bi bi-pie-chart-fill" style="color: #06b6d4;"></i>
+      <a routerLink="/app/budgets" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #06b6d4; background: rgba(6, 182, 212, 0.12);"><i class="bi bi-pie-chart-fill"></i></div>
         <span>Tetos & Orçamentos</span>
       </a>
-      <a routerLink="/app/goals" class="shortcut-card">
-        <i class="bi bi-piggy-bank-fill" style="color: #10b981;"></i>
+      <a routerLink="/app/goals" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.12);"><i class="bi bi-piggy-bank-fill"></i></div>
         <span>Metas & Cofrinhos</span>
       </a>
-      <a routerLink="/app/splits" class="shortcut-card">
-        <i class="bi bi-person-lines-fill" style="color: #f59e0b;"></i>
+      <a routerLink="/app/splits" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);"><i class="bi bi-person-lines-fill"></i></div>
         <span>Divisão de Contas</span>
       </a>
-      <a routerLink="/app/reports" class="shortcut-card">
-        <i class="bi bi-file-earmark-spreadsheet-fill" style="color: #ec4899;"></i>
+      <a routerLink="/app/reports" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #ec4899; background: rgba(236, 72, 153, 0.12);"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
         <span>Extrato & IRPF</span>
       </a>
-      <a routerLink="/app/receipts" class="shortcut-card">
-        <i class="bi bi-receipt-cutoff" style="color: #3b82f6;"></i>
+      <a routerLink="/app/receipts" class="shortcut-card hover-lift">
+        <div class="shortcut-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.12);"><i class="bi bi-receipt-cutoff"></i></div>
         <span>Scanner OCR</span>
       </a>
     </div>
@@ -137,25 +144,25 @@
     <div class="row g-4">
       <!-- Left Column: Upcoming Installments Timeline -->
       <div class="col-12 col-lg-7">
-        <div class="card-luxury h-100">
+        <div class="card-luxury p-4 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-calendar-week text-primary me-2"></i> Próximos Vencimentos & Parcelas</h5>
-            <a routerLink="/app/debts" class="btn btn-outline btn-sm">Ver Todas</a>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-week text-primary me-2"></i> Próximos Vencimentos</h5>
+            <a routerLink="/app/debts" class="btn btn-outline-primary btn-sm">Ver Todas</a>
           </div>
 
           @if (individualData && individualData.upcomingInstallments && individualData.upcomingInstallments.length > 0) {
             <div class="timeline-stack">
               @for (inst of individualData.upcomingInstallments; track inst.id) {
-                <div class="timeline-row-item">
+                <div class="timeline-row-item hover-lift">
                   <div class="timeline-icon">
                     <i class="bi bi-clock-history text-warning"></i>
                   </div>
                   <div class="timeline-info flex-fill">
-                    <strong>{{ inst.debtDescription }}</strong>
-                    <small class="text-muted d-block">Parcela {{ inst.installmentNumber }} &middot; Vencimento em {{ inst.dueDate | date: 'dd/MM/yyyy' }}</small>
+                    <strong class="d-block text-truncate" style="max-width: 240px;">{{ inst.debtDescription }}</strong>
+                    <small class="text-muted font-mono">Parcela {{ inst.installmentNumber }} &middot; Vencimento: {{ inst.dueDate | date: 'dd/MM/yyyy' }}</small>
                   </div>
                   <div class="timeline-val text-end">
-                    <strong>R$ {{ inst.amount | number: '1.2-2' }}</strong>
+                    <strong class="font-mono text-danger">R$ {{ inst.amount | number: '1.2-2' }}</strong>
                   </div>
                 </div>
               }
@@ -171,26 +178,26 @@
 
       <!-- Right Column: Family Member Balances -->
       <div class="col-12 col-lg-5">
-        <div class="card-luxury h-100">
+        <div class="card-luxury p-4 h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-people-fill text-primary me-2"></i> Membros da Família</h5>
-            <a routerLink="/app/users" class="btn btn-outline btn-sm">Gerenciar</a>
+            <h5 class="mb-0 fw-bold"><i class="bi bi-people-fill text-primary me-2"></i> Balanço da Família</h5>
+            <a routerLink="/app/users" class="btn btn-outline-primary btn-sm">Gerenciar</a>
           </div>
 
           @if (familyData && familyData.userDetails && familyData.userDetails.length > 0) {
             <div class="members-stack">
               @for (m of familyData.userDetails; track m.userId) {
-                <div class="member-list-pill">
-                  <div class="avatar-ring" style="width: 38px; height: 38px; font-size: 1rem;">
-                    <span>{{ m.userName.charAt(0) }}</span>
+                <div class="member-list-pill hover-lift">
+                  <div class="avatar-ring-member">
+                    <span>{{ m.userName.charAt(0).toUpperCase() }}</span>
                   </div>
                   <div class="flex-fill">
                     <strong>{{ m.userName }}</strong>
-                    <small class="text-muted d-block">Receita: R$ {{ m.income | number: '1.2-2' }} &middot; Gasto: R$ {{ m.expense | number: '1.2-2' }}</small>
+                    <small class="text-muted d-block font-mono">Entradas: R$ {{ m.income | number: '1.2-2' }} &middot; Gastos: R$ {{ m.expense | number: '1.2-2' }}</small>
                   </div>
                   <div class="text-end">
                     <small class="text-muted font-xs d-block">SALDO</small>
-                    <strong [ngClass]="m.balance >= 0 ? 'text-success' : 'text-danger'">
+                    <strong class="font-mono" [ngClass]="m.balance >= 0 ? 'text-success' : 'text-danger'">
                       R$ {{ m.balance | number: '1.2-2' }}
                     </strong>
                   </div>

@@ -14,6 +14,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  isDark = true;
 
   constructor(
     private fb: FormBuilder,
@@ -21,6 +22,7 @@ export class LoginComponent implements OnInit {
     private route: ActivatedRoute,
     private authService: AuthService
   ) {
+    this.initTheme();
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -33,6 +35,24 @@ export class LoginComponent implements OnInit {
         this.successMessage = 'Conta criada com sucesso! Faça login para continuar.';
       }
     });
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    const theme = this.isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('controlei-theme', theme);
+  }
+
+  private initTheme(): void {
+    const saved = localStorage.getItem('controlei-theme');
+    if (saved === 'light') {
+      this.isDark = false;
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      this.isDark = true;
+      document.documentElement.removeAttribute('data-theme');
+    }
   }
 
   fillDemo(role: 'admin' | 'member'): void {

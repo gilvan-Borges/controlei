@@ -4,48 +4,44 @@ import { Component, Input } from '@angular/core';
   selector: 'app-summary-card',
   standalone: false,
   template: `
-    <div class="summary-card glass-panel shine" [class]="'variant-' + variant">
-      <small>{{ label }}</small>
-      <strong [class]="colorClass">{{ prefix }}{{ formattedValue }}</strong>
+    <div class="summary-card stat-widget hover-lift" [class]="'variant-' + variant">
+      @if (icon) {
+        <div class="stat-icon-box" [ngClass]="iconClass">
+          <i class="bi" [ngClass]="icon" aria-hidden="true"></i>
+        </div>
+      }
+      <span class="stat-label">{{ label }}</span>
+      <div class="stat-value font-mono" [class]="colorClass">{{ prefix }}{{ formattedValue }}</div>
+      @if (trendText) {
+        <div class="stat-subtext">
+          <i class="bi" [ngClass]="trendIcon"></i>
+          <span>{{ trendText }}</span>
+        </div>
+      }
     </div>
   `,
   styles: [`
     .summary-card {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.3rem;
-      padding: 0.8rem 0.95rem;
+      height: 100%;
       cursor: default;
     }
 
-    small {
-      color: var(--controlei-muted);
-      font-size: 0.6rem;
-      font-weight: 650;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    strong {
-      font-size: 1.1rem;
-      font-weight: 750;
-      letter-spacing: -0.02em;
-      color: var(--controlei-text);
-      transition: color 0.3s ease;
-    }
-
-    .variant-success strong { color: var(--controlei-success); }
-    .variant-danger strong { color: var(--controlei-danger); }
-    .variant-warning strong { color: var(--controlei-warning); }
-    .variant-primary strong { color: var(--controlei-primary); }
+    .icon-primary { background: rgba(var(--c-primary-rgb), 0.15); color: var(--c-primary); }
+    .icon-success { background: rgba(var(--c-success-rgb), 0.15); color: var(--c-success); }
+    .icon-danger { background: rgba(var(--c-danger-rgb), 0.15); color: var(--c-danger); }
+    .icon-warning { background: rgba(var(--c-warning-rgb), 0.15); color: var(--c-warning); }
+    .icon-info { background: rgba(var(--c-info-rgb), 0.15); color: var(--c-info); }
+    .icon-muted { background: var(--c-surface-elevated); color: var(--c-text-muted); }
   `]
 })
 export class SummaryCardComponent {
   @Input() label = '';
   @Input() value = 0;
   @Input() prefix = 'R$ ';
-  @Input() variant: 'primary' | 'success' | 'danger' | 'warning' | 'muted' = 'muted';
+  @Input() icon = '';
+  @Input() trendText = '';
+  @Input() trendIcon = 'bi-arrow-up-right';
+  @Input() variant: 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'muted' = 'muted';
 
   get colorClass(): string {
     const map: Record<string, string> = {
@@ -53,9 +49,14 @@ export class SummaryCardComponent {
       success: 'text-success',
       danger: 'text-danger',
       warning: 'text-warning',
-      muted: 'text-muted'
+      info: 'text-info',
+      muted: ''
     };
-    return map[this.variant] || 'text-muted';
+    return map[this.variant] || '';
+  }
+
+  get iconClass(): string {
+    return 'icon-' + (this.variant || 'muted');
   }
 
   get formattedValue(): string {

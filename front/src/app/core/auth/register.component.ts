@@ -14,18 +14,38 @@ export class RegisterComponent {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  isDark = true;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private userService: UserService
   ) {
+    this.initTheme();
     this.registerForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordsMatch });
+  }
+
+  private initTheme(): void {
+    const saved = localStorage.getItem('controlei-theme');
+    if (saved === 'light') {
+      this.isDark = false;
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      this.isDark = true;
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    const theme = this.isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('controlei-theme', theme);
   }
 
   private passwordsMatch(group: FormGroup): { [key: string]: boolean } | null {
@@ -58,7 +78,7 @@ export class RegisterComponent {
     }).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Conta criada com sucesso! Redirecionando para o login...';
+        this.successMessage = 'Família cadastrada com sucesso! Redirecionando para o login...';
         setTimeout(() => {
           this.router.navigate(['/login'], { queryParams: { registered: 'true' } });
         }, 1500);
