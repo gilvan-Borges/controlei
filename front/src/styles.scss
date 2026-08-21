@@ -319,6 +319,58 @@ a {
 }
 
 /* ============================================================
+   HERO PANEL & VIEW SWITCHER
+   ============================================================ */
+.dashboard-hero-panel {
+  background: linear-gradient(135deg, rgba(var(--c-primary-rgb), 0.08) 0%, rgba(var(--c-indigo-rgb), 0.05) 100%), var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-lg);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--c-shadow-sm);
+
+  .hero-title {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.03em;
+  }
+}
+
+.view-pill-switcher {
+  display: inline-flex;
+  background: var(--c-surface-elevated);
+  border: 1px solid var(--c-border);
+  border-radius: 9999px;
+  padding: 4px;
+  gap: 4px;
+
+  button {
+    border: none;
+    background: transparent;
+    color: var(--c-text-muted);
+    padding: 0.45rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &.active {
+      background: var(--c-primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(var(--c-primary-rgb), 0.35);
+    }
+
+    &:hover:not(.active) {
+      color: var(--c-text);
+    }
+  }
+}
+
+/* ============================================================
    PAGE HEADER LUXURY
    ============================================================ */
 .page-header-luxury {

@@ -421,7 +421,10 @@
 
 .page-content-area {
   flex: 1;
-  padding: 1.5rem 2rem 3rem;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .app-shell-mobile {
