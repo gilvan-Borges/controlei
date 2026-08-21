@@ -11,17 +11,11 @@
 
     <div class="header-actions">
       <!-- Period Selector -->
-      <div class="period-picker-group">
-        <select class="form-select select-period" [(ngModel)]="month" (change)="onPeriodChange()">
-          @for (m of months; track m.value) {
-            <option [value]="m.value">{{ m.label }}</option>
-          }
-        </select>
-        <select class="form-select select-period" [(ngModel)]="year" (change)="onPeriodChange()">
-          <option [value]="2025">2025</option>
-          <option [value]="2026">2026</option>
-        </select>
-      </div>
+      <app-period-selector
+        [month]="month"
+        [year]="year"
+        (periodChange)="onPeriodSelect($event)"
+      ></app-period-selector>
 
       <button class="btn btn-primary" (click)="openCreateModal()">
         <i class="bi bi-plus-circle"></i>

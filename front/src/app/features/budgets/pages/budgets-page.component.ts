@@ -80,6 +80,12 @@ export class BudgetsPageComponent implements OnInit {
     });
   }
 
+  onPeriodSelect(period: { month: number; year: number }): void {
+    this.month = period.month;
+    this.year = period.year;
+    this.loadData();
+  }
+
   onPeriodChange(): void {
     this.loadData();
   }

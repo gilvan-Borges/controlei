@@ -53,6 +53,14 @@ export class DashboardPageComponent implements OnInit {
     }
   }
 
+  onPeriodChange(period: { month: number; year: number }): void {
+    this.month = period.month;
+    this.year = period.year;
+    this.individualData = null;
+    this.familyData = null;
+    this.loadData();
+  }
+
   onMonthChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     this.month = parseInt(select.value, 10);

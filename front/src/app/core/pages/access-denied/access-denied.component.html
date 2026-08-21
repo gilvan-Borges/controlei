@@ -1,0 +1,28 @@
+<div class="error-page-wrapper">
+  <div class="error-card animate-in">
+    <div class="error-illustration access-denied-theme">
+      <div class="glow-orb-warning"></div>
+      <div class="error-code-badge badge-warning">403</div>
+      <i class="bi bi-shield-lock error-icon"></i>
+    </div>
+
+    <div class="error-text-group">
+      <span class="micro-tag text-warning">ACESSO RESTRITO</span>
+      <h1 class="error-title">Permissão Insuficiente</h1>
+      <p class="error-description">
+        Você não tem privilégios de <strong>Responsável Familiar / Administrador</strong> para acessar esta funcionalidade. Solicite a alteração de permissão ao administrador da sua conta familiar.
+      </p>
+    </div>
+
+    <div class="error-actions-row">
+      <button type="button" class="btn btn-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+        <span>Voltar</span>
+      </button>
+      <button type="button" class="btn btn-primary" (click)="goDashboard()">
+        <i class="bi bi-speedometer2"></i>
+        <span>Ir para o Dashboard</span>
+      </button>
+    </div>
+  </div>
+</div>

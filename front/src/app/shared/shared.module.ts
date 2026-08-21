@@ -12,6 +12,7 @@ import { ConfirmModalComponent } from './components/confirm-modal/confirm-modal.
 import { EmptyStateComponent } from './components/empty-state/empty-state.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
+import { PeriodSelectorComponent } from './components/period-selector/period-selector.component';
 
 const SHARED_COMPONENTS = [
   ActionButtonComponent,
@@ -23,7 +24,8 @@ const SHARED_COMPONENTS = [
   ConfirmModalComponent,
   EmptyStateComponent,
   LoadingComponent,
-  ErrorMessageComponent
+  ErrorMessageComponent,
+  PeriodSelectorComponent
 ];
 
 @NgModule({

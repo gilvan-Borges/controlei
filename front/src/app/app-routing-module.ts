@@ -4,6 +4,8 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 import { LoginComponent } from './core/auth/login.component';
 import { RegisterComponent } from './core/auth/register.component';
+import { NotFoundComponent } from './core/pages/not-found/not-found.component';
+import { AccessDeniedComponent } from './core/pages/access-denied/access-denied.component';
 
 const routes: Routes = [
   {
@@ -13,6 +15,18 @@ const routes: Routes = [
   {
     path: 'register',
     component: RegisterComponent
+  },
+  {
+    path: '403',
+    component: AccessDeniedComponent
+  },
+  {
+    path: 'access-denied',
+    component: AccessDeniedComponent
+  },
+  {
+    path: '404',
+    component: NotFoundComponent
   },
   {
     path: 'app',
@@ -102,6 +116,10 @@ const routes: Routes = [
     path: '',
     redirectTo: 'login',
     pathMatch: 'full'
+  },
+  {
+    path: '**',
+    component: NotFoundComponent
   }
 ];
 

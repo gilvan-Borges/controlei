@@ -6,10 +6,14 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './core/auth/auth.module';
+import { NotFoundComponent } from './core/pages/not-found/not-found.component';
+import { AccessDeniedComponent } from './core/pages/access-denied/access-denied.component';
 
 @NgModule({
   declarations: [
-    App
+    App,
+    NotFoundComponent,
+    AccessDeniedComponent
   ],
   imports: [
     BrowserModule,

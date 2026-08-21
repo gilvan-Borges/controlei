@@ -34,6 +34,11 @@ export class ReportsPageComponent implements OnInit {
     this.loadTaxDeclaration();
   }
 
+  onPeriodSelect(period: { month: number; year: number }): void {
+    this.selectedMonth = period.month;
+    this.selectedYear = period.year;
+  }
+
   loadTaxDeclaration(): void {
     this.loadingTax = true;
     this.errorMessage = '';
