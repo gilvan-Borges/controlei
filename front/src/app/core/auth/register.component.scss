@@ -3,240 +3,449 @@
   min-height: 100vh;
 }
 
-.auth-page-container {
+.split-auth-page {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-  background-color: var(--c-bg);
   position: relative;
+  background-color: #064e3b;
 }
 
-/* ── Top Floating Navigation ── */
-.top-nav-bar {
+/* ── Top Floating Theme Toggle ── */
+.floating-theme-toggle {
   position: absolute;
-  top: 1.25rem;
-  right: 1.5rem;
-  z-index: 10;
+  top: 1.5rem;
+  right: 1.75rem;
+  z-index: 100;
 }
 
-.theme-switcher-pill {
+.theme-pill-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.85rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--c-radius-sm);
-  color: var(--c-text-muted);
+  padding: 0.45rem 0.95rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  color: #ffffff;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 650;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    color: var(--c-text);
-    border-color: var(--c-border-hover);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
   }
 }
 
-/* ── Central Centered Card Wrapper ── */
-.auth-card-wrapper {
-  width: 100%;
-  max-width: 960px;
+/* ── Split Layout Grid ── */
+.split-layout-grid {
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  border-radius: var(--c-radius-lg);
-  border: 1px solid var(--c-border);
-  background: var(--c-surface-card);
-  box-shadow: var(--c-shadow-lg);
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
+  grid-template-columns: 48% 52%;
+  min-height: 100vh;
 
-  @media (max-width: 860px) {
+  @media (max-width: 960px) {
     grid-template-columns: 1fr;
-    max-width: 480px;
   }
 }
 
-/* ── Left Hero Section ── */
-.auth-hero-section {
-  padding: 3rem 2.5rem;
-  background: var(--c-bg-subtle);
-  border-right: 1px solid var(--c-border);
+/* ============================================================
+   LEFT PANEL: DEEP EMERALD HERO SHOWCASE (Padrão Screenshot)
+   ============================================================ */
+.auth-panel-hero {
+  background-color: #084335;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  padding: 4rem 3.5rem;
+  color: #ffffff;
 
-  @media (max-width: 860px) {
+  @media (max-width: 960px) {
     display: none;
   }
-
-  .back-nav-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--c-text-muted);
-    font-size: 0.8rem;
-    font-weight: 600;
-    width: fit-content;
-    transition: color 0.15s ease;
-
-    &:hover {
-      color: var(--c-primary);
-    }
-  }
-
-  .brand-badge-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: var(--c-radius-sm);
-    background: var(--c-surface);
-    border: 1px solid var(--c-border);
-    font-size: 0.68rem;
-    font-weight: 750;
-    letter-spacing: 0.08em;
-    color: var(--c-primary);
-    width: fit-content;
-  }
-
-  .brand-title-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-
-    .brand-logo-gem {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--c-radius-sm);
-      background: var(--c-surface);
-      border: 1px solid var(--c-border);
-      color: var(--c-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
-
-    .brand-logo-text {
-      font-size: 1.85rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      color: var(--c-text);
-      margin: 0;
-    }
-  }
-
-  .brand-description {
-    color: var(--c-text-muted);
-    font-size: 0.88rem;
-    line-height: 1.6;
-  }
 }
 
-.feature-pills-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.hero-content-inner {
+  width: 100%;
+  max-width: 480px;
 }
 
-.feature-pill-item {
+.hero-brand-header {
   display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
+  align-items: center;
+  gap: 0.65rem;
 
-  .feature-icon-box {
-    width: 34px;
-    height: 34px;
-    border-radius: var(--c-radius-sm);
+  .hero-logo-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    color: #34d399;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
-    background: var(--c-surface);
-    border: 1px solid var(--c-border);
-    color: var(--c-primary);
+    font-size: 1.25rem;
+  }
+
+  .hero-brand-name {
+    font-size: 1.45rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+.hero-headline {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.hero-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #a7f3d0;
+}
+
+.hero-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.hero-feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+
+  .feature-icon-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #34d399;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
     flex-shrink: 0;
   }
 
-  .feature-text-block {
-    .feature-title {
-      font-size: 0.84rem;
-      font-weight: 700;
-      color: var(--c-text);
+  .feature-detail {
+    .feature-heading {
+      font-size: 0.92rem;
+      font-weight: 750;
+      color: #ffffff;
       margin-bottom: 0.15rem;
     }
 
-    .feature-desc {
-      font-size: 0.76rem;
-      color: var(--c-text-muted);
+    .feature-sub {
+      font-size: 0.82rem;
+      color: #6ee7b7;
       margin: 0;
       line-height: 1.4;
     }
   }
 }
 
-/* ── Right Form Card ── */
-.auth-form-card {
-  padding: 3rem 2.5rem;
+/* ============================================================
+   RIGHT PANEL: CLEAN CARD CONTAINER (Padrão Screenshot)
+   ============================================================ */
+.auth-panel-card-container {
+  background-color: #f6f3eb;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  background: var(--c-surface-card);
+  padding: 3rem 2rem;
+
+  @media (max-width: 560px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.register-floating-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2.25rem 2.25rem 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
 
   @media (max-width: 540px) {
-    padding: 2rem 1.5rem;
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+.register-card-header {
+  .register-emblem-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e2ede8;
+    color: #059669;
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
   }
 
-  .form-title {
+  .register-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--c-text);
-    margin-bottom: 0.25rem;
+    color: #0f172a;
+    margin-bottom: 0.2rem;
+    font-family: 'Outfit', sans-serif;
   }
 
-  .form-subtitle {
-    font-size: 0.84rem;
+  .register-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
     margin: 0;
   }
 }
 
-/* ── Input Styling ── */
-.input-with-icon {
+/* ── Profile Selector ── */
+.account-type-group {
+  .section-micro-label {
+    font-size: 0.74rem;
+    font-weight: 750;
+    color: #334155;
+    margin-bottom: 0.45rem;
+    display: block;
+  }
+
+  .type-selector-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+
+    .type-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #fafafa;
+
+      .type-icon {
+        font-size: 1.2rem;
+        color: #64748b;
+      }
+
+      .type-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+
+        strong {
+          font-size: 0.8rem;
+          color: #0f172a;
+        }
+
+        small {
+          font-size: 0.68rem;
+          color: #64748b;
+        }
+      }
+
+      &.selected {
+        border-color: #059669;
+        background: #f0fdf4;
+
+        .type-icon {
+          color: #059669;
+        }
+
+        .type-text strong {
+          color: #059669;
+        }
+      }
+    }
+  }
+}
+
+/* ── Clean Form Controls ── */
+.form-label-clean {
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: #334155;
+  margin-bottom: 0.35rem;
+  display: block;
+
+  .req-star {
+    color: #ef4444;
+  }
+}
+
+.input-wrap-clean {
   position: relative;
   display: flex;
   align-items: center;
 
-  .input-leading-icon {
+  .leading-icon {
     position: absolute;
     left: 0.85rem;
-    color: var(--c-text-dim);
+    color: #94a3b8;
     font-size: 0.95rem;
     pointer-events: none;
   }
 
-  .form-control {
-    padding-left: 2.35rem;
+  .form-control-clean {
+    width: 100%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem 0.55rem 2.4rem;
+    color: #0f172a;
     font-size: 0.88rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+    }
+
+    &.is-invalid {
+      border-color: #ef4444;
+    }
   }
 }
 
-.field-error-msg {
+.error-msg-clean {
   font-size: 0.72rem;
-  color: var(--c-danger);
+  color: #ef4444;
   margin-top: 0.25rem;
   display: block;
 }
 
-.btn-submit-auth {
-  padding: 0.65rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border-radius: var(--c-radius-sm);
+/* ── Submit Action Button ── */
+.btn-submit-action {
+  background: #059669;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.72rem 1.5rem;
+  font-size: 0.92rem;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+
+  &:hover:not(:disabled) {
+    background: #10b981;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.back-login-link {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #059669;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES
+   ============================================================ */
+.split-auth-page.dark-mode {
+  .auth-panel-card-container {
+    background-color: #09090b;
+  }
+
+  .register-floating-card {
+    background: #18181b;
+    border-color: #27272a;
+
+    .register-emblem-icon {
+      background: #27272a;
+      color: #34d399;
+    }
+
+    .register-title {
+      color: #ffffff;
+    }
+
+    .register-subtitle {
+      color: #a1a1aa;
+    }
+
+    .section-micro-label {
+      color: #a1a1aa;
+    }
+
+    .account-type-group .type-selector-grid .type-card {
+      background: #121215;
+      border-color: #27272a;
+
+      .type-text strong {
+        color: #ffffff;
+      }
+      .type-text small {
+        color: #71717a;
+      }
+
+      &.selected {
+        border-color: #34d399;
+        background: #142820;
+
+        .type-icon {
+          color: #34d399;
+        }
+        .type-text strong {
+          color: #34d399;
+        }
+      }
+    }
+
+    .form-label-clean {
+      color: #ffffff;
+    }
+
+    .input-wrap-clean .form-control-clean {
+      background: #121215;
+      border-color: #27272a;
+      color: #ffffff;
+
+      &:focus {
+        border-color: #34d399;
+      }
+    }
+
+    .back-login-link {
+      color: #34d399;
+    }
+  }
 }
