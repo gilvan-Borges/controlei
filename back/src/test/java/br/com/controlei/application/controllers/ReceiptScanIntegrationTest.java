@@ -4,10 +4,10 @@ import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import br.com.controlei.domain.models.dtos.category.CreateCategoryRequest;
 import br.com.controlei.domain.models.dtos.receipt.SimulateScanRequest;
 import br.com.controlei.domain.models.enums.CategoryType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -90,7 +90,7 @@ class ReceiptScanIntegrationTest {
         mockMvc.perform(multipart("/api/v1/receipts/scan")
                         .file(file)
                         .header("Authorization", "Bearer " + auth.token()))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
@@ -101,7 +101,7 @@ class ReceiptScanIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
-        return new AuthInfo(node.get("accessToken").asText(), node.get("user").get("id").asText());
+        return new AuthInfo(node.get("accessToken").asString(), node.get("user").get("id").asString());
     }
 
     private record AuthInfo(String token, String userId) {}

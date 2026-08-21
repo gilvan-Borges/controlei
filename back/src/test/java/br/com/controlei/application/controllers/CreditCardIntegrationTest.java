@@ -9,11 +9,11 @@ import br.com.controlei.domain.models.dtos.card.UpdateCreditCardRequest;
 import br.com.controlei.domain.models.dtos.user.CreateUserRequest;
 import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.Role;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -192,7 +192,7 @@ class CreditCardIntegrationTest {
         String invoicesJson = mockMvc.perform(get("/api/v1/credit-cards/" + cardId + "/invoices")
                         .header("Authorization", "Bearer " + token))
                 .andReturn().getResponse().getContentAsString();
-        String invoiceId = objectMapper.readTree(invoicesJson).get(0).get("id").asText();
+        String invoiceId = objectMapper.readTree(invoicesJson).get(0).get("id").asString();
 
         // Paga a fatura
         PayInvoiceRequest payRequest = new PayInvoiceRequest(
@@ -214,7 +214,7 @@ class CreditCardIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payRequest)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     @Test
@@ -250,7 +250,7 @@ class CreditCardIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String createMemberAndLogin(String responsibleToken, String name, String email) throws Exception {
@@ -266,7 +266,7 @@ class CreditCardIntegrationTest {
                         .content(objectMapper.writeValueAsString(new br.com.controlei.domain.models.dtos.auth.LoginRequest(email, "senha123"))))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(loginRes).get("accessToken").asText();
+        return objectMapper.readTree(loginRes).get("accessToken").asString();
     }
 
     private String createCard(String token, String name, int closingDay, int dueDay, double limit) throws Exception {
@@ -287,7 +287,7 @@ class CreditCardIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 
     private String createAccount(String token, String name, double initialBalance) throws Exception {
@@ -306,6 +306,6 @@ class CreditCardIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 }

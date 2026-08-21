@@ -7,11 +7,11 @@ import br.com.controlei.domain.models.entities.RefreshToken;
 import br.com.controlei.infrastructure.persistence.entities.UserEntity;
 import br.com.controlei.infrastructure.repositories.RefreshTokenRepository;
 import br.com.controlei.infrastructure.repositories.UserRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -64,7 +64,7 @@ class AuthRefreshTokenIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         JsonNode registerNode = objectMapper.readTree(registerRes);
-        String registerRefreshToken = registerNode.get("refreshToken").asText();
+        String registerRefreshToken = registerNode.get("refreshToken").asString();
         assertThat(registerRefreshToken).isNotBlank();
 
         LoginRequest login = new LoginRequest("carlos.token@email.com", "senha123");
@@ -93,7 +93,7 @@ class AuthRefreshTokenIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         JsonNode registerNode = objectMapper.readTree(registerRes);
-        String initialRefreshToken = registerNode.get("refreshToken").asText();
+        String initialRefreshToken = registerNode.get("refreshToken").asString();
 
         // 1. Usa o refresh token para obter novo par
         RefreshRequest refreshRequest = new RefreshRequest(initialRefreshToken);
@@ -107,8 +107,8 @@ class AuthRefreshTokenIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
 
         JsonNode refreshNode = objectMapper.readTree(refreshRes);
-        String newAccessToken = refreshNode.get("accessToken").asText();
-        String newRefreshToken = refreshNode.get("refreshToken").asText();
+        String newAccessToken = refreshNode.get("accessToken").asString();
+        String newRefreshToken = refreshNode.get("refreshToken").asString();
 
         assertThat(newRefreshToken).isNotEqualTo(initialRefreshToken);
 
@@ -141,7 +141,7 @@ class AuthRefreshTokenIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String refreshToken = objectMapper.readTree(registerRes).get("refreshToken").asText();
+        String refreshToken = objectMapper.readTree(registerRes).get("refreshToken").asString();
 
         // Faz logout com o refresh token
         mockMvc.perform(post("/api/v1/auth/logout")

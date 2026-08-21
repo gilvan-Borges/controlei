@@ -11,10 +11,10 @@ import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.InvestmentType;
 import br.com.controlei.domain.models.enums.Role;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -138,7 +138,7 @@ class InvestmentIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     @Test
@@ -279,7 +279,7 @@ class InvestmentIntegrationTest {
                         .content(objectMapper.writeValueAsString(accReq)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        UUID accountId = UUID.fromString(objectMapper.readTree(accRes).get("id").asText());
+        UUID accountId = UUID.fromString(objectMapper.readTree(accRes).get("id").asString());
 
         UUID investmentId = createInvestment(token, userId, "FII HGLG11", InvestmentType.REAL_ESTATE_FUND, BigDecimal.valueOf(5000));
 
@@ -370,7 +370,7 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String getCurrentUserId(String token) throws Exception {
@@ -379,7 +379,7 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private UUID createCategory(String token, String name, CategoryType type) throws Exception {
@@ -391,7 +391,7 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createInvestment(String token, String userId, String name,
@@ -405,7 +405,7 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private String createMember(String token, String name, String email) throws Exception {
@@ -417,7 +417,7 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private String login(String email, String password) throws Exception {
@@ -429,6 +429,6 @@ class InvestmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 }

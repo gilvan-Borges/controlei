@@ -9,10 +9,10 @@ import br.com.controlei.domain.models.dtos.transaction.CreateTransactionRequest;
 import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.TransactionType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -139,7 +139,7 @@ class BudgetIntegrationTest {
                         .header("Authorization", "Bearer " + auth.token())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
@@ -150,7 +150,7 @@ class BudgetIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
-        return new AuthInfo(node.get("accessToken").asText(), node.get("user").get("id").asText());
+        return new AuthInfo(node.get("accessToken").asString(), node.get("user").get("id").asString());
     }
 
     private record AuthInfo(String token, String userId) {}
@@ -169,7 +169,7 @@ class BudgetIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 
     private String createCategory(String token, String name, CategoryType type) throws Exception {
@@ -180,7 +180,7 @@ class BudgetIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 
     private void createExpense(String token, String userId, String accountId, String categoryId, double amount, LocalDate date) throws Exception {

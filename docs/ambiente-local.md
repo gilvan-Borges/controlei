@@ -2,7 +2,7 @@
 
 ## Pré-requisitos
 
-- Java 21+
+- Java 25+
 - Docker e Docker Compose
 - Maven (ou use o wrapper `mvnw.cmd`)
 

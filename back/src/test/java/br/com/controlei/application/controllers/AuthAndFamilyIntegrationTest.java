@@ -9,10 +9,10 @@ import br.com.controlei.domain.models.enums.Role;
 import br.com.controlei.infrastructure.persistence.entities.UserEntity;
 import br.com.controlei.infrastructure.repositories.UserRepository;
 import br.com.controlei.infrastructure.security.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -110,7 +110,7 @@ class AuthAndFamilyIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableEntity())
+                .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.error").value("BUSINESS_ERROR"));
     }
 
@@ -302,7 +302,7 @@ class AuthAndFamilyIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableEntity())
+                .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.error").value("BUSINESS_ERROR"));
     }
 
@@ -340,7 +340,7 @@ class AuthAndFamilyIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String login(String email, String password) throws Exception {
@@ -353,7 +353,7 @@ class AuthAndFamilyIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String createMember(String token, String name, String email) throws Exception {
@@ -367,7 +367,7 @@ class AuthAndFamilyIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private String createMemberInAnotherFamily(String familyName, String responsibleName, String email) throws Exception {

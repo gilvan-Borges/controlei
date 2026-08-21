@@ -12,10 +12,10 @@ import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.RecurrenceFrequency;
 import br.com.controlei.domain.models.enums.TransactionStatus;
 import br.com.controlei.domain.models.enums.TransactionType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -156,7 +156,7 @@ class RecurringTransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        String id = objectMapper.readTree(res).get("id").asText();
+        String id = objectMapper.readTree(res).get("id").asString();
 
         // Pausa a recorrência
         mockMvc.perform(patch("/api/v1/recurring-transactions/" + id + "/toggle")
@@ -178,7 +178,7 @@ class RecurringTransactionIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String createAccount(String token, String name) throws Exception {
@@ -195,7 +195,7 @@ class RecurringTransactionIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 
     private String createCategory(String token, String name, CategoryType type) throws Exception {
@@ -206,6 +206,6 @@ class RecurringTransactionIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 }

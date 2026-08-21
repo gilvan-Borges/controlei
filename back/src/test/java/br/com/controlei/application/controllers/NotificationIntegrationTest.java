@@ -3,10 +3,10 @@ package br.com.controlei.application.controllers;
 import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import br.com.controlei.domain.models.dtos.notification.CreateNotificationRequest;
 import br.com.controlei.domain.models.enums.NotificationType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -56,7 +56,7 @@ class NotificationIntegrationTest {
                 .andExpect(jsonPath("$.read").value(false))
                 .andReturn().getResponse().getContentAsString();
 
-        String notif1Id = objectMapper.readTree(res1).get("id").asText();
+        String notif1Id = objectMapper.readTree(res1).get("id").asString();
 
         CreateNotificationRequest notif2 = new CreateNotificationRequest(
                 UUID.fromString(auth.userId()),
@@ -116,7 +116,7 @@ class NotificationIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
-        return new AuthInfo(node.get("accessToken").asText(), node.get("user").get("id").asText());
+        return new AuthInfo(node.get("accessToken").asString(), node.get("user").get("id").asString());
     }
 
     private record AuthInfo(String token, String userId) {}

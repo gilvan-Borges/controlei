@@ -1,13 +1,21 @@
-<div class="container-fluid px-0">
-  <div class="d-flex align-items-center mb-3">
-    <a routerLink="/app/accounts" class="btn btn-outline-secondary btn-sm me-2">
-      <i class="bi bi-arrow-left"></i>
-    </a>
-    <h5 class="mb-0">{{ isEdit ? 'Editar Conta' : 'Nova Conta' }}</h5>
+<div class="container-fluid px-0 animate-in">
+  <div class="page-header-luxury mb-4">
+    <div class="page-title-group">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <a routerLink="/app/accounts" class="btn btn-secondary btn-sm" title="Voltar" aria-label="Voltar">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="badge-pill primary">
+          <i class="bi bi-wallet2"></i> CONTA BANCÁRIA
+        </span>
+      </div>
+      <h1 class="fw-bold mb-1">{{ isEdit ? 'Editar Conta Bancária' : 'Nova Conta Bancária' }}</h1>
+      <p class="text-muted small mb-0">Configure contas correntes, poupanças, carteiras ou contas de investimento da família.</p>
+    </div>
   </div>
 
   @if (loading) {
-    <app-loading message="Carregando..."></app-loading>
+    <app-loading message="Carregando dados da conta..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
@@ -15,74 +23,84 @@
   }
 
   @if (!loading) {
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label for="name" class="form-label">Nome</label>
-        <input
-          type="text"
-          id="name"
-          class="form-control"
-          formControlName="name"
-          placeholder="Nome da conta"
-          [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
-        />
-        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
-          <div class="invalid-feedback">Nome é obrigatório.</div>
-        }
-      </div>
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-7">
+        <div class="card-luxury p-4 p-md-5">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="name" class="form-label">Nome da Conta / Instituição</label>
+                <input
+                  type="text"
+                  id="name"
+                  class="form-control"
+                  formControlName="name"
+                  placeholder="Ex: Nubank Conta Principal, Itaú Reserva, Carteira Dinheiro"
+                  [class.is-invalid]="form.get('name')?.touched && form.get('name')?.invalid"
+                />
+                @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+                  <div class="invalid-feedback">Nome da conta é obrigatório.</div>
+                }
+              </div>
 
-      <div class="mb-3">
-        <label for="type" class="form-label">Tipo</label>
-        <select id="type" class="form-select" formControlName="type">
-          @for (t of accountTypes; track t.value) {
-            <option [value]="t.value">{{ t.label }}</option>
-          }
-        </select>
-      </div>
+              <div class="col-12 col-md-6">
+                <label for="type" class="form-label">Tipo de Conta</label>
+                <select id="type" class="form-select" formControlName="type">
+                  @for (t of accountTypes; track t.value) {
+                    <option [value]="t.value">{{ t.label }}</option>
+                  }
+                </select>
+              </div>
 
-      <div class="mb-3">
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" id="shared" formControlName="shared">
-          <label class="form-check-label" for="shared">Conta compartilhada</label>
+              <div class="col-12 col-md-6">
+                <label for="initialBalance" class="form-label">Saldo Inicial (R$)</label>
+                <app-money-input formControlName="initialBalance"></app-money-input>
+              </div>
+
+              @if (showUserField) {
+                <div class="col-12">
+                  <label for="userId" class="form-label">Titular Principal</label>
+                  <select id="userId" class="form-select" formControlName="userId">
+                    <option value="">Selecione um membro</option>
+                    @for (user of users; track user.id) {
+                      <option [value]="user.id">{{ user.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <div class="col-12">
+                <div class="form-check form-switch p-3 rounded-3" style="background: var(--c-surface-elevated); border: 1px solid var(--c-border);">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" id="shared" formControlName="shared">
+                  <label class="form-check-label fw-bold" for="shared">Conta Compartilhada com a Família</label>
+                  <small class="text-muted d-block ms-5">Permite que todos os membros familiares visualizem o saldo e movimentações.</small>
+                </div>
+              </div>
+
+              @if (isEdit) {
+                <div class="col-12">
+                  <div class="form-check form-switch p-3 rounded-3" style="background: var(--c-surface-elevated); border: 1px solid var(--c-border);">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" id="active" formControlName="active">
+                    <label class="form-check-label fw-bold" for="active">Conta Ativa</label>
+                    <small class="text-muted d-block ms-5">Contas inativas não aparecem nas opções de novos lançamentos.</small>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+              <a routerLink="/app/accounts" class="btn btn-secondary">Cancelar</a>
+              <app-action-button
+                type="submit"
+                [label]="isEdit ? 'Salvar Alterações' : 'Criar Conta'"
+                icon="bi-check-lg"
+                [loading]="saving"
+                [disabled]="form.invalid"
+              ></app-action-button>
+            </div>
+          </form>
         </div>
       </div>
-
-      @if (showUserField) {
-        <div class="mb-3">
-          <label for="userId" class="form-label">Usuário</label>
-          <select id="userId" class="form-select" formControlName="userId">
-            <option value="">Selecione um usuário</option>
-            @for (user of users; track user.id) {
-              <option [value]="user.id">{{ user.name }}</option>
-            }
-          </select>
-        </div>
-      }
-
-      <div class="mb-3">
-        <label for="initialBalance" class="form-label">Saldo Inicial</label>
-        <app-money-input formControlName="initialBalance"></app-money-input>
-      </div>
-
-      @if (isEdit) {
-        <div class="mb-3">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="active" formControlName="active">
-            <label class="form-check-label" for="active">Conta ativa</label>
-          </div>
-        </div>
-      }
-
-      <div class="d-flex gap-2">
-        <app-action-button
-          type="submit"
-          label="Salvar"
-          icon="bi-check-lg"
-          [loading]="saving"
-          [disabled]="form.invalid"
-        ></app-action-button>
-        <a routerLink="/app/accounts" class="btn btn-outline-secondary">Cancelar</a>
-      </div>
-    </form>
+    </div>
   }
 </div>

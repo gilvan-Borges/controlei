@@ -10,10 +10,10 @@ import br.com.controlei.domain.models.dtos.user.CreateUserRequest;
 import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.Role;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -342,7 +342,7 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String getCurrentUserId(String token) throws Exception {
@@ -351,7 +351,7 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private UUID createCategory(String token, String name, CategoryType type) throws Exception {
@@ -363,7 +363,7 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createDebt(String token, String userId, UUID categoryId) throws Exception {
@@ -380,7 +380,7 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private String createMember(String token, String name, String email) throws Exception {
@@ -392,7 +392,7 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private String login(String email, String password) throws Exception {
@@ -404,6 +404,6 @@ class DebtInstallmentIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 }

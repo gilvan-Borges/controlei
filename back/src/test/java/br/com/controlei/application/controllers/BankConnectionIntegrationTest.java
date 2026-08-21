@@ -5,10 +5,10 @@ import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import br.com.controlei.domain.models.dtos.openfinance.ConnectBankRequest;
 import br.com.controlei.domain.models.dtos.openfinance.OpenFinanceWebhookPayload;
 import br.com.controlei.domain.models.enums.AccountType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -59,7 +59,7 @@ class BankConnectionIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CONNECTED"))
                 .andReturn().getResponse().getContentAsString();
 
-        String connectionId = objectMapper.readTree(connRes).get("id").asText();
+        String connectionId = objectMapper.readTree(connRes).get("id").asString();
 
         // 2. Primeira sincronização -> 1 transação importada
         mockMvc.perform(post("/api/v1/bank-connections/" + connectionId + "/sync")
@@ -91,7 +91,7 @@ class BankConnectionIntegrationTest {
         // 6. Tentativa de sync após desconexão falha com 422
         mockMvc.perform(post("/api/v1/bank-connections/" + connectionId + "/sync")
                         .header("Authorization", "Bearer " + auth.token()))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
@@ -102,7 +102,7 @@ class BankConnectionIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
-        return new AuthInfo(node.get("accessToken").asText(), node.get("user").get("id").asText());
+        return new AuthInfo(node.get("accessToken").asString(), node.get("user").get("id").asString());
     }
 
     private record AuthInfo(String token, String userId) {}
@@ -121,6 +121,6 @@ class BankConnectionIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 }

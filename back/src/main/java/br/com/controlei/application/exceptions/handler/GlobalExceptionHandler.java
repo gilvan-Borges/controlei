@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
-        ex.getAllValidationResults().forEach(result ->
+        ex.getParameterValidationResults().forEach(result ->
                 result.getResolvableErrors().forEach(error1 ->
                         error.addFieldError(
                                 result.getMethodParameter().getParameterName(),
@@ -141,13 +141,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleBusinessException(
             BusinessException ex, HttpServletRequest request) {
         ApiError error = new ApiError(
-                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                HttpStatus.UNPROCESSABLE_CONTENT.value(),
                 ErrorCode.BUSINESS_ERROR.getCode(),
                 ex.getMessage(),
                 request.getRequestURI()
         );
 
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(error);
     }
 
     @ExceptionHandler(ForbiddenException.class)

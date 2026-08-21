@@ -39,7 +39,7 @@ services:
     networks:
       - controlei-network
 
-  # 3. Backend Spring Boot (Java 21)
+  # 3. Backend Spring Boot (Java 25)
   back:
     build:
       context: ./back

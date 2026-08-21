@@ -3,10 +3,10 @@ package br.com.controlei.application.controllers;
 import br.com.controlei.application.services.AuditLogService;
 import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import br.com.controlei.domain.models.enums.AuditAction;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -83,9 +83,9 @@ class ObservabilityIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
         return new AuthInfo(
-                node.get("accessToken").asText(),
-                node.get("user").get("id").asText(),
-                node.get("user").get("familyId").asText()
+                node.get("accessToken").asString(),
+                node.get("user").get("id").asString(),
+                node.get("user").get("familyId").asString()
         );
     }
 

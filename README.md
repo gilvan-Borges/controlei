@@ -34,7 +34,7 @@ Usuarios comuns podem visualizar os dados da familia, mas so podem editar os pro
 
 ### Backend
 
-- Java 21
+- Java 25
 - Spring Boot
 - Spring Web
 - Spring Data JPA

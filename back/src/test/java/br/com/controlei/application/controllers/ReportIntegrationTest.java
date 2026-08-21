@@ -10,10 +10,10 @@ import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.InvestmentType;
 import br.com.controlei.domain.models.enums.TransactionType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -133,7 +133,7 @@ class ReportIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var node = objectMapper.readTree(response);
-        return new AuthInfo(node.get("accessToken").asText(), node.get("user").get("id").asText());
+        return new AuthInfo(node.get("accessToken").asString(), node.get("user").get("id").asString());
     }
 
     private record AuthInfo(String token, String userId) {}
@@ -152,7 +152,7 @@ class ReportIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 
     private String createCategory(String token, String name) throws Exception {
@@ -163,6 +163,6 @@ class ReportIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(res).get("id").asText();
+        return objectMapper.readTree(res).get("id").asString();
     }
 }

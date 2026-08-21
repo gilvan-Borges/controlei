@@ -1,33 +1,45 @@
-<div class="container-fluid px-0">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Dívidas</h5>
-    <a routerLink="new" class="btn btn-primary btn-sm">
-      <i class="bi bi-plus-lg me-1"></i>Nova Dívida
-    </a>
+<div class="container-fluid px-0 animate-in">
+  <div class="page-header-luxury mb-4">
+    <div class="page-title-group">
+      <span class="badge-pill danger">
+        <i class="bi bi-calendar2-week"></i> COMPROMISSOS & DÍVIDAS
+      </span>
+      <h1 class="fw-bold mb-1">Dívidas & Financiamentos</h1>
+      <p class="text-muted small mb-0">Acompanhe compras parceladas, empréstimos, financiamentos e cronogramas de amortização.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="new" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Nova Dívida
+      </a>
+    </div>
   </div>
 
-  <!-- Filters -->
-  <div class="row g-2 mb-3">
-    <div class="col-6">
-      <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()">
-        <option value="">Todos os status</option>
-        @for (s of debtStatuses; track s.value) {
-          <option [value]="s.value">{{ s.label }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-6">
-      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
-        <option value="">Todos os membros</option>
-        @for (user of users; track user.id) {
-          <option [value]="user.id">{{ user.name }}</option>
-        }
-      </select>
+  <!-- Filters Card -->
+  <div class="card-luxury p-3 mb-4">
+    <div class="row g-2">
+      <div class="col-12 col-sm-6 col-md-4">
+        <label class="form-label small mb-1">Status da Dívida</label>
+        <select class="form-select form-select-sm" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onFilterChange()" aria-label="Filtrar por status">
+          <option value="">Todos os Status</option>
+          @for (s of debtStatuses; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-md-4">
+        <label class="form-label small mb-1">Membro Responsável</label>
+        <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()" aria-label="Filtrar por membro">
+          <option value="">Todos os Membros</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </div>
     </div>
   </div>
 
   @if (loading) {
-    <app-loading message="Carregando dívidas..."></app-loading>
+    <app-loading message="Carregando dívidas e parcelamentos..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
@@ -35,40 +47,58 @@
   }
 
   @if (!loading && !errorMessage && debts.length === 0) {
-    <app-empty-state icon="bi-credit-card" message="Nenhuma dívida encontrada."></app-empty-state>
+    <app-empty-state 
+      icon="bi-credit-card-2-front" 
+      message="Nenhuma dívida cadastrada"
+      description="Cadastre compras parceladas ou financiamentos para acompanhar o plano de quitação.">
+    </app-empty-state>
   }
 
   @if (!loading && !errorMessage && debts.length > 0) {
-    <div class="list-group">
+    <div class="d-flex flex-column gap-3">
       @for (debt of debts; track debt.id) {
-        <a [routerLink]="[debt.id]" class="list-group-item list-group-item-action">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="fw-medium">{{ debt.description }}</div>
-              <small class="text-muted">
-                {{ getUserName(debt.userId) }}
-                &middot; {{ debt.purchaseDate | date: 'dd/MM/yyyy' }}
-                &middot; {{ debt.installmentCount }}x R$ {{ debt.installmentAmount | number: '1.2-2' }}
-              </small>
+        <div class="card-luxury hover-lift p-3 p-md-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="debt-icon-circle">
+                <i class="bi bi-calendar2-range"></i>
+              </div>
+              <div>
+                <a [routerLink]="[debt.id]" class="h6 fw-bold mb-1 text-decoration-none text-reset d-block">
+                  {{ debt.description }}
+                </a>
+                <div class="text-muted small d-flex align-items-center gap-2 flex-wrap">
+                  <span class="badge-pill info" style="font-size: 0.68rem;">{{ getUserName(debt.userId) }}</span>
+                  <span>&middot;</span>
+                  <span>Compra em: {{ debt.purchaseDate | date: 'dd/MM/yyyy' }}</span>
+                  <span>&middot;</span>
+                  <span class="fw-bold font-mono text-warning">{{ debt.installmentCount }}x de R$ {{ debt.installmentAmount | number: '1.2-2' }}</span>
+                </div>
+              </div>
             </div>
-            <div class="text-end">
-              <div class="fw-bold">R$ {{ debt.totalAmount | number: '1.2-2' }}</div>
-              <span class="badge" [ngClass]="getStatusBadgeClass(debt.status)">
-                {{ getStatusLabel(debt.status) }}
-              </span>
+
+            <div class="d-flex align-items-center gap-3 ms-auto">
+              <div class="text-end">
+                <small class="text-muted d-block font-xs text-uppercase fw-bold">VALOR TOTAL</small>
+                <div class="h5 fw-bold font-mono mb-1 text-danger">R$ {{ debt.totalAmount | number: '1.2-2' }}</div>
+                <span class="badge-pill" [ngClass]="getStatusBadgeClass(debt.status)">
+                  {{ getStatusLabel(debt.status) }}
+                </span>
+              </div>
+
+              @if (canEditDebt(debt)) {
+                <div class="d-flex gap-1 border-start ps-3 ms-2">
+                  <a [routerLink]="[debt.id, 'edit']" class="btn btn-secondary btn-sm" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(debt)" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              }
             </div>
           </div>
-          @if (canEditDebt(debt)) {
-            <div class="mt-2 d-flex gap-1" (click)="$event.preventDefault(); $event.stopPropagation()">
-              <a [routerLink]="[debt.id, 'edit']" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <button class="btn btn-outline-danger btn-sm" (click)="confirmDelete(debt)">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          }
-        </a>
+        </div>
       }
     </div>
   }
@@ -77,7 +107,7 @@
     [visible]="showDeleteConfirm"
     title="Excluir Dívida"
     [message]="'Tem certeza que deseja excluir a dívida \'' + (debtToDelete?.description || '') + '\'?'"
-    confirmLabel="Excluir"
+    confirmLabel="Excluir Dívida"
     confirmVariant="danger"
     (confirmed)="onDeleteConfirm()"
     (cancelled)="onDeleteCancel()"

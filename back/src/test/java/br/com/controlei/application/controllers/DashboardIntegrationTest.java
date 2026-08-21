@@ -12,10 +12,10 @@ import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.InvestmentType;
 import br.com.controlei.domain.models.enums.Role;
 import br.com.controlei.domain.models.enums.TransactionType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -168,7 +168,7 @@ class DashboardIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        UUID debtId = UUID.fromString(objectMapper.readTree(debtResponse).get("id").asText());
+        UUID debtId = UUID.fromString(objectMapper.readTree(debtResponse).get("id").asString());
 
         String installmentsResponse = mockMvc.perform(get("/api/v1/debts/" + debtId + "/installments")
                         .header("Authorization", "Bearer " + token))
@@ -177,7 +177,7 @@ class DashboardIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        UUID firstInstallmentId = UUID.fromString(objectMapper.readTree(installmentsResponse).get(0).get("id").asText());
+        UUID firstInstallmentId = UUID.fromString(objectMapper.readTree(installmentsResponse).get(0).get("id").asString());
 
         mockMvc.perform(put("/api/v1/installments/" + firstInstallmentId + "/cancel")
                         .header("Authorization", "Bearer " + token))
@@ -279,7 +279,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String getCurrentUserId(String token) throws Exception {
@@ -288,7 +288,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private UUID createAccount(String token, String name, AccountType type, boolean shared, UUID userId) throws Exception {
@@ -300,7 +300,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createCategory(String token, String name, CategoryType type) throws Exception {
@@ -312,7 +312,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createTransaction(String token, String userId, UUID accountId, UUID categoryId,
@@ -327,7 +327,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private void createPaidTransaction(String token, String userId, UUID accountId, UUID categoryId,
@@ -350,7 +350,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private String createMember(String token, String name, String email) throws Exception {
@@ -362,7 +362,7 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private String login(String email, String password) throws Exception {
@@ -374,6 +374,6 @@ class DashboardIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 }

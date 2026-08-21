@@ -13,10 +13,10 @@ import br.com.controlei.domain.models.enums.AccountType;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.Role;
 import br.com.controlei.domain.models.enums.TransactionType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -162,7 +162,7 @@ class TransactionIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     @Test
@@ -292,7 +292,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 
     private String getCurrentUserId(String token) throws Exception {
@@ -301,7 +301,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private UUID createAccount(String token, String name, AccountType type, boolean shared, UUID userId) throws Exception {
@@ -313,7 +313,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createCategory(String token, String name, CategoryType type) throws Exception {
@@ -325,7 +325,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private UUID createTransaction(String token, String userId, UUID accountId, TransactionType type,
@@ -339,7 +339,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
     }
 
     private String createMember(String token, String name, String email) throws Exception {
@@ -351,7 +351,7 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("id").asText();
+        return objectMapper.readTree(response).get("id").asString();
     }
 
     private String login(String email, String password) throws Exception {
@@ -363,6 +363,6 @@ class TransactionIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        return objectMapper.readTree(response).get("accessToken").asText();
+        return objectMapper.readTree(response).get("accessToken").asString();
     }
 }
