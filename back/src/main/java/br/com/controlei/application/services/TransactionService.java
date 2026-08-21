@@ -33,17 +33,20 @@ public class TransactionService {
     private final CategoryRepositoryPort categoryRepository;
     private final TransactionMapper transactionMapper;
     private final AuthorizationService authorizationService;
+    private final br.com.controlei.infrastructure.kafka.EventPublisher eventPublisher;
 
     public TransactionService(TransactionRepositoryPort transactionRepository,
                               AccountRepositoryPort accountRepository,
                               CategoryRepositoryPort categoryRepository,
                               TransactionMapper transactionMapper,
-                              AuthorizationService authorizationService) {
+                              AuthorizationService authorizationService,
+                              br.com.controlei.infrastructure.kafka.EventPublisher eventPublisher) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
         this.transactionMapper = transactionMapper;
         this.authorizationService = authorizationService;
+        this.eventPublisher = eventPublisher;
     }
 
     public PageResult<TransactionResponse> listTransactions(TransactionQueryFilter filter, int page, int size) {
@@ -62,13 +65,36 @@ public class TransactionService {
 
         validateAccountBelongsToFamily(request.accountId(), familyId);
 
+        String categoryName = null;
         if (request.categoryId() != null) {
             Category category = validateCategoryBelongsToFamily(request.categoryId(), familyId);
             validateCategoryCompatibleWithType(category.getType(), request.type());
+            categoryName = category.getName();
         }
 
         Transaction transaction = transactionMapper.toEntity(request, familyId);
         Transaction saved = transactionRepository.save(transaction);
+
+        // Publica evento no Kafka assincronamente
+        try {
+            eventPublisher.publish(br.com.controlei.shared.events.KafkaTopics.TRANSACTIONS,
+                    br.com.controlei.shared.events.TransactionCreatedEvent.builder()
+                            .transactionId(saved.getId())
+                            .familyId(saved.getFamilyId())
+                            .userId(saved.getUserId())
+                            .accountId(saved.getAccountId())
+                            .categoryId(saved.getCategoryId())
+                            .categoryName(categoryName)
+                            .amount(saved.getAmount())
+                            .type(saved.getType() != null ? saved.getType().name() : null)
+                            .description(saved.getDescription())
+                            .transactionDate(saved.getTransactionDate())
+                            .build()
+            );
+        } catch (Exception ex) {
+            // Loga sem impedir o commit da transação
+        }
+
         return transactionMapper.toResponse(saved);
     }
 
@@ -110,6 +136,20 @@ public class TransactionService {
         transaction.setDeletedAt(LocalDateTime.now());
         transaction.setDeletedBy(authorizationService.currentUserId().toString());
         transactionRepository.save(transaction);
+
+        try {
+            eventPublisher.publish(br.com.controlei.shared.events.KafkaTopics.TRANSACTIONS,
+                    br.com.controlei.shared.events.TransactionDeletedEvent.builder()
+                            .transactionId(transaction.getId())
+                            .familyId(transaction.getFamilyId())
+                            .accountId(transaction.getAccountId())
+                            .amount(transaction.getAmount())
+                            .type(transaction.getType() != null ? transaction.getType().name() : null)
+                            .build()
+            );
+        } catch (Exception ex) {
+            // Loga sem travar
+        }
     }
 
     @Transactional

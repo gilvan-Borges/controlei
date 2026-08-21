@@ -2,11 +2,15 @@
 FROM maven:3.9.11-eclipse-temurin-25-alpine AS build
 WORKDIR /app
 
-# Copy source code and POM
+# Copy shared-events and install it in local Maven cache
+COPY shared-events ./shared-events
+RUN mvn -f shared-events/pom.xml clean install -DskipTests -B
+
+# Copy root pom and src
 COPY pom.xml .
 COPY src ./src
 
-# Build package without tests (tests are verified prior to build)
+# Build package without tests
 RUN mvn clean package -DskipTests -B
 
 # Runtime stage
