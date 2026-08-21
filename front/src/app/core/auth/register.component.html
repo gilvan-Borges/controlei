@@ -1,16 +1,9 @@
 <div class="auth-page-container">
-  <!-- Floating Ambient Glow Lights -->
-  <div class="ambient-glow glow-emerald"></div>
-  <div class="ambient-glow glow-cyan"></div>
-  <div class="ambient-glow glow-indigo"></div>
-
-  <!-- Floating Theme Toggle -->
+  <!-- Top Theme Switcher -->
   <div class="top-nav-bar">
     <button class="theme-switcher-pill" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Dark'">
-      <div class="theme-icon-circle">
-        <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill text-primary'"></i>
-      </div>
-      <span class="theme-label">{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
+      <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
+      <span>{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
     </button>
   </div>
 
@@ -23,49 +16,49 @@
       </a>
 
       <div class="brand-badge-pill mb-3">
-        <span class="pulse-indicator"></span>
-        <span>NOVO CADASTRO FAMILIAR</span>
+        <i class="bi bi-shield-check"></i>
+        <span>NOVO ESPAÇO FAMILIAR</span>
       </div>
 
       <div class="brand-title-row mb-3">
         <div class="brand-logo-gem">
-          <i class="bi bi-person-plus-fill"></i>
+          <i class="bi bi-wallet2"></i>
         </div>
-        <h1 class="brand-logo-text">Comece Agora</h1>
+        <h1 class="brand-logo-text">Controlei</h1>
       </div>
 
       <p class="brand-description mb-4">
-        Cadastre sua família gratuitamente e tenha controle total sobre gastos compartilhados, múltiplos cartões, metas e patrimônio em tempo real.
+        Comece hoje a transformar a vida financeira da sua família. Cadastre-se gratuitamente para centralizar receitas, despesas, cartões e metas coletivas.
       </p>
 
       <div class="feature-pills-list">
         <div class="feature-pill-item">
-          <div class="feature-icon-box icon-emerald">
-            <i class="bi bi-shield-check"></i>
+          <div class="feature-icon-box">
+            <i class="bi bi-shield-lock"></i>
           </div>
           <div class="feature-text-block">
-            <h6 class="feature-title">100% Seguro & Privado</h6>
-            <p class="feature-desc">Seus dados financeiros isolados e protegidos com criptografia ponta a ponta.</p>
+            <h6 class="feature-title">Privacidade & Segurança</h6>
+            <p class="feature-desc">Seus dados financeiros isolados e protegidos com criptografia de ponta a ponta.</p>
           </div>
         </div>
 
         <div class="feature-pill-item">
-          <div class="feature-icon-box icon-indigo">
-            <i class="bi bi-people-fill"></i>
+          <div class="feature-icon-box">
+            <i class="bi bi-people"></i>
           </div>
           <div class="feature-text-block">
             <h6 class="feature-title">Gestão Coletiva Familiar</h6>
-            <p class="feature-desc">Convide cônjuge e dependentes com limites e visibilidade personalizados.</p>
+            <p class="feature-desc">Adicione cônjuge e dependentes com visibilidade sob medida.</p>
           </div>
         </div>
 
         <div class="feature-pill-item">
-          <div class="feature-icon-box icon-cyan">
-            <i class="bi bi-graph-up-arrow"></i>
+          <div class="feature-icon-box">
+            <i class="bi bi-piggy-bank"></i>
           </div>
           <div class="feature-text-block">
-            <h6 class="feature-title">Patrimônio & Metas Vivas</h6>
-            <p class="feature-desc">Acompanhe cofrinhos compartilhados e a evolução dos seus investimentos.</p>
+            <h6 class="feature-title">Cofrinhos & Metas Compartilhadas</h6>
+            <p class="feature-desc">Acompanhe a evolução dos sonhos e planos da sua família em tempo real.</p>
           </div>
         </div>
       </div>
@@ -74,39 +67,36 @@
     <!-- Right Register Form Card -->
     <div class="auth-form-card">
       <div class="form-card-header mb-4">
-        <span class="security-chip mb-2">
-          <i class="bi bi-stars"></i> CADASTRO GRATUITO
-        </span>
         <h2 class="form-title">Criar sua Conta</h2>
-        <p class="form-subtitle">Leva menos de 1 minuto para configurar seu espaço familiar.</p>
+        <p class="form-subtitle text-muted">Leva menos de 1 minuto para configurar seu espaço familiar.</p>
       </div>
 
       @if (successMessage) {
-        <div class="alert-modern alert-success mb-3" role="alert">
-          <i class="bi bi-check-circle-fill me-2"></i>
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
+          <i class="bi bi-check-circle-fill"></i>
           <span>{{ successMessage }}</span>
         </div>
       }
 
       @if (errorMessage && !successMessage) {
-        <div class="alert-modern alert-danger mb-3" role="alert">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i>
           <span>{{ errorMessage }}</span>
         </div>
       }
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <div class="form-field-group mb-3">
-          <label class="field-label" for="regName">Nome Completo</label>
-          <div class="input-container">
-            <i class="bi bi-person field-icon"></i>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        <div class="form-group mb-3">
+          <label class="form-label" for="regName">Nome Completo</label>
+          <div class="input-with-icon">
+            <i class="bi bi-person input-leading-icon"></i>
             <input
               id="regName"
               type="text"
-              class="form-input"
+              class="form-control"
               formControlName="name"
               placeholder="Ex: João da Silva"
-              [class.has-error]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
+              [class.is-invalid]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
             />
           </div>
           @if (registerForm.get('name')?.touched && registerForm.get('name')?.invalid) {
@@ -114,17 +104,17 @@
           }
         </div>
 
-        <div class="form-field-group mb-3">
-          <label class="field-label" for="regEmail">E-mail</label>
-          <div class="input-container">
-            <i class="bi bi-envelope field-icon"></i>
+        <div class="form-group mb-3">
+          <label class="form-label" for="regEmail">E-mail</label>
+          <div class="input-with-icon">
+            <i class="bi bi-envelope input-leading-icon"></i>
             <input
               id="regEmail"
               type="email"
-              class="form-input"
+              class="form-control"
               formControlName="email"
               placeholder="seu@email.com"
-              [class.has-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+              [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
             />
           </div>
           @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
@@ -132,17 +122,17 @@
           }
         </div>
 
-        <div class="form-field-group mb-3">
-          <label class="field-label" for="regPassword">Senha</label>
-          <div class="input-container">
-            <i class="bi bi-lock field-icon"></i>
+        <div class="form-group mb-3">
+          <label class="form-label" for="regPassword">Senha</label>
+          <div class="input-with-icon">
+            <i class="bi bi-lock input-leading-icon"></i>
             <input
               id="regPassword"
               type="password"
-              class="form-input"
+              class="form-control"
               formControlName="password"
               placeholder="Mínimo 6 caracteres"
-              [class.has-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+              [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
             />
           </div>
           @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
@@ -150,17 +140,17 @@
           }
         </div>
 
-        <div class="form-field-group mb-4">
-          <label class="field-label" for="regConfirmPassword">Confirmar Senha</label>
-          <div class="input-container">
-            <i class="bi bi-lock-fill field-icon"></i>
+        <div class="form-group mb-4">
+          <label class="form-label" for="regConfirmPassword">Confirmar Senha</label>
+          <div class="input-with-icon">
+            <i class="bi bi-lock-fill input-leading-icon"></i>
             <input
               id="regConfirmPassword"
               type="password"
-              class="form-input"
+              class="form-control"
               formControlName="confirmPassword"
               placeholder="Repita a senha"
-              [class.has-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid"
+              [class.is-invalid]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')"
             />
           </div>
           @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')) {
@@ -170,22 +160,22 @@
 
         <button
           type="submit"
-          class="btn-submit-luxury"
+          class="btn btn-primary w-100 btn-submit-auth"
           [disabled]="registerForm.invalid || loading"
         >
           @if (loading) {
             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
             <span>Criando espaço familiar...</span>
           } @else {
-            <i class="bi bi-person-plus-fill"></i>
+            <i class="bi bi-person-plus-fill me-1"></i>
             <span>Criar Conta Familiar</span>
           }
         </button>
       </form>
 
-      <div class="form-card-footer mt-4 pt-3 text-center">
-        <span class="footer-prompt">Já possui uma conta?</span>
-        <a routerLink="/login" class="footer-action-link">Fazer Login</a>
+      <div class="form-card-footer mt-4 pt-3 border-top text-center">
+        <span class="text-muted small">Já possui uma conta? </span>
+        <a routerLink="/login" class="fw-bold ms-1">Fazer Login</a>
       </div>
     </div>
   </div>

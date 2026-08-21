@@ -15,6 +15,7 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   isDark = true;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -42,6 +43,10 @@ export class LoginComponent implements OnInit {
     const theme = this.isDark ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('controlei-theme', theme);
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   private initTheme(): void {
