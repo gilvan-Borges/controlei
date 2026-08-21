@@ -1,137 +1,164 @@
-<div class="login-wrapper">
-  <!-- Theme Toggle in Auth View -->
-  <button class="theme-toggle-floating" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'" [title]="isDark ? 'Tema Claro' : 'Tema Dark'">
-    <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-fill text-primary'"></i>
-    <span>{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
-  </button>
+<div class="auth-page-container">
+  <!-- Floating Ambient Glow Lights -->
+  <div class="ambient-glow glow-emerald"></div>
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-indigo"></div>
 
-  <div class="login-grid animate-in">
-    <!-- Left Hero Brand Column -->
-    <div class="hero-brand-column">
-      <div class="brand-badge-pill">
-        <span class="pulse-dot"></span>
+  <!-- Floating Theme Toggle -->
+  <div class="top-nav-bar">
+    <button class="theme-switcher-pill" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Dark'">
+      <div class="theme-icon-circle">
+        <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill text-primary'"></i>
+      </div>
+      <span class="theme-label">{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
+    </button>
+  </div>
+
+  <div class="auth-card-wrapper animate-in">
+    <!-- Left Hero Column -->
+    <div class="auth-hero-section">
+      <div class="brand-badge-pill mb-3">
+        <span class="pulse-indicator"></span>
         <span>GESTÃO FINANCEIRA FAMILIAR</span>
       </div>
 
-      <h1 class="brand-title">Controlei</h1>
-      <p class="brand-subtitle">
-        A plataforma inteligente para famílias organizarem múltiplos cartões, orçamentos, metas compartilhadas, divisão de contas e patrimônio.
+      <div class="brand-title-row mb-3">
+        <div class="brand-logo-gem">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <h1 class="brand-logo-text">Controlei</h1>
+      </div>
+
+      <p class="brand-description mb-4">
+        A plataforma definitiva para famílias modernas gerenciarem cartões múltiplos, orçamentos inteligentes, metas compartilhadas e divisão de despesas sem estresse.
       </p>
 
-      <div class="hero-feature-cards">
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+      <div class="feature-pills-list">
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-emerald">
             <i class="bi bi-shield-lock-fill"></i>
           </div>
-          <div>
-            <strong>Open Finance & OCR</strong>
-            <small class="text-muted d-block">Importação automática e leitura inteligente de cupons</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">Open Finance & Leitor OCR</h6>
+            <p class="feature-desc">Sincronização bancária automática e leitura instantânea de cupons fiscais.</p>
           </div>
         </div>
 
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #818cf8; background: rgba(99, 102, 241, 0.12);">
-            <i class="bi bi-diagram-3-fill"></i>
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-indigo">
+            <i class="bi bi-people-fill"></i>
           </div>
-          <div>
-            <strong>Divisão & Split Familiar</strong>
-            <small class="text-muted d-block">Simplificação de acertos com o menor número de transferências PIX</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">Divisão & Split Familiar</h6>
+            <p class="feature-desc">Cálculo inteligente de rateio com o menor número de transferências PIX.</p>
           </div>
         </div>
 
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #06b6d4; background: rgba(6, 182, 212, 0.12);">
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-cyan">
             <i class="bi bi-pie-chart-fill"></i>
           </div>
-          <div>
-            <strong>Tetos & Orçamentos</strong>
-            <small class="text-muted d-block">Alertas em tempo real antes de ultrapassar os limites da casa</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">Tetos & Orçamentos Vivos</h6>
+            <p class="feature-desc">Notificações preventivas antes de ultrapassar os limites financeiros da casa.</p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Right Login Card Column -->
-    <div class="login-card-column">
-      <div class="login-card-panel card-luxury">
-        <div class="card-header-block mb-4">
-          <span class="badge-pill primary mb-2">ACESSO SEGURO</span>
-          <h2 class="fw-bold mb-1">Acesse sua Conta</h2>
-          <p class="text-muted small mb-0">Entre com suas credenciais ou use o acesso rápido demonstrativo.</p>
+    <div class="auth-form-card">
+      <div class="form-card-header mb-4">
+        <span class="security-chip mb-2">
+          <i class="bi bi-lock-fill"></i> ACESSO SEGURO
+        </span>
+        <h2 class="form-title">Acesse sua Conta</h2>
+        <p class="form-subtitle">Entre com suas credenciais ou use o acesso rápido demonstrativo.</p>
+      </div>
+
+      @if (successMessage) {
+        <div class="alert-modern alert-success mb-3" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <span>{{ successMessage }}</span>
         </div>
+      }
 
-        @if (successMessage) {
-          <div class="alert alert-success mb-3" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
-          </div>
-        }
-
-        @if (errorMessage) {
-          <div class="alert alert-danger mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
-          </div>
-        }
-
-        <!-- Demo Autofill Pills -->
-        <div class="demo-pills-row mb-4">
-          <span class="text-muted small d-block mb-2 font-xs fw-bold text-uppercase" style="letter-spacing: 0.05em;">ACESSO RÁPIDO (DEMONSTRAÇÃO):</span>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary btn-sm flex-fill" (click)="fillDemo('admin')">
-              <i class="bi bi-shield-check text-success"></i> Super Admin
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm flex-fill" (click)="fillDemo('member')">
-              <i class="bi bi-person text-info"></i> Membro Família
-            </button>
-          </div>
+      @if (errorMessage) {
+        <div class="alert-modern alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <span>{{ errorMessage }}</span>
         </div>
+      }
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          <div class="mb-3">
-            <label class="form-label" for="loginEmail">E-mail</label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-envelope"></i>
-              <input
-                id="loginEmail"
-                type="email"
-                class="form-control"
-                formControlName="email"
-                placeholder="seu@email.com"
-                [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
-              />
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label class="form-label mb-0" for="loginPassword">Senha</label>
-              <a href="javascript:void(0)" class="small text-muted">Esqueceu a senha?</a>
-            </div>
-            <div class="input-icon-wrap">
-              <i class="bi bi-lock"></i>
-              <input
-                id="loginPassword"
-                type="password"
-                class="form-control"
-                formControlName="password"
-                placeholder="••••••••"
-                [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-              />
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 btn-lg shadow-sm" [disabled]="loading">
-            @if (loading) {
-              <span class="spinner-border spinner-border-sm me-2" role="status"></span> Autenticando...
-            } @else {
-              <i class="bi bi-box-arrow-in-right"></i> Entrar no Painel Familiar
-            }
+      <!-- Demo Autofill Pills -->
+      <div class="demo-access-panel mb-4">
+        <span class="demo-access-title">ACESSO RÁPIDO (DEMONSTRAÇÃO):</span>
+        <div class="demo-buttons-grid">
+          <button type="button" class="btn-demo-pill" (click)="fillDemo('admin')">
+            <i class="bi bi-shield-check text-success"></i>
+            <span>Super Admin</span>
           </button>
-        </form>
-
-        <div class="register-prompt mt-4 pt-3 border-top text-center">
-          <span class="text-muted small">Ainda não possui conta?</span>
-          <a routerLink="/register" class="fw-bold ms-1 text-primary small">Cadastrar Nova Família</a>
+          <button type="button" class="btn-demo-pill" (click)="fillDemo('member')">
+            <i class="bi bi-person-fill text-info"></i>
+            <span>Membro Família</span>
+          </button>
         </div>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-field-group mb-3">
+          <label class="field-label" for="loginEmail">E-mail</label>
+          <div class="input-container">
+            <i class="bi bi-envelope field-icon"></i>
+            <input
+              id="loginEmail"
+              type="email"
+              class="form-input"
+              formControlName="email"
+              placeholder="seu@email.com"
+              [class.has-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+            />
+          </div>
+          @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+            <span class="field-error-msg">Informe um e-mail válido.</span>
+          }
+        </div>
+
+        <div class="form-field-group mb-4">
+          <div class="field-label-row mb-1">
+            <label class="field-label mb-0" for="loginPassword">Senha</label>
+            <a href="javascript:void(0)" class="forgot-link">Esqueceu a senha?</a>
+          </div>
+          <div class="input-container">
+            <i class="bi bi-lock field-icon"></i>
+            <input
+              id="loginPassword"
+              type="password"
+              class="form-input"
+              formControlName="password"
+              placeholder="••••••••"
+              [class.has-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+            />
+          </div>
+          @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+            <span class="field-error-msg">A senha deve ter no mínimo 6 caracteres.</span>
+          }
+        </div>
+
+        <button type="submit" class="btn-submit-luxury" [disabled]="loading">
+          @if (loading) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <span>Autenticando...</span>
+          } @else {
+            <i class="bi bi-box-arrow-in-right"></i>
+            <span>Entrar no Painel</span>
+          }
+        </button>
+      </form>
+
+      <div class="form-card-footer mt-4 pt-3 text-center">
+        <span class="footer-prompt">Ainda não possui conta?</span>
+        <a routerLink="/register" class="footer-action-link">Cadastrar Nova Família</a>
       </div>
     </div>
   </div>

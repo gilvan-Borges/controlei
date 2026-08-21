@@ -1,171 +1,191 @@
-<div class="register-wrapper">
-  <!-- Theme Toggle Floating Button -->
-  <button class="theme-toggle-floating" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'" [title]="isDark ? 'Tema Claro' : 'Tema Dark'">
-    <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-fill text-primary'"></i>
-    <span>{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
-  </button>
+<div class="auth-page-container">
+  <!-- Floating Ambient Glow Lights -->
+  <div class="ambient-glow glow-emerald"></div>
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-indigo"></div>
 
-  <div class="register-grid animate-in">
+  <!-- Floating Theme Toggle -->
+  <div class="top-nav-bar">
+    <button class="theme-switcher-pill" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Dark'">
+      <div class="theme-icon-circle">
+        <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-stars-fill text-primary'"></i>
+      </div>
+      <span class="theme-label">{{ isDark ? 'Modo Claro' : 'Modo Dark' }}</span>
+    </button>
+  </div>
+
+  <div class="auth-card-wrapper animate-in">
     <!-- Left Hero Column -->
-    <div class="register-hero-column">
-      <a routerLink="/login" class="back-link mb-3">
-        <i class="bi bi-arrow-left"></i> Voltar ao login
+    <div class="auth-hero-section">
+      <a routerLink="/login" class="back-nav-link mb-3">
+        <i class="bi bi-arrow-left"></i>
+        <span>Voltar ao login</span>
       </a>
 
-      <div class="brand-badge-pill">
-        <span class="pulse-dot"></span>
+      <div class="brand-badge-pill mb-3">
+        <span class="pulse-indicator"></span>
         <span>NOVO CADASTRO FAMILIAR</span>
       </div>
 
-      <h1 class="brand-title">Comece Agora</h1>
-      <p class="brand-subtitle">
-        Cadastre sua família gratuitamente e tenha controle total sobre gastos, cartões, metas compartilhadas e investimentos em um único lugar.
+      <div class="brand-title-row mb-3">
+        <div class="brand-logo-gem">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <h1 class="brand-logo-text">Comece Agora</h1>
+      </div>
+
+      <p class="brand-description mb-4">
+        Cadastre sua família gratuitamente e tenha controle total sobre gastos compartilhados, múltiplos cartões, metas e patrimônio em tempo real.
       </p>
 
-      <div class="hero-feature-cards">
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+      <div class="feature-pills-list">
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-emerald">
             <i class="bi bi-shield-check"></i>
           </div>
-          <div>
-            <strong>100% Seguro & Privado</strong>
-            <small class="text-muted d-block">Seus dados protegidos com criptografia e isolamento multi-tenant</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">100% Seguro & Privado</h6>
+            <p class="feature-desc">Seus dados financeiros isolados e protegidos com criptografia ponta a ponta.</p>
           </div>
         </div>
 
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #818cf8; background: rgba(99, 102, 241, 0.12);">
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-indigo">
             <i class="bi bi-people-fill"></i>
           </div>
-          <div>
-            <strong>Gestão Coletiva</strong>
-            <small class="text-muted d-block">Convide o cônjuge e dependentes com permissões personalizadas</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">Gestão Coletiva Familiar</h6>
+            <p class="feature-desc">Convide cônjuge e dependentes com limites e visibilidade personalizados.</p>
           </div>
         </div>
 
-        <div class="feature-card hover-lift">
-          <div class="icon-wrap" style="color: #06b6d4; background: rgba(6, 182, 212, 0.12);">
+        <div class="feature-pill-item">
+          <div class="feature-icon-box icon-cyan">
             <i class="bi bi-graph-up-arrow"></i>
           </div>
-          <div>
-            <strong>Patrimônio & Metas</strong>
-            <small class="text-muted d-block">Acompanhe cofrinhos compartilhados e a evolução dos seus investimentos</small>
+          <div class="feature-text-block">
+            <h6 class="feature-title">Patrimônio & Metas Vivas</h6>
+            <p class="feature-desc">Acompanhe cofrinhos compartilhados e a evolução dos seus investimentos.</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Register Form Column -->
-    <div class="register-card-column">
-      <div class="register-card-panel card-luxury">
-        <div class="card-header-block mb-4">
-          <span class="badge-pill primary mb-2">CADASTRO GRATUITO</span>
-          <h2 class="fw-bold mb-1">Criar sua Conta</h2>
-          <p class="text-muted small mb-0">Leva menos de 1 minuto para configurar seu espaço familiar.</p>
+    <!-- Right Register Form Card -->
+    <div class="auth-form-card">
+      <div class="form-card-header mb-4">
+        <span class="security-chip mb-2">
+          <i class="bi bi-stars"></i> CADASTRO GRATUITO
+        </span>
+        <h2 class="form-title">Criar sua Conta</h2>
+        <p class="form-subtitle">Leva menos de 1 minuto para configurar seu espaço familiar.</p>
+      </div>
+
+      @if (successMessage) {
+        <div class="alert-modern alert-success mb-3" role="alert">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <span>{{ successMessage }}</span>
+        </div>
+      }
+
+      @if (errorMessage && !successMessage) {
+        <div class="alert-modern alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-field-group mb-3">
+          <label class="field-label" for="regName">Nome Completo</label>
+          <div class="input-container">
+            <i class="bi bi-person field-icon"></i>
+            <input
+              id="regName"
+              type="text"
+              class="form-input"
+              formControlName="name"
+              placeholder="Ex: João da Silva"
+              [class.has-error]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
+            />
+          </div>
+          @if (registerForm.get('name')?.touched && registerForm.get('name')?.invalid) {
+            <span class="field-error-msg">Nome é obrigatório (mínimo 2 caracteres).</span>
+          }
         </div>
 
-        @if (successMessage) {
-          <div class="alert alert-success mb-3" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+        <div class="form-field-group mb-3">
+          <label class="field-label" for="regEmail">E-mail</label>
+          <div class="input-container">
+            <i class="bi bi-envelope field-icon"></i>
+            <input
+              id="regEmail"
+              type="email"
+              class="form-input"
+              formControlName="email"
+              placeholder="seu@email.com"
+              [class.has-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+            />
           </div>
-        }
-
-        @if (errorMessage && !successMessage) {
-          <div class="alert alert-danger mb-3" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
-          </div>
-        }
-
-        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-          <div class="mb-3">
-            <label class="form-label" for="regName">Nome Completo</label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-person"></i>
-              <input
-                id="regName"
-                type="text"
-                class="form-control"
-                formControlName="name"
-                placeholder="Ex: João da Silva"
-                [class.is-invalid]="registerForm.get('name')?.touched && registerForm.get('name')?.invalid"
-              />
-            </div>
-            @if (registerForm.get('name')?.touched && registerForm.get('name')?.invalid) {
-              <div class="invalid-feedback d-block">Nome é obrigatório (mínimo 2 caracteres).</div>
-            }
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="regEmail">E-mail</label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-envelope"></i>
-              <input
-                id="regEmail"
-                type="email"
-                class="form-control"
-                formControlName="email"
-                placeholder="seu@email.com"
-                [class.is-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
-              />
-            </div>
-            @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
-              <div class="invalid-feedback d-block">E-mail válido é obrigatório.</div>
-            }
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="regPassword">Senha</label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-lock"></i>
-              <input
-                id="regPassword"
-                type="password"
-                class="form-control"
-                formControlName="password"
-                placeholder="Mínimo 6 caracteres"
-                [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
-              />
-            </div>
-            @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-              <div class="invalid-feedback d-block">Senha deve ter no mínimo 6 caracteres.</div>
-            }
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label" for="regConfirmPassword">Confirmar Senha</label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-lock-fill"></i>
-              <input
-                id="regConfirmPassword"
-                type="password"
-                class="form-control"
-                formControlName="confirmPassword"
-                placeholder="Repita a senha"
-                [class.is-invalid]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid"
-              />
-            </div>
-            @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')) {
-              <div class="invalid-feedback d-block">As senhas informadas não conferem.</div>
-            }
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-primary w-100 btn-lg shadow-sm"
-            [disabled]="registerForm.invalid || loading"
-          >
-            @if (loading) {
-              <span class="spinner-border spinner-border-sm me-2" role="status"></span> Criando espaço...
-            } @else {
-              <i class="bi bi-person-plus me-2"></i> Criar Conta Familiar
-            }
-          </button>
-        </form>
-
-        <div class="login-prompt mt-4 pt-3 border-top text-center">
-          <span class="text-muted small">Já possui uma conta?</span>
-          <a routerLink="/login" class="fw-bold ms-1 text-primary small">Fazer Login</a>
+          @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+            <span class="field-error-msg">E-mail válido é obrigatório.</span>
+          }
         </div>
+
+        <div class="form-field-group mb-3">
+          <label class="field-label" for="regPassword">Senha</label>
+          <div class="input-container">
+            <i class="bi bi-lock field-icon"></i>
+            <input
+              id="regPassword"
+              type="password"
+              class="form-input"
+              formControlName="password"
+              placeholder="Mínimo 6 caracteres"
+              [class.has-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+            />
+          </div>
+          @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+            <span class="field-error-msg">A senha deve ter no mínimo 6 caracteres.</span>
+          }
+        </div>
+
+        <div class="form-field-group mb-4">
+          <label class="field-label" for="regConfirmPassword">Confirmar Senha</label>
+          <div class="input-container">
+            <i class="bi bi-lock-fill field-icon"></i>
+            <input
+              id="regConfirmPassword"
+              type="password"
+              class="form-input"
+              formControlName="confirmPassword"
+              placeholder="Repita a senha"
+              [class.has-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid"
+            />
+          </div>
+          @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')) {
+            <span class="field-error-msg">As senhas informadas não conferem.</span>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn-submit-luxury"
+          [disabled]="registerForm.invalid || loading"
+        >
+          @if (loading) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <span>Criando espaço familiar...</span>
+          } @else {
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Criar Conta Familiar</span>
+          }
+        </button>
+      </form>
+
+      <div class="form-card-footer mt-4 pt-3 text-center">
+        <span class="footer-prompt">Já possui uma conta?</span>
+        <a routerLink="/login" class="footer-action-link">Fazer Login</a>
       </div>
     </div>
   </div>
