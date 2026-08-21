@@ -13,10 +13,10 @@
 
       <div class="mobile-actions">
         <button class="action-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'">
-          <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
+          <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
         </button>
         <button class="action-btn" (click)="toggleNotifications()" aria-label="Notificações">
-          <i class="bi bi-bell-fill"></i>
+          <i class="bi bi-bell"></i>
           @if (unreadCount > 0) {
             <span class="notification-dot">{{ unreadCount }}</span>
           }
@@ -49,15 +49,15 @@
   </div>
 } @else {
   <div class="app-shell-desktop">
-    <!-- Luxury Sidebar -->
-    <aside class="sidebar-luxury" aria-label="Navegação Lateral">
+    <!-- Minimalist Sidebar -->
+    <aside class="sidebar-minimal" aria-label="Navegação Lateral">
       <div class="sidebar-brand">
-        <div class="brand-logo-gem">
+        <div class="brand-logo">
           <i class="bi bi-wallet2" aria-hidden="true"></i>
         </div>
         <div class="brand-info">
-          <span class="brand-tag">GESTÃO FAMILIAR</span>
           <h4 class="brand-name">Controlei</h4>
+          <span class="brand-tag">Gestão Financeira</span>
         </div>
       </div>
 
@@ -73,9 +73,7 @@
                   routerLinkActive="active"
                   [routerLinkActiveOptions]="{ exact: item.route === '/app/dashboard' }"
                 >
-                  <div class="item-icon">
-                    <i class="bi" [ngClass]="item.icon" aria-hidden="true"></i>
-                  </div>
+                  <i class="bi item-icon" [ngClass]="item.icon" aria-hidden="true"></i>
                   <span class="item-label">{{ item.label }}</span>
                 </a>
               }
@@ -84,26 +82,24 @@
         }
       </div>
 
-      <!-- Sidebar User Footer -->
-      <div class="sidebar-user-footer">
-        <div class="user-profile-badge" routerLink="/app/profile" title="Ver meu perfil">
-          <div class="avatar-ring">
-            <span>{{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}</span>
+      <!-- Minimalist User Footer -->
+      <div class="sidebar-footer">
+        <div class="user-brief" routerLink="/app/profile" title="Ver meu perfil">
+          <div class="user-avatar">
+            {{ currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U' }}
           </div>
-          <div class="user-meta">
-            <strong>{{ currentUser?.name || 'Usuário' }}</strong>
-            <small>{{ currentUser?.role === 'RESPONSIBLE' ? 'Responsável' : 'Membro' }}</small>
+          <div class="user-info">
+            <span class="user-name">{{ currentUser?.name || 'Usuário' }}</span>
+            <span class="user-role">{{ currentUser?.role === 'RESPONSIBLE' ? 'Responsável' : 'Membro' }}</span>
           </div>
         </div>
 
-        <div class="footer-control-row">
-          <button class="footer-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar tema limpo' : 'Ativar tema escuro'">
-            <i class="bi" [ngClass]="isDark ? 'bi-sun-fill text-warning' : 'bi-moon-fill text-primary'"></i>
-            <span>{{ isDark ? 'Tema Claro' : 'Tema Dark' }}</span>
+        <div class="footer-actions">
+          <button class="icon-btn" (click)="toggleTheme()" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'" aria-label="Alternar tema">
+            <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
           </button>
-          <button class="footer-btn logout" (click)="logout()" aria-label="Encerrar sessão">
+          <button class="icon-btn logout" (click)="logout()" title="Sair" aria-label="Sair da conta">
             <i class="bi bi-box-arrow-right"></i>
-            <span>Sair</span>
           </button>
         </div>
       </div>
@@ -111,30 +107,30 @@
 
     <!-- Main Workspace with Topbar -->
     <div class="main-workspace">
-      <header class="topbar-luxury">
+      <header class="topbar-minimal">
         <div class="topbar-left">
-          <div class="family-tenant-pill">
+          <div class="family-pill">
             <i class="bi bi-shield-check text-success"></i>
-            <span>Família Conectada &middot; Ambiente Seguro</span>
+            <span>Família Conectada</span>
           </div>
         </div>
 
         <div class="topbar-right">
           <!-- Quick Action CTA -->
-          <a routerLink="/app/transactions" class="btn btn-primary btn-sm btn-quick-action shadow-sm">
+          <a routerLink="/app/transactions" class="btn btn-primary btn-sm btn-quick-action">
             <i class="bi bi-plus-lg"></i>
             <span>Nova Transação</span>
           </a>
 
           <!-- Theme Toggle Topbar Button -->
-          <button class="topbar-icon-btn" (click)="toggleTheme()" [title]="isDark ? 'Mudar para Tema Claro' : 'Mudar para Tema Dark'">
-            <i class="bi" [ngClass]="isDark ? 'bi-sun-fill' : 'bi-moon-stars-fill'"></i>
+          <button class="topbar-btn" (click)="toggleTheme()" [title]="isDark ? 'Mudar para Tema Claro' : 'Mudar para Tema Dark'">
+            <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
           </button>
 
           <!-- Notifications Bell & Dropdown -->
           <div class="notification-wrapper">
-            <button class="topbar-icon-btn" (click)="toggleNotifications()" aria-label="Notificações">
-              <i class="bi bi-bell-fill"></i>
+            <button class="topbar-btn" (click)="toggleNotifications()" aria-label="Notificações">
+              <i class="bi bi-bell"></i>
               @if (unreadCount > 0) {
                 <span class="notification-badge-counter">{{ unreadCount }}</span>
               }
@@ -156,7 +152,7 @@
                   @if (recentNotifications.length > 0) {
                     @for (notif of recentNotifications; track notif.id) {
                       <div class="notification-item" [class.unread]="!notif.read" (click)="markNotificationRead(notif.id)">
-                        <div class="notif-icon-box" [ngClass]="notif.type.toLowerCase()">
+                        <div class="notif-icon-box">
                           <i class="bi" [ngClass]="notif.type === 'BILL_DUE' ? 'bi-calendar-event' : notif.type === 'BUDGET_WARNING' ? 'bi-exclamation-octagon' : 'bi-bell'"></i>
                         </div>
                         <div class="notif-content">
