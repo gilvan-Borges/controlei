@@ -1,0 +1,187 @@
+<div class="split-auth-page">
+  <!-- Top Floating Theme Toggle -->
+  <div class="floating-theme-toggle">
+    <button type="button" class="theme-pill-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'">
+      <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
+      <span>{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
+    </button>
+  </div>
+
+  <div class="split-layout-grid">
+    <!-- LEFT PANEL: Deep Emerald Form Area (Padrão Screenshot) -->
+    <div class="auth-panel-form">
+      <div class="auth-form-inner animate-in">
+        <!-- Brand Emblem Icon -->
+        <div class="auth-emblem-wrap">
+          <div class="emblem-shield">
+            <i class="bi bi-wallet2"></i>
+          </div>
+        </div>
+
+        <div class="auth-form-title-group">
+          <h2 class="auth-main-title">Bem-vindo de volta</h2>
+          <p class="auth-sub-title">Entre com suas credenciais para acessar o sistema</p>
+        </div>
+
+        @if (successMessage) {
+          <div class="auth-alert alert-success-custom mb-3" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="auth-alert alert-danger-custom mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <!-- Demo Quick Fill Buttons -->
+        <div class="demo-quick-bar mb-4">
+          <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
+          <div class="demo-pills-row">
+            <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
+              <i class="bi bi-shield-check"></i>
+              <span>Administrador</span>
+            </button>
+            <button type="button" class="btn-demo-tag" (click)="fillDemo('member')">
+              <i class="bi bi-person"></i>
+              <span>Membro</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="custom-auth-form">
+          <!-- Email Field -->
+          <div class="form-field-item mb-3">
+            <label for="email" class="field-label-custom">
+              E-mail ou username <span class="req-star">*</span>
+            </label>
+            <div class="input-icon-wrapper">
+              <i class="bi bi-envelope field-leading-icon"></i>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                class="input-custom"
+                placeholder="seu.email@exemplo.com"
+                autocomplete="email"
+                [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+              />
+            </div>
+            @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+              <span class="error-text">Informe um e-mail válido</span>
+            }
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-field-item mb-4">
+            <div class="field-label-row">
+              <label for="password" class="field-label-custom mb-0">
+                Senha <span class="req-star">*</span>
+              </label>
+              <span class="forgot-link">Esqueci minha senha</span>
+            </div>
+            <div class="input-icon-wrapper">
+              <i class="bi bi-lock field-leading-icon"></i>
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="input-custom"
+                placeholder="••••••••••••"
+                autocomplete="current-password"
+                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+              />
+              <button
+                type="button"
+                class="btn-eye-toggle"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Ver senha'"
+              >
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+              </button>
+            </div>
+            @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+              <span class="error-text">Informe sua senha</span>
+            }
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="btn-submit-action w-100"
+            [disabled]="loginForm.invalid || loading"
+          >
+            @if (loading) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span>Acessando...</span>
+            } @else {
+              <span>Entrar</span>
+              <i class="bi bi-arrow-right ms-2"></i>
+            }
+          </button>
+        </form>
+
+        <div class="auth-bottom-switch mt-4 text-center">
+          <span class="switch-prompt">Não tem uma conta?</span>
+          <a routerLink="/register" class="switch-link ms-1">Cadastre-se agora</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Warm Hero / Showcase Area (Padrão Screenshot) -->
+    <div class="auth-panel-hero">
+      <div class="hero-content-inner animate-in">
+        <div class="hero-brand-header mb-4">
+          <div class="hero-logo-mark">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <span class="hero-brand-name">Controlei</span>
+        </div>
+
+        <h1 class="hero-headline mb-3">
+          Gestão Financeira<br>Familiar Inteligente
+        </h1>
+
+        <p class="hero-description mb-5">
+          Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
+        </p>
+
+        <div class="hero-features-list">
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Segurança e Isolamento Total</h6>
+              <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
+            </div>
+          </div>
+
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-lightning-charge"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Agilidade Operacional</h6>
+              <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
+            </div>
+          </div>
+
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-pie-chart"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Controle de Tetos & Metas</h6>
+              <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
