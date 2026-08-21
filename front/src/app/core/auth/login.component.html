@@ -1,13 +1,15 @@
-<div class="auth-master-stage" [class.register-mode]="isRegister">
-  <div class="split-layout-grid">
+<div class="auth-stage-container" [class.register-mode]="isRegister">
+  <div class="auth-split-wrapper">
 
     <!-- ============================================================
-         LEFT HALF PANEL (Verde no Login -> Creme no Register)
+         1. 3D SLIDING & FLIPPING FORM CARD (Transita da Esquerda para a Direita girando 180deg)
          ============================================================ -->
-    <div class="auth-half-panel left-panel">
-      <!-- 1A. Login Form Content (Visível quando isRegister === false) -->
-      <div class="panel-content-slot login-form-slot" [class.slot-active]="!isRegister">
+    <div class="sliding-form-card">
+
+      <!-- FRONT FACE: LOGIN FORM (Visível no modo Login - Lado Esquerdo) -->
+      <div class="form-face form-face-login">
         <div class="auth-form-inner">
+          <!-- Brand Emblem -->
           <div class="auth-emblem-wrap">
             <div class="emblem-shield">
               <i class="bi bi-wallet2"></i>
@@ -33,8 +35,8 @@
             </div>
           }
 
-          <!-- Demo Quick Fill -->
-          <div class="demo-quick-bar mb-4">
+          <!-- Quick Demo Buttons -->
+          <div class="demo-quick-bar mb-3">
             <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
             <div class="demo-pills-row">
               <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
@@ -108,7 +110,7 @@
               [disabled]="loginForm.invalid || loading"
             >
               @if (loading) {
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                 <span>Acessando...</span>
               } @else {
                 <span>Entrar</span>
@@ -119,128 +121,21 @@
 
           <div class="auth-bottom-switch mt-4 text-center">
             <span class="switch-prompt">Não tem uma conta?</span>
-            <a href="/register" (click)="goToRegister($event)" class="switch-link ms-1">Cadastre-se agora</a>
+            <button type="button" (click)="goToRegister($event)" class="btn-link-switch ms-1">
+              Cadastre-se agora <i class="bi bi-arrow-right-short"></i>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- 1B. Showcase Hero (Visível quando isRegister === true) -->
-      <div class="panel-content-slot register-hero-slot" [class.slot-active]="isRegister">
-        <div class="hero-content-inner">
-          <div class="hero-brand-header mb-4">
-            <div class="hero-logo-mark">
-              <i class="bi bi-wallet2"></i>
-            </div>
-            <span class="hero-brand-name">Controlei</span>
-          </div>
-
-          <h1 class="hero-headline mb-3">
-            Gestão Financeira<br>Familiar Inteligente
-          </h1>
-
-          <p class="hero-description mb-5">
-            Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
-          </p>
-
-          <div class="hero-features-list">
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-shield-check"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Segurança e Isolamento Total</h6>
-                <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
-              </div>
-            </div>
-
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-lightning-charge"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Agilidade Operacional</h6>
-                <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
-              </div>
-            </div>
-
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-pie-chart"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Controle de Tetos & Metas</h6>
-                <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
-         RIGHT HALF PANEL (Creme no Login -> Verde no Register)
-         ============================================================ -->
-    <div class="auth-half-panel right-panel">
-      <!-- 2A. Showcase Hero (Visível quando isRegister === false) -->
-      <div class="panel-content-slot login-hero-slot" [class.slot-active]="!isRegister">
-        <div class="hero-content-inner">
-          <div class="hero-brand-header mb-4">
-            <div class="hero-logo-mark">
-              <i class="bi bi-wallet2"></i>
-            </div>
-            <span class="hero-brand-name">Controlei</span>
-          </div>
-
-          <h1 class="hero-headline mb-3">
-            Gestão Financeira<br>Familiar Inteligente
-          </h1>
-
-          <p class="hero-description mb-5">
-            Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
-          </p>
-
-          <div class="hero-features-list">
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-shield-check"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Segurança e Isolamento Total</h6>
-                <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
-              </div>
-            </div>
-
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-lightning-charge"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Agilidade Operacional</h6>
-                <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
-              </div>
-            </div>
-
-            <div class="hero-feature-row">
-              <div class="feature-icon-badge">
-                <i class="bi bi-pie-chart"></i>
-              </div>
-              <div class="feature-detail">
-                <h6 class="feature-heading">Controle de Tetos & Metas</h6>
-                <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2B. Register Form Card (Visível quando isRegister === true) -->
-      <div class="panel-content-slot register-form-slot" [class.slot-active]="isRegister">
+      <!-- BACK FACE: REGISTER FORM (Gira 180deg, visível quando desliza para o Lado Direito) -->
+      <div class="form-face form-face-register">
         <div class="register-floating-card">
           <div class="register-card-header text-center mb-3">
             <div class="register-emblem-icon">
               <i class="bi bi-wallet2"></i>
             </div>
-            <h2 class="register-title">Criar conta</h2>
+            <h2 class="register-title">Criar conta familiar</h2>
             <p class="register-subtitle">Preencha seus dados para acessar a plataforma</p>
           </div>
 
@@ -284,7 +179,7 @@
           </div>
 
           <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="register-form">
-            <div class="form-group mb-3">
+            <div class="form-group mb-2">
               <label class="form-label-clean" for="regName">
                 Nome completo <span class="req-star">*</span>
               </label>
@@ -304,7 +199,7 @@
               }
             </div>
 
-            <div class="form-group mb-3">
+            <div class="form-group mb-2">
               <label class="form-label-clean" for="regEmail">
                 E-mail <span class="req-star">*</span>
               </label>
@@ -324,7 +219,7 @@
               }
             </div>
 
-            <div class="form-group mb-3">
+            <div class="form-group mb-2">
               <label class="form-label-clean" for="regPassword">
                 Senha <span class="req-star">*</span>
               </label>
@@ -352,7 +247,7 @@
               }
             </div>
 
-            <div class="form-group mb-4">
+            <div class="form-group mb-3">
               <label class="form-label-clean" for="regConfirmPassword">
                 Confirmar Senha <span class="req-star">*</span>
               </label>
@@ -387,10 +282,65 @@
             </button>
           </form>
 
-          <div class="register-footer text-center mt-4">
-            <a href="/login" (click)="goToLogin($event)" class="back-login-link">
+          <div class="register-footer text-center mt-3">
+            <button type="button" (click)="goToLogin($event)" class="btn-link-switch-back">
               <i class="bi bi-arrow-left me-1"></i> Já tem conta? Fazer login
-            </a>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================
+         2. SLIDING SHOWCASE HERO CARD (Transita da Direita para a Esquerda)
+         ============================================================ -->
+    <div class="sliding-hero-card">
+      <div class="hero-content-inner">
+        <div class="hero-brand-header mb-4">
+          <div class="hero-logo-mark">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <span class="hero-brand-name">Controlei</span>
+        </div>
+
+        <h1 class="hero-headline mb-3">
+          Gestão Financeira<br>Familiar Inteligente
+        </h1>
+
+        <p class="hero-description mb-5">
+          Gestão integrada de despesas da casa, múltiplos cartões de crédito, divisão automática de contas com PIX simplificado e orçamentos vivos em um só lugar.
+        </p>
+
+        <div class="hero-features-list">
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Segurança e Isolamento Total</h6>
+              <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
+            </div>
+          </div>
+
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-lightning-charge"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Agilidade Operacional</h6>
+              <p class="feature-sub">Divisão inteligente de débitos calculando o menor número de transferências.</p>
+            </div>
+          </div>
+
+          <div class="hero-feature-row">
+            <div class="feature-icon-badge">
+              <i class="bi bi-pie-chart"></i>
+            </div>
+            <div class="feature-detail">
+              <h6 class="feature-heading">Controle de Tetos & Metas</h6>
+              <p class="feature-sub">Avisos proativos antes de estourar os orçamentos da sua família.</p>
+            </div>
           </div>
         </div>
       </div>

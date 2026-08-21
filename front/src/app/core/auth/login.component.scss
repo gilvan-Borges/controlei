@@ -3,76 +3,82 @@
   min-height: 100vh;
 }
 
-.auth-master-stage {
-  min-height: 100vh;
+.auth-stage-container {
   position: relative;
-  overflow-x: hidden;
+  width: 100vw;
+  min-height: 100vh;
+  overflow: hidden;
+  perspective: 2000px;
   background-color: #084335;
 }
 
-/* ── Split Layout Grid ── */
-.split-layout-grid {
-  display: grid;
-  grid-template-columns: 50% 50%;
+.auth-split-wrapper {
+  position: relative;
+  width: 100%;
   min-height: 100vh;
-
-  @media (max-width: 960px) {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
 }
 
 /* ============================================================
-   HALF PANELS WITH SMOOTH BACKGROUND MORPHING (0.55s)
+   1. THE 3D SLIDING & FLIPPING FORM CARD
    ============================================================ */
-.auth-half-panel {
-  position: relative;
+.sliding-form-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  min-height: 100vh;
+  z-index: 10;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+
+  @media (max-width: 960px) {
+    position: relative;
+    width: 100%;
+  }
+}
+
+/* When in Register Mode: Card SLIDES to the right AND FLIPS 180deg */
+.auth-stage-container.register-mode .sliding-form-card {
+  transform: translateX(100%) rotateY(180deg);
+
+  @media (max-width: 960px) {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Common Face Styling */
+.form-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100vh;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  background-color: #084335;
 }
 
-/* LEFT PANEL:
-   - Login Mode (!register-mode): Background Verde Floresta (#084335)
-   - Register Mode (register-mode): Background Creme Suave (#f6f3eb)
-*/
-.left-panel {
-  background-color: #084335;
-  padding: 3.5rem 2.5rem;
+/* ── FRONT FACE (LOGIN) ── */
+.form-face-login {
+  transform: rotateY(0deg);
+  padding: 3rem 2.5rem;
 
   @media (max-width: 560px) {
-    padding: 3rem 1.25rem;
+    padding: 2.5rem 1.25rem;
   }
 }
 
-.auth-master-stage.register-mode .left-panel {
-  background-color: #f6f3eb;
-
-  @media (max-width: 960px) {
-    display: none;
-  }
-}
-
-/* RIGHT PANEL:
-   - Login Mode (!register-mode): Background Creme Suave (#f6f3eb)
-   - Register Mode (register-mode): Background Verde Floresta (#084335)
-*/
-.right-panel {
-  background-color: #f6f3eb;
-  padding: 3.5rem 2.5rem;
-
-  @media (max-width: 960px) {
-    display: none;
-  }
-}
-
-.auth-master-stage.register-mode .right-panel {
-  background-color: #084335;
-  display: flex;
-  padding: 3rem 2rem;
+/* ── BACK FACE (REGISTER) ── */
+.form-face-register {
+  transform: rotateY(180deg);
+  padding: 2.5rem 2rem;
+  overflow-y: auto;
 
   @media (max-width: 560px) {
     padding: 2rem 1rem;
@@ -80,35 +86,35 @@
 }
 
 /* ============================================================
-   PANEL CONTENT SLOTS & TRANSITIONS
+   2. THE SLIDING SHOWCASE HERO CARD
    ============================================================ */
-.panel-content-slot {
+.sliding-hero-card {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.94);
-  width: 100%;
-  max-width: 440px;
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.4s ease;
+  width: 50%;
+  min-height: 100vh;
+  background-color: #f6f3eb;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 3rem;
+  transition: transform 0.75s cubic-bezier(0.65, 0, 0.35, 1);
 
-  &.slot-active {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-    transition-delay: 0.12s;
+  @media (max-width: 960px) {
+    display: none;
   }
 }
 
-/* ── Form Inside Left (Login) ── */
+/* When in Register Mode: Hero SLIDES to the left */
+.auth-stage-container.register-mode .sliding-hero-card {
+  transform: translateX(-100%);
+}
+
+/* ============================================================
+   LOGIN FORM ELEMENTS
+   ============================================================ */
 .auth-form-inner {
   width: 100%;
   max-width: 400px;
@@ -119,11 +125,11 @@
 .auth-emblem-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 
   .emblem-shield {
-    width: 60px;
-    height: 60px;
+    width: 58px;
+    height: 58px;
     border-radius: 16px;
     background: rgba(16, 185, 129, 0.2);
     border: 1.5px solid rgba(52, 211, 153, 0.5);
@@ -131,26 +137,26 @@
     align-items: center;
     justify-content: center;
     color: #34d399;
-    font-size: 1.85rem;
+    font-size: 1.8rem;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   }
 }
 
 .auth-form-title-group {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 
   .auth-main-title {
-    font-size: 1.75rem;
+    font-size: 1.7rem;
     font-weight: 800;
     color: #ffffff;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
     letter-spacing: -0.02em;
     font-family: 'Outfit', sans-serif;
   }
 
   .auth-sub-title {
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     color: #a7f3d0;
     margin: 0;
     line-height: 1.4;
@@ -162,7 +168,7 @@
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 0.65rem 0.85rem;
+  padding: 0.6rem 0.8rem;
 
   .demo-bar-label {
     font-size: 0.65rem;
@@ -170,7 +176,7 @@
     letter-spacing: 0.08em;
     color: #6ee7b7;
     display: block;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.35rem;
   }
 
   .demo-pills-row {
@@ -204,9 +210,9 @@
 
 /* ── Alerts ── */
 .auth-alert {
-  padding: 0.65rem 0.85rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -224,7 +230,7 @@
   }
 }
 
-/* ── Form Inputs (Login) ── */
+/* ── Inputs (Login) ── */
 .form-field-item {
   display: flex;
   flex-direction: column;
@@ -233,7 +239,7 @@
     font-size: 0.82rem;
     font-weight: 650;
     color: #ffffff;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
 
     .req-star {
       color: #f87171;
@@ -244,7 +250,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
 
     .forgot-link {
       font-size: 0.76rem;
@@ -277,7 +283,7 @@
     background: rgba(0, 0, 0, 0.25);
     border: 1.5px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px;
-    padding: 0.65rem 2.4rem 0.65rem 2.5rem;
+    padding: 0.62rem 2.4rem 0.62rem 2.5rem;
     color: #ffffff;
     font-size: 0.9rem;
     font-family: inherit;
@@ -330,7 +336,7 @@
   color: #ffffff;
   border: none;
   border-radius: 10px;
-  padding: 0.72rem 1.5rem;
+  padding: 0.7rem 1.5rem;
   font-size: 0.92rem;
   font-weight: 750;
   display: inline-flex;
@@ -352,34 +358,244 @@
   }
 }
 
-/* ── Bottom Switch Link ── */
+/* ── Switch Action Buttons ── */
 .auth-bottom-switch {
   .switch-prompt {
     font-size: 0.82rem;
     color: #a7f3d0;
   }
 
-  .switch-link {
+  .btn-link-switch {
+    background: transparent;
+    border: none;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 750;
     color: #fbbf24;
-    text-decoration: none;
-    transition: all 0.15s ease;
     cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
 
     &:hover {
       text-decoration: underline;
       color: #fef08a;
+      transform: translateX(2px);
     }
   }
 }
 
 /* ============================================================
-   SHOWCASE HERO (Creme)
+   REGISTER FORM CARD (Inside Back Face)
+   ============================================================ */
+.register-floating-card {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.85rem 1.85rem 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+
+  @media (max-width: 540px) {
+    padding: 1.5rem 1rem;
+  }
+}
+
+.register-card-header {
+  .register-emblem-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #e2ede8;
+    color: #059669;
+    font-size: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.35rem;
+  }
+
+  .register-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 0.15rem;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .register-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+  }
+}
+
+.account-type-group {
+  .section-micro-label {
+    font-size: 0.72rem;
+    font-weight: 750;
+    color: #334155;
+    margin-bottom: 0.35rem;
+    display: block;
+  }
+
+  .type-selector-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+
+    .type-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #fafafa;
+
+      .type-icon {
+        font-size: 1.1rem;
+        color: #64748b;
+      }
+
+      .type-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+
+        strong {
+          font-size: 0.78rem;
+          color: #0f172a;
+        }
+
+        small {
+          font-size: 0.65rem;
+          color: #64748b;
+        }
+      }
+
+      &.selected {
+        border-color: #059669;
+        background: #f0fdf4;
+
+        .type-icon {
+          color: #059669;
+        }
+
+        .type-text strong {
+          color: #059669;
+        }
+      }
+    }
+  }
+}
+
+.form-label-clean {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #334155;
+  margin-bottom: 0.25rem;
+  display: block;
+
+  .req-star {
+    color: #ef4444;
+  }
+}
+
+.input-wrap-clean {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .leading-icon {
+    position: absolute;
+    left: 0.8rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  .form-control-clean {
+    width: 100%;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.48rem 0.75rem 0.48rem 2.2rem;
+    color: #0f172a;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+    }
+
+    &.is-invalid {
+      border-color: #ef4444;
+    }
+  }
+
+  .btn-eye-toggle-clean {
+    position: absolute;
+    right: 0.6rem;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0.2rem 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #334155;
+    }
+  }
+}
+
+.error-msg-clean {
+  font-size: 0.7rem;
+  color: #ef4444;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.btn-link-switch-back {
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #059669;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+    color: #047857;
+    transform: translateX(-2px);
+  }
+}
+
+/* ============================================================
+   SHOWCASE HERO (Right Side in Login, Left Side in Register)
    ============================================================ */
 .hero-content-inner {
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   color: #18181b;
 }
 
@@ -410,7 +626,7 @@
 }
 
 .hero-headline {
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   font-weight: 900;
   line-height: 1.18;
   letter-spacing: -0.03em;
@@ -419,7 +635,7 @@
 }
 
 .hero-description {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1.6;
   color: #475569;
 }
@@ -427,13 +643,13 @@
 .hero-features-list {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.15rem;
 }
 
 .hero-feature-row {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.9rem;
 
   .feature-icon-badge {
     width: 38px;
@@ -450,219 +666,17 @@
 
   .feature-detail {
     .feature-heading {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 750;
       color: #0f172a;
       margin-bottom: 0.15rem;
     }
 
     .feature-sub {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: #64748b;
       margin: 0;
       line-height: 1.4;
     }
-  }
-}
-
-/* ============================================================
-   REGISTER FLOATING CARD (Inside Right Panel on Green)
-   ============================================================ */
-.register-floating-card {
-  width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 2.25rem 2rem 1.85rem;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
-
-  @media (max-width: 540px) {
-    padding: 1.75rem 1.25rem;
-  }
-}
-
-.register-card-header {
-  .register-emblem-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: #e2ede8;
-    color: #059669;
-    font-size: 1.45rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .register-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 0.2rem;
-    font-family: 'Outfit', sans-serif;
-  }
-
-  .register-subtitle {
-    font-size: 0.82rem;
-    color: #64748b;
-    margin: 0;
-  }
-}
-
-.account-type-group {
-  .section-micro-label {
-    font-size: 0.74rem;
-    font-weight: 750;
-    color: #334155;
-    margin-bottom: 0.45rem;
-    display: block;
-  }
-
-  .type-selector-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.65rem;
-
-    .type-card {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 0.65rem 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      background: #fafafa;
-
-      .type-icon {
-        font-size: 1.2rem;
-        color: #64748b;
-      }
-
-      .type-text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.2;
-
-        strong {
-          font-size: 0.8rem;
-          color: #0f172a;
-        }
-
-        small {
-          font-size: 0.68rem;
-          color: #64748b;
-        }
-      }
-
-      &.selected {
-        border-color: #059669;
-        background: #f0fdf4;
-
-        .type-icon {
-          color: #059669;
-        }
-
-        .type-text strong {
-          color: #059669;
-        }
-      }
-    }
-  }
-}
-
-.form-label-clean {
-  font-size: 0.8rem;
-  font-weight: 650;
-  color: #334155;
-  margin-bottom: 0.35rem;
-  display: block;
-
-  .req-star {
-    color: #ef4444;
-  }
-}
-
-.input-wrap-clean {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .leading-icon {
-    position: absolute;
-    left: 0.85rem;
-    color: #94a3b8;
-    font-size: 0.95rem;
-    pointer-events: none;
-  }
-
-  .form-control-clean {
-    width: 100%;
-    background: #ffffff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.55rem 0.85rem 0.55rem 2.4rem;
-    color: #0f172a;
-    font-size: 0.88rem;
-    font-family: inherit;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-
-    &::placeholder {
-      color: #94a3b8;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: #059669;
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
-    }
-
-    &.is-invalid {
-      border-color: #ef4444;
-    }
-  }
-
-  .btn-eye-toggle-clean {
-    position: absolute;
-    right: 0.65rem;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.25rem 0.4rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-      color: #334155;
-    }
-  }
-}
-
-.error-msg-clean {
-  font-size: 0.72rem;
-  color: #ef4444;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.back-login-link {
-  font-size: 0.82rem;
-  font-weight: 650;
-  color: #059669;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    text-decoration: underline;
-    color: #047857;
   }
 }
