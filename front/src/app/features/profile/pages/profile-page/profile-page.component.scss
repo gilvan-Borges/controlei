@@ -1,3 +1,22 @@
 :host {
   display: block;
 }
+
+.profile-large-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(var(--c-primary-rgb), 0.35);
+}
+
+.font-xs {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}

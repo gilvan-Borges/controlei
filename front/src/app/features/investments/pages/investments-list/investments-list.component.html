@@ -1,43 +1,54 @@
-<div class="container-fluid px-0">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Investimentos</h5>
-    <a routerLink="new" class="btn btn-primary btn-sm">
-      <i class="bi bi-plus-lg me-1"></i>Novo
-    </a>
+<div class="container-fluid px-0 animate-in">
+  <div class="page-header-luxury mb-4">
+    <div class="page-title-group">
+      <span class="badge-pill purple">
+        <i class="bi bi-graph-up-arrow"></i> PATRIMÔNIO & ATIVOS
+      </span>
+      <h1 class="fw-bold mb-1">Investimentos da Família</h1>
+      <p class="text-muted small mb-0">Acompanhe a evolução patrimonial em renda fixa, ações, fundos, previdência e criptoativos.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="new" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Novo Investimento
+      </a>
+    </div>
   </div>
 
-  <div class="row g-2 mb-3">
-    <div class="col-4">
-      <label class="form-label small mb-1">Tipo</label>
-      <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()">
-        <option value="">Todos</option>
-        @for (type of investmentTypes; track type.value) {
-          <option [value]="type.value">{{ type.label }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-4">
-      <label class="form-label small mb-1">Membro</label>
-      <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()">
-        <option value="">Todos</option>
-        @for (user of users; track user.id) {
-          <option [value]="user.id">{{ user.name }}</option>
-        }
-      </select>
-    </div>
-    <div class="col-4">
-      <label class="form-label small mb-1">Categoria</label>
-      <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()">
-        <option value="">Todas</option>
-        @for (category of categories; track category.id) {
-          <option [value]="category.id">{{ category.name }}</option>
-        }
-      </select>
+  <!-- Filters Card -->
+  <div class="card-luxury p-3 mb-4">
+    <div class="row g-2">
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">Classe de Ativo</label>
+        <select class="form-select form-select-sm" [value]="filterType" (change)="filterType = $any($event.target).value; onFilterChange()" aria-label="Filtrar por classe de ativo">
+          <option value="">Todas as Classes</option>
+          @for (type of investmentTypes; track type.value) {
+            <option [value]="type.value">{{ type.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">Titular</label>
+        <select class="form-select form-select-sm" [value]="filterUserId" (change)="filterUserId = $any($event.target).value; onFilterChange()" aria-label="Filtrar por titular">
+          <option value="">Toda a Família</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">Categoria</label>
+        <select class="form-select form-select-sm" [value]="filterCategoryId" (change)="filterCategoryId = $any($event.target).value; onFilterChange()" aria-label="Filtrar por categoria">
+          <option value="">Todas as Categorias</option>
+          @for (category of categories; track category.id) {
+            <option [value]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </div>
     </div>
   </div>
 
   @if (loading) {
-    <app-loading message="Carregando investimentos..."></app-loading>
+    <app-loading message="Calculando patrimônio investido da família..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
@@ -45,39 +56,61 @@
   }
 
   @if (!loading && !errorMessage && investments.length === 0) {
-    <app-empty-state icon="bi-graph-up" message="Nenhum investimento encontrado."></app-empty-state>
+    <app-empty-state 
+      icon="bi-graph-up-arrow" 
+      message="Nenhum investimento registrado"
+      description="Cadastre seus ativos para acompanhar a evolução do patrimônio familiar.">
+    </app-empty-state>
   }
 
   @if (!loading && !errorMessage && investments.length > 0) {
-    <div class="list-group">
+    <div class="row g-3">
       @for (investment of investments; track investment.id) {
-        <div class="list-group-item">
-          <div class="d-flex justify-content-between gap-3">
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card-luxury hover-lift p-4 h-100 d-flex flex-column justify-content-between">
             <div>
-              <div class="fw-medium">{{ investment.name }}</div>
-              <small class="text-muted">
-                {{ getUserName(investment.userId) }}
-                &middot; {{ getTypeLabel(investment.type) }}
-                &middot; {{ getCategoryName(investment.categoryId) }}
-              </small>
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="investment-icon-box">
+                  <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <span class="badge-pill purple">
+                  {{ getTypeLabel(investment.type) }}
+                </span>
+              </div>
+
+              <h5 class="fw-bold mb-1 text-truncate">{{ investment.name }}</h5>
+              <div class="text-muted small mb-3 d-flex align-items-center gap-1">
+                <span class="badge-pill info" style="font-size: 0.68rem;">{{ getUserName(investment.userId) }}</span>
+                @if (investment.categoryId) {
+                  <span>&middot;</span>
+                  <span>{{ getCategoryName(investment.categoryId) }}</span>
+                }
+              </div>
+
+              <div class="p-3 rounded-3 mb-3" style="background: var(--c-surface-elevated); border: 1px solid var(--c-border);">
+                <small class="text-muted d-block font-xs text-uppercase fw-bold mb-1">POSIÇÃO ATUAL</small>
+                <div class="h4 fw-bold font-mono mb-0 text-success">
+                  R$ {{ investment.currentAmount | number: '1.2-2' }}
+                </div>
+                @if (investment.referenceDate) {
+                  <small class="text-muted d-block mt-1 font-xs">
+                    Atualizado em: {{ investment.referenceDate | date: 'dd/MM/yyyy' }}
+                  </small>
+                }
+              </div>
             </div>
-            <div class="text-end">
-              <div class="fw-bold text-primary">R$ {{ investment.currentAmount | number: '1.2-2' }}</div>
-              @if (investment.referenceDate) {
-                <small class="text-muted">{{ investment.referenceDate | date: 'dd/MM/yyyy' }}</small>
-              }
-            </div>
+
+            @if (canEditInvestment(investment)) {
+              <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                <a [routerLink]="[investment.id, 'edit']" class="btn btn-secondary btn-sm" title="Atualizar Posição">
+                  <i class="bi bi-pencil"></i> Editar
+                </a>
+                <button class="btn btn-outline-danger btn-sm" type="button" (click)="confirmDelete(investment)" title="Excluir">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            }
           </div>
-          @if (canEditInvestment(investment)) {
-            <div class="d-flex gap-2 mt-2">
-              <a [routerLink]="[investment.id, 'edit']" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-pencil"></i>
-              </a>
-              <button class="btn btn-outline-danger btn-sm" type="button" (click)="confirmDelete(investment)">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          }
         </div>
       }
     </div>
@@ -85,10 +118,10 @@
 
   <app-confirm-modal
     [visible]="showDeleteConfirm"
-    title="Excluir investimento"
-    [message]="'Tem certeza que deseja excluir o investimento ' + (investmentToDelete?.name || '') + '?'"
+    title="Excluir Investimento"
+    [message]="'Tem certeza que deseja excluir o ativo \'' + (investmentToDelete?.name || '') + '\'?'"
     confirmVariant="danger"
-    confirmLabel="Excluir"
+    confirmLabel="Excluir Ativo"
     (confirmed)="onDeleteConfirm()"
     (cancelled)="onDeleteCancel()"
   ></app-confirm-modal>

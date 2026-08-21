@@ -1,21 +1,24 @@
-<section class="users-page">
-  <header class="page-header">
-    <div>
-      <span class="eyebrow">familia</span>
-      <h2>Membros</h2>
-      <p>Gerencie quem participa da organizacao financeira familiar.</p>
+<div class="container-fluid px-0 animate-in">
+  <div class="page-header-luxury mb-4">
+    <div class="page-title-group">
+      <span class="badge-pill indigo">
+        <i class="bi bi-people-fill"></i> FAMÍLIA & USUÁRIOS
+      </span>
+      <h1 class="fw-bold mb-1">Membros da Família</h1>
+      <p class="text-muted small mb-0">Gerencie quem participa do espaço familiar, defina papéis e convide dependentes.</p>
     </div>
 
     @if (permissions.canCreateMember()) {
-      <a routerLink="new" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>
-        Novo membro
-      </a>
+      <div class="header-actions">
+        <a routerLink="new" class="btn btn-primary btn-sm shadow-sm">
+          <i class="bi bi-person-plus-fill me-1"></i> Convidar Membro
+        </a>
+      </div>
     }
-  </header>
+  </div>
 
   @if (loading) {
-    <app-loading message="Carregando membros..."></app-loading>
+    <app-loading message="Carregando membros da família..."></app-loading>
   }
 
   @if (errorMessage && !loading) {
@@ -23,36 +26,47 @@
   }
 
   @if (!loading && !errorMessage && users.length === 0) {
-    <app-empty-state icon="bi-people" message="Nenhum membro encontrado."></app-empty-state>
+    <app-empty-state 
+      icon="bi-people-fill" 
+      message="Nenhum membro cadastrado"
+      description="Convide cônjuges, filhos ou dependentes para organizar o orçamento em conjunto.">
+    </app-empty-state>
   }
 
   @if (!loading && !errorMessage && users.length > 0) {
-    <div class="members-grid">
+    <div class="row g-3">
       @for (user of users; track user.id) {
-        <article class="member-card">
-          <div class="member-main">
-            <div class="avatar">{{ user.name.charAt(0) }}</div>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card-luxury hover-lift p-4 h-100 d-flex flex-column justify-content-between">
             <div>
-              <strong>{{ user.name }}</strong>
-              <span>{{ user.email }}</span>
-            </div>
-          </div>
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="user-avatar-circle">
+                  <span>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
+                </div>
+                <div class="d-flex gap-1">
+                  <span class="badge-pill" [ngClass]="user.role === 'RESPONSIBLE' ? 'primary' : 'indigo'">
+                    {{ getRoleLabel(user.role) }}
+                  </span>
+                  <span class="badge-pill" [ngClass]="user.active ? 'success' : 'danger'">
+                    {{ user.active ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
+              </div>
 
-          <div class="member-actions">
-            <span class="chip" [class.owner]="user.role === 'RESPONSIBLE'">
-              {{ getRoleLabel(user.role) }}
-            </span>
-            <span class="chip" [class.active]="user.active" [class.inactive]="!user.active">
-              {{ user.active ? 'Ativo' : 'Inativo' }}
-            </span>
+              <h5 class="fw-bold mb-1 text-truncate">{{ user.name }}</h5>
+              <span class="text-muted small d-block mb-3 text-truncate">{{ user.email }}</span>
+            </div>
+
             @if (permissions.canEditMember()) {
-              <a [routerLink]="[user.id, 'edit']" class="icon-button" aria-label="Editar membro">
-                <i class="bi bi-pencil"></i>
-              </a>
+              <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a [routerLink]="[user.id, 'edit']" class="btn btn-secondary btn-sm" title="Editar permissões">
+                  <i class="bi bi-pencil me-1"></i> Editar Membro
+                </a>
+              </div>
             }
           </div>
-        </article>
+        </div>
       }
     </div>
   }
-</section>
+</div>
