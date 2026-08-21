@@ -6,36 +6,36 @@
 .split-auth-page {
   min-height: 100vh;
   position: relative;
-  background-color: #064e3b;
+  background-color: #084335;
 }
 
 /* ── Top Floating Theme Toggle ── */
 .floating-theme-toggle {
   position: absolute;
-  top: 1.5rem;
-  right: 1.75rem;
+  top: 1.25rem;
+  right: 1.5rem;
   z-index: 100;
 }
 
 .theme-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.95rem;
-  background: rgba(255, 255, 255, 0.15);
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 650;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.35);
   }
 }
 
@@ -51,7 +51,7 @@
 }
 
 /* ============================================================
-   LEFT PANEL: DEEP EMERALD FORM AREA (Padrão Screenshot)
+   LEFT PANEL: DEEP PINE EMERALD FORM AREA (Padrão Screenshot)
    ============================================================ */
 .auth-panel-form {
   background-color: #084335;
@@ -77,26 +77,26 @@
 .auth-emblem-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 
   .emblem-shield {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 16px;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1.5px solid rgba(52, 211, 153, 0.4);
+    background: rgba(16, 185, 129, 0.2);
+    border: 1.5px solid rgba(52, 211, 153, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #34d399;
-    font-size: 2rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    font-size: 1.85rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   }
 }
 
 .auth-form-title-group {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 
   .auth-main-title {
     font-size: 1.75rem;
@@ -117,8 +117,8 @@
 
 /* ── Demo Quick Bar ── */
 .demo-quick-bar {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
   padding: 0.65rem 0.85rem;
 
@@ -232,8 +232,8 @@
 
   .input-custom {
     width: 100%;
-    background: rgba(0, 0, 0, 0.22);
-    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px;
     padding: 0.65rem 2.4rem 0.65rem 2.5rem;
     color: #ffffff;
@@ -242,12 +242,12 @@
     transition: all 0.15s ease;
 
     &::placeholder {
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.45);
     }
 
     &:focus {
       outline: none;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.38);
       border-color: #34d399;
       box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
     }
@@ -429,46 +429,6 @@
       color: #64748b;
       margin: 0;
       line-height: 1.4;
-    }
-  }
-}
-
-/* ============================================================
-   DARK MODE OVERRIDES (Para quando o usuário alternar para Dark)
-   ============================================================ */
-.split-auth-page.dark-mode {
-  .auth-panel-form {
-    background-color: #0d1e18;
-  }
-
-  .auth-panel-hero {
-    background-color: #09090b;
-    color: #ffffff;
-
-    .hero-brand-name {
-      color: #34d399;
-    }
-
-    .hero-headline {
-      color: #ffffff;
-    }
-
-    .hero-description {
-      color: #a1a1aa;
-    }
-
-    .feature-icon-badge {
-      background: #18181b;
-      border: 1px solid #27272a;
-      color: #34d399;
-    }
-
-    .feature-heading {
-      color: #ffffff;
-    }
-
-    .feature-sub {
-      color: #71717a;
     }
   }
 }

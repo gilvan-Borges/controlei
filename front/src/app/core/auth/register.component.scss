@@ -6,36 +6,36 @@
 .split-auth-page {
   min-height: 100vh;
   position: relative;
-  background-color: #064e3b;
+  background-color: #084335;
 }
 
 /* ── Top Floating Theme Toggle ── */
 .floating-theme-toggle {
   position: absolute;
-  top: 1.5rem;
-  right: 1.75rem;
+  top: 1.25rem;
+  right: 1.5rem;
   z-index: 100;
 }
 
 .theme-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem 0.95rem;
-  background: rgba(255, 255, 255, 0.15);
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 9999px;
   color: #ffffff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 650;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.35);
   }
 }
 
@@ -51,7 +51,7 @@
 }
 
 /* ============================================================
-   LEFT PANEL: DEEP EMERALD HERO SHOWCASE (Padrão Screenshot)
+   LEFT PANEL: DEEP PINE HERO SHOWCASE (Padrão Screenshot)
    ============================================================ */
 .auth-panel-hero {
   background-color: #084335;
@@ -157,7 +157,7 @@
 }
 
 /* ============================================================
-   RIGHT PANEL: CLEAN CARD CONTAINER (Padrão Screenshot)
+   RIGHT PANEL: CLEAN FLOATING CARD CONTAINER (Padrão Screenshot)
    ============================================================ */
 .auth-panel-card-container {
   background-color: #f6f3eb;
@@ -374,78 +374,5 @@
 
   &:hover {
     text-decoration: underline;
-  }
-}
-
-/* ============================================================
-   DARK MODE OVERRIDES
-   ============================================================ */
-.split-auth-page.dark-mode {
-  .auth-panel-card-container {
-    background-color: #09090b;
-  }
-
-  .register-floating-card {
-    background: #18181b;
-    border-color: #27272a;
-
-    .register-emblem-icon {
-      background: #27272a;
-      color: #34d399;
-    }
-
-    .register-title {
-      color: #ffffff;
-    }
-
-    .register-subtitle {
-      color: #a1a1aa;
-    }
-
-    .section-micro-label {
-      color: #a1a1aa;
-    }
-
-    .account-type-group .type-selector-grid .type-card {
-      background: #121215;
-      border-color: #27272a;
-
-      .type-text strong {
-        color: #ffffff;
-      }
-      .type-text small {
-        color: #71717a;
-      }
-
-      &.selected {
-        border-color: #34d399;
-        background: #142820;
-
-        .type-icon {
-          color: #34d399;
-        }
-        .type-text strong {
-          color: #34d399;
-        }
-      }
-    }
-
-    .form-label-clean {
-      color: #ffffff;
-    }
-
-    .input-wrap-clean .form-control-clean {
-      background: #121215;
-      border-color: #27272a;
-      color: #ffffff;
-
-      &:focus {
-        border-color: #34d399;
-      }
-    }
-
-    .back-login-link {
-      color: #34d399;
-    }
   }
 }
