@@ -1,16 +1,8 @@
-<div class="split-auth-page">
-  <!-- Top Floating Theme Toggle -->
-  <div class="floating-theme-toggle">
-    <button type="button" class="theme-pill-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'">
-      <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
-      <span>{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
-    </button>
-  </div>
-
+<div class="split-auth-page login-page-theme">
   <div class="split-layout-grid">
-    <!-- LEFT PANEL: Deep Emerald Form Area (Padrão Screenshot) -->
-    <div class="auth-panel-form">
-      <div class="auth-form-inner animate-in">
+    <!-- LEFT PANEL: Deep Pine Green Form Area -->
+    <div class="auth-panel-form auth-panel-green">
+      <div class="auth-form-inner auth-animate-left">
         <!-- Brand Emblem Icon -->
         <div class="auth-emblem-wrap">
           <div class="emblem-shield">
@@ -132,9 +124,9 @@
       </div>
     </div>
 
-    <!-- RIGHT PANEL: Warm Hero / Showcase Area (Padrão Screenshot) -->
-    <div class="auth-panel-hero">
-      <div class="hero-content-inner animate-in">
+    <!-- RIGHT PANEL: Warm Cream Light Showcase Area -->
+    <div class="auth-panel-hero auth-panel-cream">
+      <div class="hero-content-inner auth-animate-right">
         <div class="hero-brand-header mb-4">
           <div class="hero-logo-mark">
             <i class="bi bi-wallet2"></i>

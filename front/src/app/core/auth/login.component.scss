@@ -7,36 +7,7 @@
   min-height: 100vh;
   position: relative;
   background-color: #084335;
-}
-
-/* ── Top Floating Theme Toggle ── */
-.floating-theme-toggle {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.5rem;
-  z-index: 100;
-}
-
-.theme-pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
-  color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 650;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.35);
-    border-color: rgba(255, 255, 255, 0.35);
-  }
+  overflow-x: hidden;
 }
 
 /* ── Split Layout Grid ── */
@@ -50,10 +21,41 @@
   }
 }
 
+/* ── Smooth Animations ── */
+.auth-animate-left {
+  animation: authSlideInLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-animate-right {
+  animation: authSlideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes authSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* ============================================================
-   LEFT PANEL: DEEP PINE EMERALD FORM AREA (Padrão Screenshot)
+   LEFT PANEL: DEEP PINE GREEN FORM AREA (#084335)
    ============================================================ */
-.auth-panel-form {
+.auth-panel-green {
   background-color: #084335;
   display: flex;
   flex-direction: column;
@@ -61,6 +63,7 @@
   justify-content: center;
   padding: 3.5rem 2.5rem;
   color: #ffffff;
+  transition: background-color 0.4s ease;
 
   @media (max-width: 560px) {
     padding: 3rem 1.5rem;
@@ -182,7 +185,7 @@
   }
 }
 
-/* ── Inputs (Estilo Screenshot) ── */
+/* ── Inputs ── */
 .form-field-item {
   display: flex;
   flex-direction: column;
@@ -282,7 +285,7 @@
   margin-top: 0.25rem;
 }
 
-/* ── Submit Button (Padrão Screenshot) ── */
+/* ── Submit Button ── */
 .btn-submit-action {
   background: #059669;
   color: #ffffff;
@@ -322,17 +325,19 @@
     font-weight: 700;
     color: #fbbf24;
     text-decoration: none;
+    transition: all 0.15s ease;
 
     &:hover {
       text-decoration: underline;
+      color: #fef08a;
     }
   }
 }
 
 /* ============================================================
-   RIGHT PANEL: WARM CLEAN SHOWCASE AREA (Padrão Screenshot)
+   RIGHT PANEL: WARM CREAM SHOWCASE AREA (#f6f3eb)
    ============================================================ */
-.auth-panel-hero {
+.auth-panel-cream {
   background-color: #f6f3eb;
   display: flex;
   flex-direction: column;
@@ -340,6 +345,7 @@
   justify-content: center;
   padding: 4rem 3.5rem;
   color: #18181b;
+  transition: background-color 0.4s ease;
 
   @media (max-width: 960px) {
     display: none;

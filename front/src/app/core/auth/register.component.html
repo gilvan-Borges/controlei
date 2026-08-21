@@ -1,16 +1,8 @@
-<div class="split-auth-page" [class.dark-mode]="isDark">
-  <!-- Top Floating Theme Switcher -->
-  <div class="floating-theme-toggle">
-    <button type="button" class="theme-pill-btn" (click)="toggleTheme()" [attr.aria-label]="isDark ? 'Ativar modo claro' : 'Ativar modo escuro'" [title]="isDark ? 'Modo Claro' : 'Modo Escuro'">
-      <i class="bi" [ngClass]="isDark ? 'bi-sun' : 'bi-moon'"></i>
-      <span>{{ isDark ? 'Modo Claro' : 'Modo Escuro' }}</span>
-    </button>
-  </div>
-
+<div class="split-auth-page register-page-theme">
   <div class="split-layout-grid">
-    <!-- LEFT PANEL: Deep Emerald Hero Showcase -->
-    <div class="auth-panel-hero">
-      <div class="hero-content-inner animate-in">
+    <!-- LEFT PANEL: Warm Cream Light Hero Showcase (Invertido em relação ao Login) -->
+    <div class="auth-panel-hero auth-panel-cream">
+      <div class="hero-content-inner auth-animate-left">
         <div class="hero-brand-header mb-4">
           <div class="hero-logo-mark">
             <i class="bi bi-wallet2"></i>
@@ -60,9 +52,9 @@
       </div>
     </div>
 
-    <!-- RIGHT PANEL: Clean Off-White Background with Floating Card -->
-    <div class="auth-panel-card-container">
-      <div class="register-floating-card animate-in">
+    <!-- RIGHT PANEL: Deep Pine Green Form Area (Invertido em relação ao Login) -->
+    <div class="auth-panel-form auth-panel-green">
+      <div class="register-floating-card auth-animate-right">
         <div class="register-card-header text-center mb-3">
           <div class="register-emblem-icon">
             <i class="bi bi-wallet2"></i>
@@ -85,7 +77,7 @@
           </div>
         }
 
-        <!-- Profile / Account Type Selector (Estilo Screenshot) -->
+        <!-- Profile / Account Type Selector -->
         <div class="account-type-group mb-3">
           <label class="section-micro-label">Tipo de Cadastro</label>
           <div class="type-selector-grid">
