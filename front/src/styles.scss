@@ -15,72 +15,72 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces & Backgrounds */
-  --c-bg: #07090e;
-  --c-bg-canvas: #07090e;
-  --c-bg-subtle: #0f1422;
-  --c-surface: #111827;
-  --c-surface-card: #111a2e;
-  --c-surface-glass: rgba(17, 26, 46, 0.72);
-  --c-surface-glass-strong: rgba(15, 23, 42, 0.92);
-  --c-surface-elevated: #1a243b;
-  --c-surface-hover: #1f2d4a;
+  /* ── PURE MATTE BLACK & CHARCOAL PALETTE (SEM AZUL / SEM TINTA VERDE) ── */
+  --c-bg: #09090b;              /* Fundo Preto Neutro Zinc */
+  --c-bg-canvas: #000000;       /* Preto absoluto */
+  --c-bg-subtle: #121215;       /* Cinza carvão escuro */
+  --c-surface: #141417;         /* Cinza escuro profundo */
+  --c-surface-card: #18181b;    /* Cartão Cinza Grafite Neutro */
+  --c-surface-glass: rgba(24, 24, 27, 0.92);
+  --c-surface-glass-strong: #121215;
+  --c-surface-elevated: #27272a;/* Cinza elevado Zinc 800 */
+  --c-surface-hover: #3f3f46;   /* Zinc 700 */
 
-  /* Primary Brand Colors (Emerald Growth) */
+  /* Cores de Ação e Confirmação */
   --c-primary: #10b981;
   --c-primary-rgb: 16, 185, 129;
   --c-primary-light: #34d399;
   --c-primary-dark: #059669;
-  --c-primary-glow: rgba(16, 185, 129, 0.35);
+  --c-primary-glow: rgba(16, 185, 129, 0.25);
 
-  /* Vivid Accents */
-  --c-accent: #06b6d4;
-  --c-accent-rgb: 6, 182, 212;
-  --c-indigo: #6366f1;
-  --c-indigo-rgb: 99, 102, 241;
-  --c-violet: #8b5cf6;
-  --c-violet-rgb: 139, 92, 246;
-  --c-pink: #ec4899;
-  --c-pink-rgb: 236, 72, 153;
-  --c-amber: #f59e0b;
-  --c-amber-rgb: 245, 158, 11;
-  --c-rose: #f43f5e;
-  --c-rose-rgb: 244, 63, 94;
+  /* Acentos de Interface */
+  --c-accent: #38bdf8;
+  --c-accent-rgb: 56, 189, 248;
+  --c-indigo: #818cf8;
+  --c-indigo-rgb: 129, 140, 248;
+  --c-violet: #a78bfa;
+  --c-violet-rgb: 167, 139, 250;
+  --c-pink: #f472b6;
+  --c-pink-rgb: 244, 114, 182;
+  --c-amber: #fbbf24;
+  --c-amber-rgb: 251, 191, 36;
+  --c-rose: #f87171;
+  --c-rose-rgb: 248, 113, 113;
 
   /* Semantic Alerts */
   --c-success: #10b981;
   --c-success-rgb: 16, 185, 129;
-  --c-warning: #f59e0b;
-  --c-warning-rgb: 245, 158, 11;
-  --c-danger: #f43f5e;
-  --c-danger-rgb: 244, 63, 94;
-  --c-info: #06b6d4;
-  --c-info-rgb: 6, 182, 212;
+  --c-warning: #fbbf24;
+  --c-warning-rgb: 251, 191, 36;
+  --c-danger: #f87171;
+  --c-danger-rgb: 248, 113, 113;
+  --c-info: #38bdf8;
+  --c-info-rgb: 56, 189, 248;
 
-  /* High Contrast Typography */
-  --c-text: #f8fafc;
-  --c-text-muted: #94a3b8;
-  --c-text-dim: #64748b;
-  --c-text-inverse: #07090e;
+  /* Tipografia em Alto Contraste (Branco Puro e Cinzas Neutros Zinc) */
+  --c-text: #ffffff;
+  --c-text-muted: #a1a1aa;      /* Zinc 400 */
+  --c-text-dim: #71717a;        /* Zinc 500 */
+  --c-text-inverse: #09090b;
 
-  /* Borders & Dividers */
-  --c-border: rgba(255, 255, 255, 0.08);
-  --c-border-subtle: rgba(255, 255, 255, 0.04);
-  --c-border-hover: rgba(16, 185, 129, 0.4);
+  /* Bordas em Cinza Neutro Zinc (Sem azul) */
+  --c-border: #27272a;          /* Zinc 800 */
+  --c-border-subtle: #18181b;   /* Zinc 900 */
+  --c-border-hover: #3f3f46;    /* Zinc 700 */
   --c-border-focus: #10b981;
 
-  /* Glow Shadows & Elevations */
-  --c-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --c-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-  --c-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.65);
-  --c-shadow-glow: 0 0 30px rgba(16, 185, 129, 0.22);
-  --c-shadow-indigo-glow: 0 0 30px rgba(99, 102, 241, 0.25);
+  /* Sombras Neutras Profundas */
+  --c-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --c-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  --c-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.85);
+  --c-shadow-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+  --c-shadow-indigo-glow: 0 0 20px rgba(129, 140, 248, 0.2);
 
   /* Border Radii */
-  --c-radius-sm: 10px;
-  --c-radius: 16px;
-  --c-radius-lg: 24px;
-  --c-radius-xl: 32px;
+  --c-radius-sm: 8px;
+  --c-radius: 12px;
+  --c-radius-lg: 18px;
+  --c-radius-xl: 24px;
 }
 
 /* ── PEARL CLEAN / LIGHT THEME ── */
@@ -88,15 +88,15 @@
   color-scheme: light;
 
   /* Surfaces & Backgrounds */
-  --c-bg: #f8fafc;
-  --c-bg-canvas: #f8fafc;
-  --c-bg-subtle: #f1f5f9;
+  --c-bg: #f4f4f5;
+  --c-bg-canvas: #fafafa;
+  --c-bg-subtle: #e4e4e7;
   --c-surface: #ffffff;
   --c-surface-card: #ffffff;
-  --c-surface-glass: rgba(255, 255, 255, 0.88);
-  --c-surface-glass-strong: rgba(255, 255, 255, 0.98);
-  --c-surface-elevated: #f8fafc;
-  --c-surface-hover: #f1f5f9;
+  --c-surface-glass: rgba(255, 255, 255, 0.92);
+  --c-surface-glass-strong: #ffffff;
+  --c-surface-elevated: #f4f4f5;
+  --c-surface-hover: #e4e4e7;
 
   /* Primary Brand Colors */
   --c-primary: #059669;
@@ -130,28 +130,28 @@
   --c-info-rgb: 2, 132, 199;
 
   /* High Contrast Typography */
-  --c-text: #0f172a;
-  --c-text-muted: #475569;
-  --c-text-dim: #94a3b8;
+  --c-text: #09090b;
+  --c-text-muted: #52525b;
+  --c-text-dim: #71717a;
   --c-text-inverse: #ffffff;
 
   /* Borders & Dividers */
-  --c-border: #e2e8f0;
-  --c-border-subtle: #f1f5f9;
-  --c-border-hover: rgba(5, 150, 105, 0.45);
+  --c-border: #e4e4e7;
+  --c-border-subtle: #f4f4f5;
+  --c-border-hover: #d4d4d8;
   --c-border-focus: #059669;
 
   /* Clean Shadows */
-  --c-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-  --c-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-  --c-shadow-lg: 0 25px 50px -12px rgba(15, 23, 42, 0.14);
-  --c-shadow-glow: 0 0 25px rgba(5, 150, 105, 0.15);
-  --c-shadow-indigo-glow: 0 0 25px rgba(79, 70, 229, 0.15);
+  --c-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --c-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --c-shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12);
+  --c-shadow-glow: 0 0 20px rgba(5, 150, 105, 0.15);
+  --c-shadow-indigo-glow: 0 0 20px rgba(79, 70, 229, 0.15);
 
-  --c-radius-sm: 10px;
-  --c-radius: 16px;
-  --c-radius-lg: 24px;
-  --c-radius-xl: 32px;
+  --c-radius-sm: 8px;
+  --c-radius: 12px;
+  --c-radius-lg: 18px;
+  --c-radius-xl: 24px;
 }
 
 /* ============================================================
@@ -170,29 +170,9 @@ html, body {
   line-height: 1.55;
   color: var(--c-text);
   background-color: var(--c-bg);
-  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
-
-/* ── Ambient Background Glow Layer ── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    radial-gradient(ellipse 60% 40% at 10% 10%, rgba(var(--c-primary-rgb), 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 90% 20%, rgba(var(--c-indigo-rgb), 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 90%, rgba(var(--c-accent-rgb), 0.05) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-[data-theme="light"] body::before {
-  background-image:
-    radial-gradient(ellipse 60% 40% at 10% 10%, rgba(var(--c-primary-rgb), 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 90% 20%, rgba(var(--c-indigo-rgb), 0.03) 0%, transparent 60%);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1, h2, h3, h4, h5, h6,
