@@ -40,6 +40,7 @@ public class AuthService {
     private final long refreshTokenExpirationDays;
     private final LoginAttemptTracker loginAttempts;
     private final boolean registrationEnabled;
+    private final FamilyDefaultsService familyDefaults;
     /** Hash de uma senha qualquer, para gastar o mesmo tempo de BCrypt quando o e-mail nao existe. */
     private final String dummyHash;
 
@@ -51,6 +52,7 @@ public class AuthService {
                        TokenProvider tokenProvider,
                        LoginAttemptTracker loginAttempts,
                        @Value("${app.registration.enabled:true}") boolean registrationEnabled,
+                       FamilyDefaultsService familyDefaults,
                        @Value("${jwt.refresh-expiration-days:7}") long refreshTokenExpirationDays) {
         this.userRepository = userRepository;
         this.familyRepository = familyRepository;
@@ -61,6 +63,7 @@ public class AuthService {
         this.refreshTokenExpirationDays = refreshTokenExpirationDays;
         this.loginAttempts = loginAttempts;
         this.registrationEnabled = registrationEnabled;
+        this.familyDefaults = familyDefaults;
         this.dummyHash = passwordHasher.hash("senha-ficticia-para-igualar-o-tempo");
     }
 
@@ -106,6 +109,9 @@ public class AuthService {
 
         savedFamily.setResponsibleUserId(savedResponsible.getId());
         familyRepository.save(savedFamily);
+
+        // Categorias comuns e uma conta "Carteira": a familia ja pode lancar a primeira despesa
+        familyDefaults.createFor(savedFamily.getId(), savedResponsible.getId());
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 savedResponsible.getId(),
