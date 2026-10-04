@@ -22,18 +22,52 @@
       </button>
     </div>
 
+    @if (settings && !settings.enabled && settings.aiAvailable) {
+      <div class="assistant-banner" role="region" aria-label="Assistente com IA desativado">
+        @if (settings.canManage) {
+          @if (!consentOpen) {
+            <p>O assistente com IA está <strong>desativado</strong>. Ative para ele consultar seus dados e fazer coisas por você.</p>
+            <button type="button" (click)="openConsent()">Ativar assistente com IA</button>
+          } @else {
+            <p class="consent-title"><strong>Antes de ativar, saiba:</strong></p>
+            <ul class="consent-list">
+              <li>As perguntas e os dados da família que o assistente consultar (saldos, transações, orçamentos, metas) são enviados a um provedor de IA externo para gerar a resposta.</li>
+              <li>O provedor é instruído a não guardar nem treinar com esses dados.</li>
+              <li>Vale para todos os membros da família. Nada é alterado sem confirmação de quem pediu.</li>
+              <li>Você pode desativar a qualquer momento.</li>
+            </ul>
+            <label class="consent-check">
+              <input type="checkbox" [checked]="acknowledged" (change)="acknowledged = !acknowledged" />
+              <span>Estou ciente e quero ativar para a minha família</span>
+            </label>
+            <div class="assistant-banner-buttons">
+              <button type="button" class="primary" (click)="setEnabled(true)" [disabled]="!acknowledged || savingSettings">Ativar</button>
+              <button type="button" (click)="closeConsent()">Agora não</button>
+            </div>
+          }
+        } @else {
+          <p>O assistente com IA está <strong>desativado</strong>. Peça ao responsável da família para ativá-lo. Enquanto isso, respondo dúvidas básicas de uso.</p>
+        }
+      </div>
+    }
+    @if (settings && settings.enabled && settings.canManage) {
+      <div class="assistant-manage">
+        <button type="button" (click)="setEnabled(false)" [disabled]="savingSettings">Desativar assistente com IA</button>
+      </div>
+    }
+
     <div #list class="assistant-messages" tabindex="0" role="log" aria-live="polite" aria-relevant="additions">
       @for (m of messages; track $index) {
         <div class="assistant-msg" [class.user]="m.from === 'user'">
           <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
           {{ m.text }}
           @for (a of m.actions ?? []; track a.id) {
-            <div class="assistant-action" [attr.data-state]="a.state">
+            <div class="assistant-action" [class.destructive]="a.destructive" [attr.data-state]="a.state">
               <p class="assistant-action-summary">{{ a.summary }}</p>
               @if (a.state === 'pending' || a.state === 'working') {
                 <div class="assistant-action-buttons">
                   <button type="button" class="confirm" (click)="confirm(a)" [disabled]="a.state === 'working'">
-                    {{ a.state === 'working' ? 'Executando…' : 'Confirmar' }}
+                    {{ a.state === 'working' ? 'Executando…' : a.destructive ? 'Excluir' : 'Confirmar' }}
                   </button>
                   <button type="button" class="cancel" (click)="cancel(a)" [disabled]="a.state === 'working'">Cancelar</button>
                 </div>

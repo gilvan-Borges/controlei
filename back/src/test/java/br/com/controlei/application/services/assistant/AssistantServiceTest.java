@@ -4,6 +4,7 @@ import br.com.controlei.application.exceptions.BusinessException;
 import br.com.controlei.application.services.AuditLogService;
 import br.com.controlei.application.services.AuthorizationService;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient;
+import br.com.controlei.domain.contracts.repositories.AssistantSettingsRepositoryPort;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.Completion;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.Message;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.ToolCall;
@@ -33,6 +34,7 @@ class AssistantServiceTest {
     private ObjectProvider<AssistantAiClient> provider;
     private PendingActions pending;
     private AssistantToolbox toolbox;
+    private AssistantSettingsRepositoryPort settings;
     private final UUID userId = UUID.randomUUID();
 
     @SuppressWarnings("unchecked")
@@ -46,12 +48,14 @@ class AssistantServiceTest {
         pending = new PendingActions();
         toolbox = mock(AssistantToolbox.class);
         when(toolbox.all()).thenReturn(List.of());
+        settings = mock(AssistantSettingsRepositoryPort.class);
+        when(settings.isEnabled(any())).thenReturn(true);
     }
 
     private AssistantService service(AssistantAiClient client, int limit) {
         when(provider.getIfAvailable()).thenReturn(client);
         return new AssistantService(provider, toolbox, pending, authorization, mock(AuditLogService.class),
-                new ObjectMapper(), limit);
+                settings, new ObjectMapper(), limit);
     }
 
     private static Completion text(String t) {
@@ -196,6 +200,56 @@ class AssistantServiceTest {
         }
 
         verify(ai, times(AssistantService.FAILURES_TO_OPEN)).complete(any(), any());
+    }
+
+    @Test
+    void whenTheFamilyHasNotEnabledTheAssistantNothingIsSentToTheProvider() {
+        when(settings.isEnabled(any())).thenReturn(false);
+
+        var answer = service(ai, 10).ask("quanto gastei este mês?", List.of());
+
+        assertFalse(answer.ai());
+        assertEquals(AssistantService.DISABLED_HINT, answer.answer());
+        verify(ai, times(0)).complete(any(), any());
+    }
+
+    @Test
+    void disabledFamilyStillGetsLocalHelpWithoutTheProvider() {
+        when(settings.isEnabled(any())).thenReturn(false);
+
+        var answer = service(ai, 10).ask("como lançar uma despesa?", List.of());
+
+        assertTrue(answer.answer().contains("Nova despesa"));
+        verify(ai, times(0)).complete(any(), any());
+    }
+
+    @Test
+    void onlyTheResponsibleCanChangeTheSwitchAndEnablingNeedsAcknowledgement() {
+        var service = service(ai, 10);
+        org.mockito.Mockito.doThrow(new br.com.controlei.application.exceptions.ForbiddenException("so o responsavel"))
+                .when(authorization).requireResponsible();
+        assertThrows(br.com.controlei.application.exceptions.ForbiddenException.class, () -> service.updateSettings(true, true));
+        verify(settings, times(0)).setEnabled(any(), org.mockito.ArgumentMatchers.anyBoolean(), any());
+    }
+
+    @Test
+    void enablingWithoutAcknowledgementIsRefused() {
+        var service = service(ai, 10);
+
+        assertThrows(BusinessException.class, () -> service.updateSettings(true, false));
+        verify(settings, times(0)).setEnabled(any(), org.mockito.ArgumentMatchers.anyBoolean(), any());
+    }
+
+    @Test
+    void disablingNeedsNoAcknowledgementAndIsAudited() {
+        var audit = mock(AuditLogService.class);
+        when(provider.getIfAvailable()).thenReturn(ai);
+        var service = new AssistantService(provider, toolbox, pending, authorization, audit, settings, new ObjectMapper(), 10);
+
+        service.updateSettings(false, false);
+
+        verify(settings).setEnabled(any(), org.mockito.ArgumentMatchers.eq(false), any());
+        verify(audit).logAction(any(), any(), org.mockito.ArgumentMatchers.eq("ASSISTANT_SETTINGS"), any(), any(), any(), any(), any(), any());
     }
 
     @Test

@@ -22,7 +22,7 @@ public class PendingActions {
 
     private record Pending(UUID userId, String summary, Supplier<String> action, Instant expiresAt) {}
 
-    public record Prepared(UUID id, String summary) {}
+    public record Prepared(UUID id, String summary, boolean destructive) {}
 
     private final ConcurrentHashMap<UUID, Pending> store = new ConcurrentHashMap<>();
     private final Clock clock;
@@ -35,7 +35,7 @@ public class PendingActions {
         this.clock = clock;
     }
 
-    public Prepared register(UUID userId, String summary, Supplier<String> action) {
+    public Prepared register(UUID userId, String summary, Supplier<String> action, boolean destructive) {
         Instant now = clock.instant();
         store.values().removeIf(p -> p.expiresAt().isBefore(now));
         long mine = store.values().stream().filter(p -> p.userId().equals(userId)).count();
@@ -44,7 +44,7 @@ public class PendingActions {
         }
         UUID id = UUID.randomUUID();
         store.put(id, new Pending(userId, summary, action, now.plus(TTL)));
-        return new Prepared(id, summary);
+        return new Prepared(id, summary, destructive);
     }
 
     /** Retira a acao (uso unico). So o dono a retira; qualquer outro recebe "nao encontrada", sem pista de que existe. */

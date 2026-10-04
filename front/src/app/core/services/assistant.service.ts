@@ -6,6 +6,16 @@ import { environment } from '../../../environments/environment';
 export interface PreparedAction {
   id: string;
   summary: string;
+  /** Exclusão: a tela destaca o cartão e o botão diz "Excluir". */
+  destructive?: boolean;
+}
+
+export interface AssistantSettings {
+  enabled: boolean;
+  /** Só o responsável da família pode ligar ou desligar. */
+  canManage: boolean;
+  /** Há provedor de IA configurado no servidor. */
+  aiAvailable: boolean;
 }
 
 export interface AssistantAnswer {
@@ -31,6 +41,14 @@ export class AssistantService {
 
   ask(question: string, history: Turn[]): Observable<AssistantAnswer> {
     return this.http.post<AssistantAnswer>(`${this.baseUrl}/ask`, { question, history });
+  }
+
+  getSettings(): Observable<AssistantSettings> {
+    return this.http.get<AssistantSettings>(`${this.baseUrl}/settings`);
+  }
+
+  updateSettings(enabled: boolean, acknowledged: boolean): Observable<AssistantSettings> {
+    return this.http.put<AssistantSettings>(`${this.baseUrl}/settings`, { enabled, acknowledged });
   }
 
   confirm(actionId: string): Observable<{ message: string }> {

@@ -8,6 +8,7 @@ import br.com.controlei.application.services.AuthorizationService;
 import br.com.controlei.application.services.assistant.PendingActions.Prepared;
 import br.com.controlei.application.services.receipt.AiQuota;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient;
+import br.com.controlei.domain.contracts.repositories.AssistantSettingsRepositoryPort;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.Completion;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.Message;
 import br.com.controlei.domain.contracts.ai.AssistantAiClient.ToolCall;
@@ -89,24 +90,33 @@ public class AssistantService {
 
     public record Answer(String answer, boolean ai, List<Prepared> actions) {}
 
+    /** Estado do interruptor para a tela: se esta ligado, se quem pergunta pode muda-lo e se ha IA configurada no servidor. */
+    public record Settings(boolean enabled, boolean canManage, boolean aiAvailable) {}
+
+    static final String DISABLED_HINT =
+            "O assistente com IA está desativado para a sua família. O responsável pode ativá-lo aqui mesmo, no topo do assistente.";
+
     private final ObjectProvider<AssistantAiClient> client;
     private final AssistantToolbox toolbox;
     private final PendingActions pending;
     private final AuthorizationService authorization;
     private final AuditLogService audit;
+    private final AssistantSettingsRepositoryPort settings;
     private final ObjectMapper mapper;
     private final AiQuota quota;
     private final AtomicInteger consecutiveFailures = new AtomicInteger();
     private final AtomicReference<Instant> openUntil = new AtomicReference<>(Instant.MIN);
 
     public AssistantService(ObjectProvider<AssistantAiClient> client, AssistantToolbox toolbox, PendingActions pending,
-                            AuthorizationService authorization, AuditLogService audit, ObjectMapper mapper,
+                            AuthorizationService authorization, AuditLogService audit,
+                            AssistantSettingsRepositoryPort settings, ObjectMapper mapper,
                             @Value("${controlei.ai.assistant-daily-limit-per-family:40}") int dailyLimit) {
         this.client = client;
         this.toolbox = toolbox;
         this.pending = pending;
         this.authorization = authorization;
         this.audit = audit;
+        this.settings = settings;
         this.mapper = mapper;
         // Cota propria: conversar com o assistente nao pode consumir as leituras de comprovante da familia.
         this.quota = new AiQuota(dailyLimit);
@@ -119,6 +129,12 @@ public class AssistantService {
         }
         AssistantAiClient ai = client.getIfAvailable();
         List<Prepared> prepared = new ArrayList<>();
+        // Sem o aceite do responsavel da familia, nada sai do servidor: so a base de ajuda local responde.
+        boolean familyAllowsAi = settings.isEnabled(authorization.currentFamilyId());
+        if (ai != null && !familyAllowsAi) {
+            return new Answer(AssistantKnowledge.bestMatch(question).map(AssistantKnowledge.Topic::answer)
+                    .orElse(DISABLED_HINT), false, List.of());
+        }
         if (ai != null && Instant.now().isAfter(openUntil.get())
                 && quota.tryAcquire(authorization.currentFamilyId())) {
             try {
@@ -191,7 +207,7 @@ public class AssistantService {
                     ? mapper.createObjectNode() : mapper.readTree(call.argumentsJson());
             var result = tool.handler().handle(args);
             if (result.isPending()) {
-                prepared.add(pending.register(authorization.currentUserId(), result.summary(), result.action()));
+                prepared.add(pending.register(authorization.currentUserId(), result.summary(), result.action(), result.destructive()));
                 return "PREPARADO e aguardando a confirmacao da pessoa na tela: " + result.summary()
                         + ". Nao diga que foi feito; peca para confirmar.";
             }
@@ -202,6 +218,28 @@ public class AssistantService {
             log.warn("ferramenta {} falhou ({})", tool.name(), e.getClass().getSimpleName());
             return "ERRO: nao foi possivel executar essa ferramenta";
         }
+    }
+
+    public Settings settings() {
+        return new Settings(settings.isEnabled(authorization.currentFamilyId()), authorization.isResponsible(),
+                client.getIfAvailable() != null);
+    }
+
+    /**
+     * Liga ou desliga o assistente de IA da familia. So o responsavel; para ligar, ele precisa declarar ciencia de que os
+     * dados consultados pela conversa sao enviados ao provedor de IA. Fica no log de auditoria.
+     */
+    public Settings updateSettings(boolean enabled, boolean acknowledged) {
+        authorization.requireResponsible();
+        if (enabled && !acknowledged) {
+            throw new BusinessException("Para ativar, confirme que está ciente de que os dados consultados serão enviados ao provedor de IA");
+        }
+        UUID familyId = authorization.currentFamilyId();
+        UUID userId = authorization.currentUserId();
+        settings.setEnabled(familyId, enabled, userId);
+        audit.logAction(familyId, userId, "ASSISTANT_SETTINGS", familyId, AuditAction.UPDATE, null,
+                enabled ? "assistente de IA ativado" : "assistente de IA desativado", null, null);
+        return settings();
     }
 
     /** Executa a acao que a pessoa confirmou. Roda como quem confirmou, com as mesmas regras de qualquer tela. */

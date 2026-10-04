@@ -19,7 +19,7 @@ class PendingActionsTest {
     @Test
     void anActionCanBeUsedOnlyOnce() {
         var pending = new PendingActions();
-        var prepared = pending.register(owner, "resumo", () -> "ok");
+        var prepared = pending.register(owner, "resumo", () -> "ok", false);
 
         assertEquals("ok", pending.take(prepared.id(), owner).get());
         assertThrows(NotFoundException.class, () -> pending.take(prepared.id(), owner));
@@ -28,7 +28,7 @@ class PendingActionsTest {
     @Test
     void anotherUserCannotTakeItAndGetsNoHintItExists() {
         var pending = new PendingActions();
-        var prepared = pending.register(owner, "resumo", () -> "ok");
+        var prepared = pending.register(owner, "resumo", () -> "ok", false);
 
         assertThrows(NotFoundException.class, () -> pending.take(prepared.id(), UUID.randomUUID()));
         // E o dono ainda consegue: a tentativa alheia nao a consome.
@@ -44,7 +44,7 @@ class PendingActionsTest {
             @Override public Instant instant() { return now[0]; }
         };
         var pending = new PendingActions(clock);
-        var prepared = pending.register(owner, "resumo", () -> "ok");
+        var prepared = pending.register(owner, "resumo", () -> "ok", false);
 
         now[0] = now[0].plus(PendingActions.TTL).plus(Duration.ofSeconds(1));
 
@@ -55,11 +55,11 @@ class PendingActionsTest {
     void limitsHowManyActionsOneUserCanHaveWaiting() {
         var pending = new PendingActions();
         for (int i = 0; i < PendingActions.MAX_PER_USER; i++) {
-            pending.register(owner, "a" + i, () -> "ok");
+            pending.register(owner, "a" + i, () -> "ok", false);
         }
 
-        assertThrows(AssistantTool.ToolException.class, () -> pending.register(owner, "demais", () -> "ok"));
+        assertThrows(AssistantTool.ToolException.class, () -> pending.register(owner, "demais", () -> "ok", false));
         // Outro usuario nao e afetado.
-        pending.register(UUID.randomUUID(), "outro", () -> "ok");
+        pending.register(UUID.randomUUID(), "outro", () -> "ok", false);
     }
 }
