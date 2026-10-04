@@ -13,4 +13,7 @@ public interface AuditLogRepositoryPort {
     Optional<AuditLog> findByIdAndDeletedAtIsNull(UUID id);
 
     List<AuditLog> findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId);
+
+    /** Os {@code limit} registros mais recentes: a trilha de auditoria so cresce, entao nunca se lista inteira. */
+    List<AuditLog> findRecentByFamilyId(UUID familyId, int limit);
 }

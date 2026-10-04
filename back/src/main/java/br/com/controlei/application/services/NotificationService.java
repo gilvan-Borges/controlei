@@ -16,6 +16,9 @@ import java.util.UUID;
 @Service
 public class NotificationService {
 
+    /** Teto da listagem (as mais recentes); "marcar todas como lidas" continua alcancando todas. */
+    static final int MAX_LISTED = 200;
+
     private final NotificationRepositoryPort notificationRepository;
     private final AuthorizationService authorizationService;
 
@@ -56,9 +59,7 @@ public class NotificationService {
         UUID familyId = authorizationService.currentFamilyId();
         UUID userId = authorizationService.currentUserId();
 
-        List<Notification> list = unreadOnly
-                ? notificationRepository.findAllByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNullOrderByCreatedAtDesc(familyId, userId)
-                : notificationRepository.findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(familyId, userId);
+        List<Notification> list = notificationRepository.findRecent(familyId, userId, unreadOnly, MAX_LISTED);
 
         return list.stream().map(this::buildResponse).toList();
     }

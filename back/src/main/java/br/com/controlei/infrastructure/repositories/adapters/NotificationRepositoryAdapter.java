@@ -32,6 +32,15 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
     }
 
     @Override
+    public List<Notification> findRecent(UUID familyId, UUID userId, boolean unreadOnly, int limit) {
+        var page = org.springframework.data.domain.PageRequest.of(0, limit);
+        var rows = unreadOnly
+                ? repository.findAllByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNullOrderByCreatedAtDesc(familyId, userId, page)
+                : repository.findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(familyId, userId, page);
+        return rows.stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public List<Notification> findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId) {
         return repository.findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(familyId, userId)
                 .stream()
