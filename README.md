@@ -89,6 +89,10 @@ CONTROLEI_AI_MODEL=google/gemini-2.5-flash   # opcional
 CONTROLEI_AI_DAILY_LIMIT=30                  # leituras por família por dia
 ```
 
+## Deploy (na VPS do JavAI, pela Tailscale)
+
+O Controlei roda na mesma VPS do JavAI, como um segundo projeto Compose, com a **Tailscale como caminho padrão** para deploy, SSH e ferramentas internas. Não publica nenhuma porta: o Caddy do JavAI entra por uma rede de borda dedicada e fala com o gateway. As imagens vêm do GHCR (a VPS nunca compila) e o deploy tem rollback automático. Passo a passo, segredos, DNS e Access em [`deploy/README.md`](deploy/README.md); `docker-compose.vps.yml` é o compose de produção.
+
 ## Estrutura
 
 | Pasta | O que é |

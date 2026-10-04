@@ -1,0 +1,10 @@
+#!/bin/bash
+# Comando forcado do usuario deploy-controlei: a unica coisa que a chave dele consegue fazer.
+# Mesmo desenho do javai-deploy. Instalado em /usr/local/sbin/controlei-deploy (deploy/README.md).
+set -euo pipefail
+tag="${SSH_ORIGINAL_COMMAND:-}"
+if [[ ! "$tag" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Uso: ssh deploy-controlei@javai-vps <SHA do commit, 40 caracteres>" >&2
+  exit 2
+fi
+exec sudo -n /usr/local/sbin/controlei-deploy-root "$tag"

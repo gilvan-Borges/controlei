@@ -74,3 +74,100 @@ jobs:
           if [ "$published" != "1" ]; then
             echo "Esperada 1 porta publicada (nginx), encontradas $published" && exit 1
           fi
+      - name: Compose da VPS nao publica porta nenhuma
+        env:
+          JWT_SECRET: 0123456789012345678901234567890123
+          DB_PASSWORD: ci-senha-descartavel
+          REDIS_PASSWORD: ci-redis-descartavel
+          CONTROLEI_TAG: ci
+          TAILSCALE_IP: 100.64.0.1
+        run: |
+          docker compose -f docker-compose.vps.yml config -q
+          # Em producao o unico caminho de entrada e o Caddy, pela rede externa; o Kafka UI so existe no override
+          # da tailnet, preso ao IP da Tailscale.
+          published=$(docker compose -f docker-compose.vps.yml config | grep -c 'published:')
+          if [ "$published" != "0" ]; then
+            echo "A VPS nao pode publicar porta (encontradas $published)" && exit 1
+          fi
+          docker compose -f docker-compose.vps.yml -f docker-compose.tailnet.yml config | grep -q "host_ip: 100.64.0.1"
+          for var in DB_PASSWORD REDIS_PASSWORD JWT_SECRET; do
+            if env "$var=" docker compose -f docker-compose.vps.yml config -q 2>/dev/null; then
+              echo "O compose da VPS deveria exigir $var" && exit 1
+            fi
+          done
+
+  # Imagens no GHCR: so depois que back, front e compose passaram, e so na main. A VPS nunca compila nada.
+  images:
+    name: Imagens no GHCR
+    needs: [back, front, compose]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io/gilvan-borges
+      TAG: ${{ github.sha }}
+      TRIVY_IMAGE: aquasec/trivy:0.75.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build das imagens (o back compila dentro da propria imagem)
+        run: |
+          docker build -t "$REGISTRY/controlei-back:$TAG" back
+          docker build -t "$REGISTRY/controlei-front:$TAG" front
+      - name: Trivy (falha com vulnerabilidade alta ou critica que ja tem correcao)
+        run: |
+          for image in controlei-back controlei-front; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+              --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress "$REGISTRY/$image:$TAG"
+          done
+      - name: Publica no GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          for image in controlei-back controlei-front; do
+            docker push "$REGISTRY/$image:$TAG"
+          done
+
+  # Deploy na VPS pela Tailscale (deploy/README.md). Desligado ate a variavel do repositorio DEPLOY_ENABLED valer
+  # "true", o que so acontece depois do primeiro deploy manual.
+  deploy:
+    name: Deploy na VPS
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: producao
+    concurrency:
+      group: deploy-producao
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    steps:
+      # Aparelho temporario na tailnet, autenticado por OIDC: nenhum segredo da Tailscale fica no GitHub. A politica
+      # da tailnet so deixa o tag:ci-javai chegar na porta 22 da javai-vps. A tag:ci e de outro projeto.
+      - uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
+        with:
+          oauth-client-id: ${{ vars.TS_OIDC_CLIENT_ID }}
+          audience: ${{ vars.TS_OIDC_AUDIENCE }}
+          tags: tag:ci-javai
+          ping: ${{ vars.DEPLOY_HOST }}
+      # O usuario deploy-controlei so aceita o SHA do commit (comando forcado). O GITHUB_TOKEN vai pelo stdin, so
+      # para baixar as imagens e os arquivos de infra, e expira quando o job termina.
+      - name: Deploy
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.sha }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n%s\n' "$GHCR_USER" "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=30 "deploy-controlei@$DEPLOY_HOST" "$TAG"

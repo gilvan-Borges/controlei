@@ -1,0 +1,121 @@
+#!/bin/bash
+# Deploy de uma versao do Controlei na VPS do JavAI. Instalado em /usr/local/sbin/controlei-deploy-root e chamado
+# so pelo comando forcado do usuario deploy-controlei, via sudo (deploy/README.md). Esta copia no repositorio e a
+# fonte da verdade: depois de mudar, reinstale na VPS.
+#
+# Mesmo modelo do javai-deploy-root: a VPS nunca compila nada e nenhum segredo da Tailscale fica no GitHub.
+# Entrada: o SHA do commit (argumento) e, pelo stdin, o usuario e o GITHUB_TOKEN do job do CI (uma linha cada).
+# O token expira quando o job termina; aqui serve para baixar as imagens e os arquivos de infraestrutura.
+set -euo pipefail
+
+readonly COMPOSE_DIR=/opt/controlei
+readonly REPO=gilvan-Borges/controlei
+readonly SHA_RE='^[0-9a-f]{40}$'
+readonly EDGE_NETWORK=controlei-edge
+# "caminho no repositorio:caminho no servidor". Os unicos arquivos aplicados; .env nunca sai do servidor.
+readonly INFRA_FILES=(
+  "docker-compose.vps.yml:docker-compose.yml"
+  "nginx/nginx.conf:nginx/nginx.conf"
+  "nginx/proxy_api.conf:nginx/proxy_api.conf"
+)
+
+tag="${1:-}"
+[[ "$tag" =~ $SHA_RE ]] || { echo "SHA invalido." >&2; exit 2; }
+cd "$COMPOSE_DIR" 2>/dev/null || { echo "$COMPOSE_DIR nao existe: faca o primeiro deploy a mao (deploy/README.md)." >&2; exit 3; }
+[[ -f .env ]] || { echo ".env nao existe: faca o primeiro deploy a mao (deploy/README.md)." >&2; exit 3; }
+docker network inspect "$EDGE_NETWORK" >/dev/null 2>&1 \
+  || { echo "A rede $EDGE_NETWORK nao existe (deploy/README.md, passo 1)." >&2; exit 3; }
+
+IFS= read -r ghcr_user || true
+IFS= read -r ghcr_token || true
+[[ "$ghcr_user" =~ ^[A-Za-z0-9-]{1,39}$ && -n "$ghcr_token" ]] || { echo "Credencial do GHCR ausente no stdin." >&2; exit 4; }
+
+work="$(mktemp -d)"
+DOCKER_CONFIG="$work/docker"; export DOCKER_CONFIG
+trap 'rm -rf "$work"' EXIT
+printf '%s' "$ghcr_token" | docker login ghcr.io -u "$ghcr_user" --password-stdin >/dev/null
+
+# --- 1. arquivos de infraestrutura do commit ---------------------------------------------------------------
+printf 'Authorization: Bearer %s\n' "$ghcr_token" > "$work/header"
+unset ghcr_token
+mkdir -p "$work/new" "$work/old"
+changed_nginx=0
+for pair in "${INFRA_FILES[@]}"; do
+  src="${pair%%:*}"; dst="${pair##*:}"
+  mkdir -p "$work/new/$(dirname "$dst")" "$work/old/$(dirname "$dst")"
+  curl -fsS --max-time 30 -H @"$work/header" -H 'Accept: application/vnd.github.raw' \
+    "https://api.github.com/repos/$REPO/contents/$src?ref=$tag" -o "$work/new/$dst" \
+    || { echo "Nao consegui baixar $src do commit $tag." >&2; exit 5; }
+  [[ -s "$work/new/$dst" ]] || { echo "$src veio vazio." >&2; exit 5; }
+  cp -p "$dst" "$work/old/$dst" 2>/dev/null || true
+done
+rm -f "$work/header"
+# O compose novo precisa ser valido com o .env deste servidor antes de substituir o atual.
+CONTROLEI_TAG="$tag" docker compose --project-directory "$COMPOSE_DIR" -f "$work/new/docker-compose.yml" --env-file .env config --quiet \
+  || { echo "O docker-compose do commit e invalido; nada foi alterado." >&2; exit 6; }
+for pair in "${INFRA_FILES[@]}"; do
+  dst="${pair##*:}"
+  if ! cmp -s "$work/new/$dst" "$dst" 2>/dev/null; then
+    [[ "$dst" == nginx/* ]] && changed_nginx=1
+    install -D -m 644 "$work/new/$dst" "$dst"
+    logger -t controlei-deploy "infra atualizada: $dst"
+  fi
+done
+
+# --- 2. imagens e conteineres ------------------------------------------------------------------------------
+previous="$(sed -n 's/^CONTROLEI_TAG=//p' .env)"
+set_tag() {
+  if grep -q '^CONTROLEI_TAG=' .env; then sed -i "s/^CONTROLEI_TAG=.*/CONTROLEI_TAG=$1/" .env; else printf 'CONTROLEI_TAG=%s\n' "$1" >> .env; fi
+}
+
+restore_infra() {
+  for pair in "${INFRA_FILES[@]}"; do
+    dst="${pair##*:}"
+    [[ -f "$work/old/$dst" ]] && install -m 644 "$work/old/$dst" "$dst"
+  done
+}
+
+healthy() {
+  # Todo servico precisa estar bem: com healthcheck, saudavel; sem ele, de pe e sem reiniciar em loop.
+  local svc id status has_health restarting ok
+  for _ in $(seq 1 72); do
+    ok=1
+    for svc in $(docker compose config --services); do
+      id="$(docker compose ps -a -q "$svc")"
+      [[ -n "$id" ]] || { ok=0; break; }
+      status="$(docker inspect -f '{{.State.Status}}' "$id")"
+      has_health="$(docker inspect -f '{{if .State.Health}}sim{{end}}' "$id")"
+      restarting="$(docker inspect -f '{{.State.Restarting}}' "$id")"
+      if [[ "$has_health" == sim ]]; then
+        [[ "$(docker inspect -f '{{.State.Health.Status}}' "$id")" == healthy ]] || { ok=0; break; }
+      else
+        [[ "$status" == running && "$restarting" == false ]] || { ok=0; break; }
+      fi
+    done
+    [[ $ok -eq 1 ]] && return 0
+    sleep 5
+  done
+  return 1
+}
+
+logger -t controlei-deploy "inicio: $tag (atual: ${previous:-nenhum})"
+set_tag "$tag"
+if docker compose pull --quiet && docker compose up -d --remove-orphans \
+   && { [[ $changed_nginx -eq 0 ]] || docker compose restart gateway >/dev/null; } && healthy; then
+  docker image prune -f >/dev/null
+  logger -t controlei-deploy "ok: $tag"
+  echo "Deploy de $tag concluido."
+else
+  logger -t controlei-deploy "falhou: $tag; voltando para ${previous:-nada}"
+  echo "Deploy de $tag falhou; voltando para ${previous:-nada}." >&2
+  docker compose ps -a --format 'table {{.Service}}\t{{.Status}}' >&2 || true
+  # A causa precisa aparecer no log do CI: os conteineres sao recriados no rollback e os logs somem.
+  docker compose logs --no-log-prefix --tail 30 back gateway kafka >&2 || true
+  restore_infra
+  if [[ -n "$previous" ]]; then
+    set_tag "$previous"
+    docker compose up -d --remove-orphans || true
+    docker compose restart gateway >/dev/null 2>&1 || true
+  fi
+  exit 1
+fi
