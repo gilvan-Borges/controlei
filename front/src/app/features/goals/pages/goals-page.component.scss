@@ -1,0 +1,114 @@
+.goals-page {
+  display: block;
+}
+
+.goal-card {
+  padding: 1.35rem;
+}
+
+.goal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.goal-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #050505;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.goal-info strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--c-text);
+}
+.goal-info small {
+  font-size: 0.78rem;
+  color: var(--c-text-muted);
+}
+
+.btn-icon-danger {
+  background: transparent;
+  border: none;
+  color: var(--c-text-dim);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+.btn-icon-danger:hover {
+  color: var(--c-danger);
+}
+
+.goal-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid var(--c-border);
+}
+
+/* Modal Luxury */
+.modal-backdrop-luxury {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-dialog-luxury {
+  width: 100%;
+  max-width: 500px;
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-xl);
+  box-shadow: var(--c-shadow-lg);
+  overflow: hidden;
+  animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header-luxury {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--c-border);
+}
+.modal-header-luxury h5 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.btn-close-luxury {
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-body-luxury {
+  padding: 1.5rem;
+}
+
+.modal-footer-luxury {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-top: 1px solid var(--c-border);
+  background: rgba(0, 0, 0, 0.1);
+}

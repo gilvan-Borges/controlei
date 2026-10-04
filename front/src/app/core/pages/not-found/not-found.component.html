@@ -1,0 +1,28 @@
+<div class="error-page-wrapper">
+  <div class="error-card animate-in">
+    <div class="error-illustration">
+      <div class="glow-orb"></div>
+      <div class="error-code-badge">404</div>
+      <i class="bi bi-compass error-icon"></i>
+    </div>
+
+    <div class="error-text-group">
+      <span class="micro-tag">PÁGINA NÃO ENCONTRADA</span>
+      <h1 class="error-title">Você encontrou uma rota inexistente</h1>
+      <p class="error-description">
+        O link que você tentou acessar não existe, foi removido ou alterado. Verifique a URL digitada ou retorne à segurança do seu painel financeiro.
+      </p>
+    </div>
+
+    <div class="error-actions-row">
+      <button type="button" class="btn btn-secondary" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+        <span>Voltar</span>
+      </button>
+      <button type="button" class="btn btn-primary" (click)="goDashboard()">
+        <i class="bi bi-speedometer2"></i>
+        <span>Ir para o Dashboard</span>
+      </button>
+    </div>
+  </div>
+</div>

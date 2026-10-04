@@ -1,0 +1,131 @@
+<div class="open-finance-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill primary">
+        <i class="bi bi-shield-lock-fill"></i> REGULAMENTADO BACEN
+      </span>
+      <h1>Open Finance & Conexões Bancárias</h1>
+      <p>Conecte suas contas de forma 100% segura via Open Finance Brasil para sincronização automática de extratos e saldos.</p>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Active Bank Connections -->
+  <h5 class="mb-3"><i class="bi bi-link-45deg text-primary me-2"></i> Conexões Bancárias Ativas</h5>
+  @if (loading) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+  } @else if (connections.length === 0) {
+    <div class="card-luxury text-center py-4 mb-4">
+      <i class="bi bi-shield-check text-muted" style="font-size: 2.5rem;"></i>
+      <p class="text-muted mt-2 mb-0">Nenhuma conta bancária conectada. Escolha um banco abaixo para autorizar.</p>
+    </div>
+  } @else {
+    <div class="row g-3 mb-5">
+      @for (conn of connections; track conn.id) {
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card-luxury bank-conn-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon-box mb-0" style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 38px; height: 38px; border-radius: 10px;">
+                  <i class="bi bi-bank2"></i>
+                </div>
+                <div>
+                  <strong>{{ conn.institutionName }}</strong>
+                  <small class="text-muted d-block font-xs">ID: {{ conn.externalItemId }}</small>
+                </div>
+              </div>
+
+              <span class="badge-pill success">CONECTADO</span>
+            </div>
+
+            <div class="small text-muted mb-3">
+              Última Sincronização: <strong>{{ conn.lastSyncedAt ? (conn.lastSyncedAt | date: 'dd/MM/yyyy HH:mm') : 'Hoje' }}</strong>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm flex-fill" (click)="sync(conn)" [disabled]="syncingId === conn.id">
+                @if (syncingId === conn.id) {
+                  <span class="spinner-border spinner-border-sm me-1"></span> Sincronizando...
+                } @else {
+                  <i class="bi bi-arrow-repeat"></i> Sincronizar Agora
+                }
+              </button>
+              <button class="btn btn-outline-danger btn-sm" (click)="disconnect(conn.id)" title="Desconectar">
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Available Institutions Catalog -->
+  <h5 class="mb-3"><i class="bi bi-grid-fill text-primary me-2"></i> Conectar Nova Instituição Financeira</h5>
+  <div class="row g-3">
+    @for (bank of availableBanks; track bank.id) {
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card-luxury bank-catalog-card text-center" (click)="openModal(bank)">
+          <div class="bank-logo-gem mx-auto mb-2" [style.background]="bank.color">
+            <i class="bi" [ngClass]="bank.icon"></i>
+          </div>
+          <strong>{{ bank.name }}</strong>
+          <small class="text-muted d-block mt-1">Open Finance Brasil</small>
+          <button class="btn btn-secondary btn-sm mt-3 w-100">Conectar</button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Connect Modal -->
+  @if (showConnectModal) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-shield-check text-success me-2"></i> Autorizar Conexão: {{ selectedBank.name }}</h5>
+          <button class="btn-close-luxury" (click)="showConnectModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="consent-box p-3 mb-3">
+            <div class="d-flex gap-2">
+              <i class="bi bi-lock-fill text-success fs-4"></i>
+              <div class="small">
+                <strong>Consentimento Seguro Open Finance</strong>
+                <p class="text-muted mb-0">Você está autorizando o Controlei a consultar saldos e extratos da sua conta bancária. Suas credenciais e senhas nunca são compartilhadas.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Vincular à Conta no Controlei</label>
+            <select class="form-select" [(ngModel)]="connectRequest.targetAccountId">
+              @for (acc of accounts; track acc.id) {
+                <option [value]="acc.id">{{ acc.name }} (Saldo: R$ {{ acc.initialBalance | number: '1.2-2' }})</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showConnectModal = false">Cancelar</button>
+          <button class="btn btn-primary" (click)="submitConnect()">Autorizar e Conectar</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

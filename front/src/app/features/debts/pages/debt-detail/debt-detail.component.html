@@ -1,0 +1,88 @@
+<div class="container-fluid px-0">
+  <div class="d-flex align-items-center mb-3">
+    <a routerLink="/app/debts" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">Detalhe da Dívida</h5>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (debt && !loading) {
+    <div class="card mb-3">
+      <div class="card-body">
+        <h6 class="card-title">{{ debt.description }}</h6>
+        <div class="row g-2">
+          <div class="col-6">
+            <small class="text-muted d-block">Valor Total</small>
+            <span class="fw-bold">R$ {{ debt.totalAmount | number: '1.2-2' }}</span>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Parcelas</small>
+            <span>{{ debt.installmentCount }}x R$ {{ debt.installmentAmount | number: '1.2-2' }}</span>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Data da Compra</small>
+            <span>{{ debt.purchaseDate | date: 'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Status</small>
+            <span class="badge" [ngClass]="getDebtStatusBadgeClass(debt.status)">{{ debt.status }}</span>
+          </div>
+        </div>
+        @if (debt.notes) {
+          <div class="mt-2">
+            <small class="text-muted d-block">Observações</small>
+            <span>{{ debt.notes }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <h6 class="mb-2">Parcelas</h6>
+
+    @if (installments.length === 0) {
+      <app-empty-state icon="bi-calendar-check" message="Nenhuma parcela encontrada."></app-empty-state>
+    }
+
+    @if (installments.length > 0) {
+      <div class="list-group">
+        @for (inst of installments; track inst.id) {
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-medium">Parcela {{ inst.installmentNumber }}</div>
+                <small class="text-muted">
+                  Vence em {{ inst.dueDate | date: 'dd/MM/yyyy' }}
+                  @if (inst.paidAt) {
+                    &middot; Pago em {{ inst.paidAt | date: 'dd/MM/yyyy' }}
+                  }
+                </small>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold">R$ {{ inst.amount | number: '1.2-2' }}</span>
+                <span class="badge" [ngClass]="getStatusBadgeClass(inst.status)">
+                  {{ getStatusLabel(inst.status) }}
+                </span>
+                @if (canEditInstallment(inst) && inst.status === 'PENDING') {
+                  <button class="btn btn-outline-success btn-sm" (click)="payInstallment(inst)">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" (click)="cancelInstallment(inst)">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

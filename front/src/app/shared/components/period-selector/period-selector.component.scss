@@ -1,0 +1,206 @@
+:host {
+  display: inline-block;
+  position: relative;
+}
+
+.period-selector-container {
+  position: relative;
+  display: inline-flex;
+}
+
+.period-controls-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-sm);
+  padding: 3px;
+  box-shadow: var(--c-shadow-sm);
+}
+
+.nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:hover {
+    background: var(--c-surface-elevated);
+    color: var(--c-text);
+  }
+}
+
+.period-display-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.32rem 0.65rem;
+  background: var(--c-surface-elevated);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  color: var(--c-text);
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  .period-icon {
+    font-size: 0.85rem;
+    color: var(--c-primary);
+  }
+
+  .period-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    strong {
+      font-weight: 700;
+      color: var(--c-text);
+    }
+
+    .year-span {
+      font-weight: 500;
+      color: var(--c-text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+  }
+
+  .chevron-icon {
+    font-size: 0.7rem;
+    color: var(--c-text-dim);
+    transition: transform 0.15s ease;
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:hover,
+  &.active {
+    border-color: var(--c-primary);
+    background: var(--c-surface-hover);
+  }
+}
+
+/* ── Custom Sleek Popover ── */
+.period-popover-card {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 240px;
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  box-shadow: var(--c-shadow-lg);
+  padding: 0.75rem;
+  z-index: 1000;
+}
+
+.popover-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.65rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+
+  .year-nav-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--c-surface-elevated);
+      color: var(--c-text);
+      border-color: var(--c-border-hover);
+    }
+  }
+
+  .popover-year-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--c-text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .btn-today-shortcut {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--c-border);
+    background: var(--c-surface-elevated);
+    color: var(--c-primary);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--c-primary);
+      color: var(--c-text-inverse);
+    }
+  }
+}
+
+/* ── 12 Months Grid ── */
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.month-cell-btn {
+  padding: 0.45rem 0.2rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:hover {
+    background: var(--c-surface-elevated);
+    color: var(--c-text);
+    border-color: var(--c-border);
+  }
+
+  &.selected {
+    background: var(--c-primary);
+    color: var(--c-text-inverse);
+    font-weight: 800;
+    border-color: var(--c-primary);
+  }
+}
+
+/* ── Compact Mode ── */
+.compact-mode {
+  .period-controls-group {
+    padding: 2px;
+  }
+  .period-display-pill {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+  }
+  .nav-btn {
+    width: 24px;
+    height: 24px;
+  }
+}
