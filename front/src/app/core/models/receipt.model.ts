@@ -1,4 +1,4 @@
-export type ScanStatus = 'PROCESSING' | 'COMPLETED' | 'FAILED';
+export type ScanStatus = 'PROCESSING' | 'COMPLETED' | 'NEEDS_REVIEW' | 'FAILED';
 
 export interface ReceiptScan {
   id: string;
