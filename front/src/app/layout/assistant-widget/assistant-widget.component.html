@@ -1,0 +1,61 @@
+<button
+  #fab
+  type="button"
+  class="assistant-fab"
+  (click)="toggle()"
+  [attr.aria-expanded]="open"
+  aria-controls="assistant-panel"
+  [attr.aria-label]="open ? 'Fechar assistente' : 'Abrir assistente de ajuda'"
+>
+  <i class="bi" [ngClass]="open ? 'bi-x-lg' : 'bi-stars'" aria-hidden="true"></i>
+</button>
+
+@if (open) {
+  <section id="assistant-panel" class="assistant-panel" role="dialog" aria-label="Assistente de ajuda">
+    <div class="assistant-header">
+      <div>
+        <strong>Assistente Controlei</strong>
+        <small>Dúvidas sobre como usar o app</small>
+      </div>
+      <button type="button" class="assistant-close" (click)="close()" aria-label="Fechar assistente">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div #list class="assistant-messages" tabindex="0" role="log" aria-live="polite" aria-relevant="additions">
+      @for (m of messages; track $index) {
+        <div class="assistant-msg" [class.user]="m.from === 'user'">
+          <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
+          {{ m.text }}
+        </div>
+      }
+      @if (loading) {
+        <div class="assistant-msg typing" role="status">Pensando…</div>
+      }
+      @if (messages.length === 1) {
+        <div class="assistant-suggestions">
+          @for (s of suggestions; track s) {
+            <button type="button" (click)="send(s)">{{ s }}</button>
+          }
+        </div>
+      }
+    </div>
+
+    <form class="assistant-form" (submit)="$event.preventDefault(); submit(field)">
+      <label for="assistant-input" class="sr-only">Sua pergunta</label>
+      <input
+        #input
+        #field
+        id="assistant-input"
+        type="text"
+        autocomplete="off"
+        [maxLength]="maxLength"
+        placeholder="Digite sua dúvida"
+      />
+      <button type="submit" [disabled]="loading" aria-label="Enviar pergunta">
+        <i class="bi bi-send-fill" aria-hidden="true"></i>
+      </button>
+    </form>
+    <p class="assistant-note">Não vejo seus dados financeiros. Não envie senhas nem documentos.</p>
+  </section>
+}
