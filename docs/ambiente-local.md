@@ -29,9 +29,9 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=controlei
 DB_USER=controlei
-DB_PASSWORD=controlei123
+DB_PASSWORD=defina-uma-senha-local
 JWT_SECRET=sua-chave-secreta-aqui-minimo-32-caracteres
-JWT_EXPIRATION_HOURS=24
+JWT_EXPIRATION_MINUTES=15
 ```
 
 ## Iniciar o Backend
@@ -108,9 +108,9 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/v1/me" `
 | `DB_PORT` | Porta do PostgreSQL | `5432` |
 | `DB_NAME` | Nome do banco | `controlei` |
 | `DB_USER` | Usuário do banco | `controlei` |
-| `DB_PASSWORD` | Senha do banco | `controlei123` |
+| `DB_PASSWORD` | Senha do banco (obrigatoria no Compose e em producao) | sem padrao |
 | `JWT_SECRET` | Chave secreta JWT | (obrigatório) |
-| `JWT_EXPIRATION_HOURS` | Horas de expiração do token | `24` |
+| `JWT_EXPIRATION_MINUTES` | Minutos de validade do access token (o refresh token renova) | `15` |
 | `SERVER_PORT` | Porta do servidor | `8080` |
 
 ## Parar o Banco

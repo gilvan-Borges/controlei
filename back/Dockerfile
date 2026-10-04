@@ -28,4 +28,6 @@ ENV SERVER_PORT=8080
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+# Heap proporcional ao limite do container (o padrao da JVM em container pequeno e conservador demais) e saida
+# imediata em OutOfMemoryError, para o Compose reiniciar o servico em vez de deixa-lo meio morto.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+ExitOnOutOfMemoryError", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

@@ -1,0 +1,29 @@
+# Override SOMENTE para desenvolvimento local:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Publica as portas internas apenas em 127.0.0.1 (nunca na rede), para depurar com ferramentas locais,
+# e sobe o Kafka UI, que nao existe no compose de producao.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+  redis:
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+  kafka:
+    ports:
+      - "127.0.0.1:9092:9092"
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: controlei-kafka-ui
+    ports:
+      - "127.0.0.1:8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: controlei-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: 'false'
+    depends_on:
+      - kafka
+    networks:
+      - controlei-network
+  back:
+    environment:
+      APP_SEED_ENABLED: "true"

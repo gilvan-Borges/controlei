@@ -7,9 +7,9 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-controlei}
       POSTGRES_USER: ${DB_USER:-controlei}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-controlei123}
-    ports:
-      - "${DB_PORT:-5432}:5432"
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
+    # Sem "ports": o banco so existe dentro da rede do Compose. Para inspecionar localmente use
+    # `docker compose exec postgres psql` ou o override docker-compose.dev.yml (portas em 127.0.0.1).
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,8 +25,6 @@ services:
     image: redis:7-alpine
     container_name: controlei-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -42,16 +40,13 @@ services:
     image: apache/kafka:3.8.0
     container_name: controlei-kafka
     restart: unless-stopped
-    ports:
-      - "9092:9092"
-      - "29092:29092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -61,51 +56,7 @@ services:
     networks:
       - controlei-network
 
-  # 4. Kafka UI (Monitoramento de Tópicos, Mensagens e Consumer Groups)
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: controlei-kafka-ui
-    restart: unless-stopped
-    ports:
-      - "8085:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: controlei-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      DYNAMIC_CONFIG_ENABLED: 'true'
-    depends_on:
-      - kafka
-    networks:
-      - controlei-network
-
-  # 5. Keycloak 26 (Identity & Access Management - OIDC / OAuth2)
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.0
-    container_name: controlei-keycloak
-    command: start-dev --import-realm
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres
-      KC_DB_URL_PORT: 5432
-      KC_DB_URL_DATABASE: ${DB_NAME:-controlei}
-      KC_DB_USERNAME: ${DB_USER:-controlei}
-      KC_DB_PASSWORD: ${DB_PASSWORD:-controlei123}
-      KC_DB_SCHEMA: keycloak
-      KC_HTTP_ENABLED: 'true'
-      KC_HOSTNAME_STRICT: 'false'
-      KC_HOSTNAME_STRICT_HTTPS: 'false'
-      KC_HEALTH_ENABLED: 'true'
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - controlei-network
-
-  # 6. Backend Spring Boot (Clean Architecture & Event-Driven)
+  # 4. Backend Spring Boot (Clean Architecture & Event-Driven)
   back:
     build:
       context: ./back
@@ -118,18 +69,21 @@ services:
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-controlei}
       DB_USER: ${DB_USER:-controlei}
-      DB_PASSWORD: ${DB_PASSWORD:-controlei123}
+      DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD no .env}
       JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env (minimo 32 caracteres)}
       CONTROLEI_AI_ENABLED: ${CONTROLEI_AI_ENABLED:-false}
       CONTROLEI_AI_API_KEY: ${CONTROLEI_AI_API_KEY:-}
       CONTROLEI_AI_MODEL: ${CONTROLEI_AI_MODEL:-google/gemini-2.5-flash}
-      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      CONTROLEI_AI_DAILY_LIMIT: ${CONTROLEI_AI_DAILY_LIMIT:-30}
+      OPENFINANCE_WEBHOOK_SECRET: ${OPENFINANCE_WEBHOOK_SECRET:-}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-15}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ENABLED: "true"
-      APP_CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:4200,http://localhost:8085,http://localhost:8080}
-      APP_SEED_ENABLED: "true"
+      APP_CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      # Seed de usuarios de demonstracao: desligado. Ligue so em ambiente local, com senha propria.
+      APP_SEED_ENABLED: "false"
     depends_on:
       postgres:
         condition: service_healthy
@@ -140,7 +94,7 @@ services:
     networks:
       - controlei-network
 
-  # 7. Frontend Angular SPA
+  # 5. Frontend Angular SPA
   front:
     build:
       context: ./front
@@ -152,15 +106,16 @@ services:
     networks:
       - controlei-network
 
-  # 8. Reverse Proxy / Gateway Nginx
+  # 6. Reverse Proxy / Gateway Nginx: a UNICA porta publicada
   nginx:
     image: nginx:1.27-alpine
     container_name: controlei-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "${GATEWAY_PORT:-80}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/proxy_api.conf:/etc/nginx/proxy_api.conf:ro
     depends_on:
       - front
       - back
@@ -173,4 +128,3 @@ volumes:
 
 networks:
   controlei-network:
-    driver: bridge
