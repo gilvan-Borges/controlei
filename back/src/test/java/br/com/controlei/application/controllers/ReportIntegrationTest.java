@@ -117,7 +117,8 @@ class ReportIntegrationTest {
                         .param("year", "2025"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.familyName").value("Familia Relatorios"))
-                .andExpect(jsonPath("$.accounts[0].accountName").value("Conta Itau"))
+                // a familia nasce com a conta "Carteira"; a conta do teste vem junto, nao necessariamente primeiro
+                .andExpect(jsonPath("$.accounts[?(@.accountName=='Conta Itau')]").isNotEmpty())
                 .andExpect(jsonPath("$.investments[0].investmentName").value("CDB 110% CDI"))
                 .andExpect(jsonPath("$.debts[0].debtName").value("Financiamento Carro"))
                 .andExpect(jsonPath("$.totalAssets").value(40000.0))

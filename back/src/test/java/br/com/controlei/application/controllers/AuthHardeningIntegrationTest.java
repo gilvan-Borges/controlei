@@ -132,4 +132,20 @@ class AuthHardeningIntegrationTest {
                         .content("{\"refreshToken\":\"" + refresh + "\"}"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void aNewFamilyStartsWithCommonCategoriesAndAWallet() throws Exception {
+        String token = register("Familia Padroes", "Pia Padroes", "pia.padroes@email.com", PASSWORD)
+                .get("accessToken").asString();
+
+        String categories = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(categories).contains("Alimentação", "Moradia", "Transporte", "Saúde", "Salário");
+
+        String accounts = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(accounts).contains("Carteira");
+    }
 }

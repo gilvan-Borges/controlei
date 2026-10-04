@@ -117,7 +117,8 @@ class BudgetIntegrationTest {
     @Test
     void cannotCreateDuplicateBudgetForSameCategoryAndPeriod() throws Exception {
         AuthInfo auth = registerFamily("Familia Duplicada", "Joao Meta", "joao.meta@email.com");
-        String categoryId = createCategory(auth.token(), "Transporte", CategoryType.EXPENSE);
+        // "Transporte" ja nasce com a familia (FamilyDefaultsService); uma categoria propria evita o conflito de nome
+        String categoryId = createCategory(auth.token(), "Oficina e Manutencao", CategoryType.EXPENSE);
 
         CreateBudgetRequest request = new CreateBudgetRequest(
                 null,
