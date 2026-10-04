@@ -79,7 +79,6 @@
                 <label for="loginPassword" class="field-label-custom mb-0">
                   Senha <span class="req-star">*</span>
                 </label>
-                <span class="forgot-link">Esqueci minha senha</span>
               </div>
               <div class="input-icon-wrapper">
                 <i class="bi bi-lock field-leading-icon"></i>
@@ -88,7 +87,7 @@
                   [type]="showPassword ? 'text' : 'password'"
                   formControlName="password"
                   class="input-custom"
-                  placeholder="••••••••••••"
+                  placeholder="Sua senha"
                   autocomplete="current-password"
                   [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
                 />
@@ -155,32 +154,33 @@
             </div>
           }
 
-          <!-- Profile / Account Type Selector -->
-          <div class="account-type-group mb-3">
-            <label class="section-micro-label">Tipo de Cadastro</label>
-            <div class="type-selector-grid">
-              <div class="type-card selected">
-                <div class="type-icon">
-                  <i class="bi bi-house-door"></i>
-                </div>
-                <div class="type-text">
-                  <strong>Responsável</strong>
-                  <small>Administrador familiar</small>
-                </div>
-              </div>
-              <div class="type-card">
-                <div class="type-icon">
-                  <i class="bi bi-person"></i>
-                </div>
-                <div class="type-text">
-                  <strong>Membro</strong>
-                  <small>Gestão compartilhada</small>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p class="register-note mb-3">
+            <i class="bi bi-info-circle"></i>
+            <span>Você cria a família e será o <strong>responsável</strong>. Depois, convide os outros membros em <em>Usuários</em>.</span>
+          </p>
 
           <form [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()" class="register-form">
+            <div class="form-group mb-2">
+              <label class="form-label-clean" for="regFamily">
+                Nome da família <span class="req-star">*</span>
+              </label>
+              <div class="input-wrap-clean">
+                <i class="bi bi-house-heart leading-icon"></i>
+                <input
+                  id="regFamily"
+                  type="text"
+                  class="form-control-clean"
+                  formControlName="familyName"
+                  placeholder="Ex: Família Silva"
+                  autocomplete="organization"
+                  [class.is-invalid]="registerForm.get('familyName')?.touched && registerForm.get('familyName')?.invalid"
+                />
+              </div>
+              @if (registerForm.get('familyName')?.touched && registerForm.get('familyName')?.invalid) {
+                <span class="error-msg-clean">Informe o nome da família (mínimo 2 caracteres).</span>
+              }
+            </div>
+
             <div class="form-group mb-2">
               <label class="form-label-clean" for="regName">
                 Nome completo <span class="req-star">*</span>
@@ -321,7 +321,7 @@
             </div>
             <div class="feature-detail">
               <h6 class="feature-heading">Segurança e Isolamento Total</h6>
-              <p class="feature-sub">Dados criptografados de ponta a ponta e controle de permissões familiares.</p>
+              <p class="feature-sub">Cada família só enxerga os próprios dados, e só o responsável gerencia os membros.</p>
             </div>
           </div>
 

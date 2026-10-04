@@ -3,7 +3,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { ShellComponent } from './layout/shell/shell.component';
 import { LoginComponent } from './core/auth/login.component';
-import { RegisterComponent } from './core/auth/register.component';
 import { NotFoundComponent } from './core/pages/not-found/not-found.component';
 import { AccessDeniedComponent } from './core/pages/access-denied/access-denied.component';
 
