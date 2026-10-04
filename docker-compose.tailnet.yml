@@ -1,0 +1,29 @@
+# Ferramentas internas, SOMENTE pela Tailscale (padrao de acesso interno do projeto).
+#
+#   cd /opt/controlei
+#   docker compose -f docker-compose.yml -f docker-compose.tailnet.yml up -d kafka-ui
+#   # abra http://<ip-da-tailscale-da-vps>:8085 de um aparelho da tailnet
+#
+# As portas sao presas ao IP da Tailscale da VPS (TAILSCALE_IP no .env), nunca a 0.0.0.0: o Docker ignora o ufw,
+# entao a unica protecao de uma porta publicada e o endereco em que ela escuta. Pela internet publica ela nao existe.
+# Nao faz parte do deploy automatico: e para depurar, e se desliga com `docker compose rm -sf kafka-ui`.
+services:
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    restart: "no"
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    ports:
+      - "${TAILSCALE_IP:?defina TAILSCALE_IP no .env}:8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: controlei
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "false"
+    # "data" para falar com o Kafka; "app" porque uma porta so e publicada a partir de uma rede com rota para o host
+    # (a "data" e internal). A porta continua presa ao IP da Tailscale acima.
+    networks: [data, app]
+    mem_limit: 384m
+    depends_on:
+      kafka:
+        condition: service_healthy
+
