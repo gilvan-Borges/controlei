@@ -15,7 +15,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -77,10 +81,11 @@ class BankConnectionIntegrationTest {
 
         // 4. Recebe webhook do agregador
         OpenFinanceWebhookPayload webhook = new OpenFinanceWebhookPayload("TRANSACTIONS_UPDATED", "item_nubank_999", null);
+        String webhookBody = objectMapper.writeValueAsString(webhook);
         mockMvc.perform(post("/api/v1/bank-connections/webhook")
-                        .header("X-OpenFinance-Signature", "sha256=mock_valid_signature")
+                        .header("X-OpenFinance-Signature", "sha256=" + sign(webhookBody))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(webhook)))
+                        .content(webhookBody))
                 .andExpect(status().isOk());
 
         // 5. Desconectar conta
@@ -94,8 +99,52 @@ class BankConnectionIntegrationTest {
                 .andExpect(status().isUnprocessableContent());
     }
 
+    @Test
+    void webhookWithoutAValidSignatureIsRejected() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                new OpenFinanceWebhookPayload("TRANSACTIONS_UPDATED", "item_qualquer", null));
+
+        mockMvc.perform(post("/api/v1/bank-connections/webhook")
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/v1/bank-connections/webhook")
+                        .header("X-OpenFinance-Signature", "sha256=" + "0".repeat(64))
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+
+        // assinatura certa para OUTRO corpo: o corpo adulterado nao passa
+        mockMvc.perform(post("/api/v1/bank-connections/webhook")
+                        .header("X-OpenFinance-Signature", "sha256=" + sign("{}"))
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cannotPointASyncAtAnAccountOfAnotherFamily() throws Exception {
+        AuthInfo victim = registerFamily("Familia Vitima", "Vera Vitima", "vera.vitima@email.com");
+        String victimAccount = createAccount(victim.token(), "Conta da Vitima", 1000.0);
+        AuthInfo attacker = registerFamily("Familia Atacante", "Ari Atacante", "ari.atacante@email.com");
+
+        ConnectBankRequest request = new ConnectBankRequest(
+                "nubank", "Nubank S.A.", "item_ataque", UUID.fromString(victimAccount), null);
+
+        mockMvc.perform(post("/api/v1/bank-connections")
+                        .header("Authorization", "Bearer " + attacker.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                // 404 e a resposta certa: nao confirma ao atacante que o UUID existe em outra familia
+                .andExpect(status().isNotFound());
+    }
+
+    private String sign(String body) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec("test-webhook-secret".getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+        return HexFormat.of().formatHex(mac.doFinal(body.getBytes(StandardCharsets.UTF_8)));
+    }
+
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
-        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha123");
+        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha12345");
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

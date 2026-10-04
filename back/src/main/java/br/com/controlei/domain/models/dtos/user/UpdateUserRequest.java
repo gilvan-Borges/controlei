@@ -13,7 +13,7 @@ public record UpdateUserRequest(
         @Email(message = "Email invalido")
         String email,
 
-        @Size(min = 6, message = "Senha deve ter no minimo 6 caracteres")
+        @Size(min = 10, max = 72, message = "Senha deve ter entre 10 e 72 caracteres")
         String password,
 
         Boolean active

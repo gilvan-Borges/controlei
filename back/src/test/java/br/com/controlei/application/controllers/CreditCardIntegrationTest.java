@@ -244,7 +244,7 @@ class CreditCardIntegrationTest {
     }
 
     private String registerFamily(String familyName, String responsibleName, String email) throws Exception {
-        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha123");
+        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha12345");
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -254,7 +254,7 @@ class CreditCardIntegrationTest {
     }
 
     private String createMemberAndLogin(String responsibleToken, String name, String email) throws Exception {
-        CreateUserRequest userReq = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest userReq = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
         mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + responsibleToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -263,7 +263,7 @@ class CreditCardIntegrationTest {
 
         String loginRes = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new br.com.controlei.domain.models.dtos.auth.LoginRequest(email, "senha123"))))
+                        .content(objectMapper.writeValueAsString(new br.com.controlei.domain.models.dtos.auth.LoginRequest(email, "senha12345"))))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(loginRes).get("accessToken").asString();

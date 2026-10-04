@@ -44,9 +44,11 @@ class ObservabilityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
 
-        // 2. Info endpoint
+        // 2. Info e prometheus exigem autenticacao: so a saude e publica
         mockMvc.perform(get("/actuator/info"))
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/actuator/prometheus"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -75,7 +77,7 @@ class ObservabilityIntegrationTest {
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
-        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha123");
+        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha12345");
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

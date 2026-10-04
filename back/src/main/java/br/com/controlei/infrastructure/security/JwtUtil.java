@@ -24,14 +24,9 @@ public class JwtUtil implements TokenProvider {
 
     public JwtUtil(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration-minutes:15}") long expirationMinutes,
-            @Value("${jwt.expiration-hours:0}") long expirationHours) {
+            @Value("${jwt.expiration-minutes:15}") long expirationMinutes) {
         this.algorithm = Algorithm.HMAC256(secret);
-        if (expirationHours > 0 && expirationMinutes == 15) {
-            this.expirationSeconds = expirationHours * 3600;
-        } else {
-            this.expirationSeconds = expirationMinutes * 60;
-        }
+        this.expirationSeconds = expirationMinutes * 60;
     }
 
     @Override

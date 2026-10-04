@@ -3,6 +3,8 @@ package br.com.controlei.application.services;
 import br.com.controlei.application.contracts.TokenProvider;
 import br.com.controlei.application.exceptions.BusinessException;
 import br.com.controlei.application.exceptions.UnauthorizedException;
+import br.com.controlei.application.security.LoginAttemptTracker;
+import br.com.controlei.application.security.TokenHasher;
 import br.com.controlei.application.mappers.UserMapper;
 import br.com.controlei.domain.contracts.PasswordHasher;
 import br.com.controlei.domain.contracts.repositories.FamilyRepositoryPort;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -34,6 +37,9 @@ public class AuthService {
     private final PasswordHasher passwordHasher;
     private final TokenProvider tokenProvider;
     private final long refreshTokenExpirationDays;
+    private final LoginAttemptTracker loginAttempts;
+    /** Hash de uma senha qualquer, para gastar o mesmo tempo de BCrypt quando o e-mail nao existe. */
+    private final String dummyHash;
 
     public AuthService(UserRepositoryPort userRepository,
                        FamilyRepositoryPort familyRepository,
@@ -41,6 +47,7 @@ public class AuthService {
                        UserMapper userMapper,
                        PasswordHasher passwordHasher,
                        TokenProvider tokenProvider,
+                       LoginAttemptTracker loginAttempts,
                        @Value("${jwt.refresh-expiration-days:7}") long refreshTokenExpirationDays) {
         this.userRepository = userRepository;
         this.familyRepository = familyRepository;
@@ -49,11 +56,18 @@ public class AuthService {
         this.passwordHasher = passwordHasher;
         this.tokenProvider = tokenProvider;
         this.refreshTokenExpirationDays = refreshTokenExpirationDays;
+        this.loginAttempts = loginAttempts;
+        this.dummyHash = passwordHasher.hash("senha-ficticia-para-igualar-o-tempo");
+    }
+
+    private static String normalize(String email) {
+        return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     @Transactional
     public LoginResponse registerFamily(RegisterFamilyRequest request) {
-        if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+        String email = normalize(request.email());
+        if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
             throw new BusinessException("Email ja cadastrado");
         }
 
@@ -72,7 +86,7 @@ public class AuthService {
                 UUID.randomUUID(),
                 savedFamily.getId(),
                 request.responsibleName(),
-                request.email(),
+                email,
                 passwordHasher.hash(request.password()),
                 Role.RESPONSIBLE,
                 true,
@@ -94,12 +108,12 @@ public class AuthService {
         );
 
         String accessToken = tokenProvider.generateToken(authenticatedUser);
-        RefreshToken refreshToken = createRefreshToken(savedResponsible.getId());
+        String refreshToken = createRefreshToken(savedResponsible.getId());
         UserResponse userResponse = userMapper.toResponse(savedResponsible);
 
         return new LoginResponse(
                 accessToken,
-                refreshToken.getToken(),
+                refreshToken,
                 "Bearer",
                 tokenProvider.getExpirationSeconds(),
                 userResponse
@@ -108,16 +122,21 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmailAndDeletedAtIsNull(request.email())
-                .orElseThrow(() -> new UnauthorizedException("Credenciais invalidas"));
-
-        if (!user.isActive()) {
-            throw new UnauthorizedException("Credenciais invalidas");
+        String email = normalize(request.email());
+        if (loginAttempts.isLocked(email)) {
+            throw new UnauthorizedException("Muitas tentativas. Tente novamente em alguns minutos.");
         }
 
-        if (!passwordHasher.matches(request.password(), user.getPasswordHash())) {
+        User user = userRepository.findByEmailAndDeletedAtIsNull(email).orElse(null);
+        boolean usable = user != null && user.isActive();
+        // Sempre roda o BCrypt (contra um hash qualquer se a conta nao existe): o tempo de resposta nao revela
+        // se o e-mail esta cadastrado.
+        boolean passwordOk = passwordHasher.matches(request.password(), usable ? user.getPasswordHash() : dummyHash);
+        if (!usable || !passwordOk) {
+            loginAttempts.recordFailure(email);
             throw new UnauthorizedException("Credenciais invalidas");
         }
+        loginAttempts.recordSuccess(email);
 
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 user.getId(),
@@ -127,12 +146,12 @@ public class AuthService {
         );
 
         String accessToken = tokenProvider.generateToken(authenticatedUser);
-        RefreshToken refreshToken = createRefreshToken(user.getId());
+        String refreshToken = createRefreshToken(user.getId());
         UserResponse userResponse = userMapper.toResponse(user);
 
         return new LoginResponse(
                 accessToken,
-                refreshToken.getToken(),
+                refreshToken,
                 "Bearer",
                 tokenProvider.getExpirationSeconds(),
                 userResponse
@@ -141,7 +160,7 @@ public class AuthService {
 
     @Transactional
     public LoginResponse refreshToken(String tokenValue) {
-        RefreshToken token = refreshTokenRepository.findByToken(tokenValue)
+        RefreshToken token = refreshTokenRepository.findByToken(TokenHasher.sha256(tokenValue))
                 .orElseThrow(() -> new UnauthorizedException("Token de atualizacao invalido ou expirado"));
 
         if (token.isRevoked()) {
@@ -175,12 +194,12 @@ public class AuthService {
         );
 
         String newAccessToken = tokenProvider.generateToken(authenticatedUser);
-        RefreshToken newRefreshToken = createRefreshToken(user.getId());
+        String newRefreshToken = createRefreshToken(user.getId());
         UserResponse userResponse = userMapper.toResponse(user);
 
         return new LoginResponse(
                 newAccessToken,
-                newRefreshToken.getToken(),
+                newRefreshToken,
                 "Bearer",
                 tokenProvider.getExpirationSeconds(),
                 userResponse
@@ -190,22 +209,24 @@ public class AuthService {
     @Transactional
     public void logout(String tokenValue) {
         if (tokenValue != null && !tokenValue.isBlank()) {
-            refreshTokenRepository.findByToken(tokenValue).ifPresent(t -> {
+            refreshTokenRepository.findByToken(TokenHasher.sha256(tokenValue)).ifPresent(t -> {
                 t.setRevoked(true);
                 refreshTokenRepository.save(t);
             });
         }
     }
 
-    private RefreshToken createRefreshToken(UUID userId) {
-        RefreshToken refreshToken = new RefreshToken(
+    /** Devolve o token em claro (vai so para o cliente); no banco fica apenas o hash. */
+    private String createRefreshToken(UUID userId) {
+        String raw = TokenHasher.newToken();
+        refreshTokenRepository.save(new RefreshToken(
                 UUID.randomUUID(),
                 userId,
-                UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", ""),
+                TokenHasher.sha256(raw),
                 LocalDateTime.now().plusDays(refreshTokenExpirationDays),
                 false,
                 LocalDateTime.now()
-        );
-        return refreshTokenRepository.save(refreshToken);
+        ));
+        return raw;
     }
 }

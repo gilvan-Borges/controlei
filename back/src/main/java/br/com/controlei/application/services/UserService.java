@@ -5,6 +5,7 @@ import br.com.controlei.application.exceptions.ForbiddenException;
 import br.com.controlei.application.exceptions.NotFoundException;
 import br.com.controlei.application.mappers.UserMapper;
 import br.com.controlei.domain.contracts.PasswordHasher;
+import br.com.controlei.domain.contracts.repositories.RefreshTokenRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.UserRepositoryPort;
 import br.com.controlei.domain.models.dtos.user.CreateUserRequest;
 import br.com.controlei.domain.models.dtos.user.CurrentUserResponse;
@@ -26,15 +27,18 @@ public class UserService {
     private final UserMapper userMapper;
     private final AuthorizationService authorizationService;
     private final PasswordHasher passwordHasher;
+    private final RefreshTokenRepositoryPort refreshTokenRepository;
 
     public UserService(UserRepositoryPort userRepository,
                        UserMapper userMapper,
                        AuthorizationService authorizationService,
-                       PasswordHasher passwordHasher) {
+                       PasswordHasher passwordHasher,
+                       RefreshTokenRepositoryPort refreshTokenRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.authorizationService = authorizationService;
         this.passwordHasher = passwordHasher;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public CurrentUserResponse getCurrentUser() {
@@ -63,7 +67,8 @@ public class UserService {
             throw new BusinessException("Nao e permitido criar outro responsavel pela familia");
         }
 
-        if (userRepository.existsByEmailAndDeletedAtIsNull(request.email())) {
+        String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
+        if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
             throw new BusinessException("Email ja cadastrado");
         }
 
@@ -71,7 +76,7 @@ public class UserService {
                 UUID.randomUUID(),
                 familyId,
                 request.name(),
-                request.email(),
+                email,
                 passwordHasher.hash(request.password()),
                 request.role(),
                 true,
@@ -105,6 +110,8 @@ public class UserService {
 
         if (request.password() != null && !request.password().isBlank()) {
             user.setPasswordHash(passwordHasher.hash(request.password()));
+            // Senha nova invalida as sessoes abertas: quem tinha o refresh token antigo nao renova mais
+            refreshTokenRepository.revokeAllByUserId(user.getId());
         }
 
         if (request.active() != null) {

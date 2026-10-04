@@ -1,5 +1,6 @@
 package br.com.controlei.application.services;
 
+import br.com.controlei.application.exceptions.BusinessException;
 import br.com.controlei.domain.contracts.repositories.AccountRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.CategoryRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.DebtRepositoryPort;
@@ -26,7 +27,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -59,7 +62,26 @@ public class ReportService {
         this.authorizationService = authorizationService;
     }
 
+    /**
+     * Texto seguro para uma celula de CSV. Um membro malicioso cria uma transacao cuja descricao comeca com
+     * "=", "+", "-" ou "@" e o responsavel executa a formula ao abrir o extrato no Excel; por isso esses valores
+     * ganham um apostrofo na frente. Quebras de linha e aspas tambem sao neutralizadas.
+     */
+    static String csv(String value) {
+        if (value == null) {
+            return "";
+        }
+        String s = value.replace("\r", " ").replace("\n", " ").replace(";", ",").replace("\"", "\"\"");
+        if (!s.isEmpty() && "=+-@\t".indexOf(s.charAt(0)) >= 0) {
+            s = "'" + s;
+        }
+        return s;
+    }
+
     public byte[] generateMonthlyStatementCsv(int year, int month) {
+        if (month < 1 || month > 12 || year < 2000 || year > 2100) {
+            throw new BusinessException("Periodo invalido");
+        }
         UUID familyId = authorizationService.currentFamilyId();
         YearMonth ym = YearMonth.of(year, month);
         LocalDate start = ym.atDay(1);
@@ -72,23 +94,30 @@ public class ReportService {
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+        // Nomes consultados uma vez por id (e nao uma vez por linha): 2.000 linhas viravam ~6.000 consultas
+        Map<UUID, String> categoryNames = new HashMap<>();
+        Map<UUID, String> accountNames = new HashMap<>();
+        Map<UUID, String> userNames = new HashMap<>();
+
         for (Transaction t : transactions) {
             String date = t.getTransactionDate() != null ? t.getTransactionDate().format(dtf) : "";
-            String desc = t.getDescription() != null ? t.getDescription().replace(";", ",") : "";
+            String desc = csv(t.getDescription());
             String type = t.getType() != null ? t.getType().name() : "";
 
-            Category cat = t.getCategoryId() != null ? categoryRepository.findByIdAndDeletedAtIsNull(t.getCategoryId()).orElse(null) : null;
-            String catName = cat != null ? cat.getName() : "Sem categoria";
+            String catName = t.getCategoryId() == null ? "Sem categoria"
+                    : categoryNames.computeIfAbsent(t.getCategoryId(), id -> csv(categoryRepository.findByIdAndDeletedAtIsNull(id)
+                            .map(Category::getName).orElse("Sem categoria")));
 
-            Account acc = t.getAccountId() != null ? accountRepository.findByIdAndDeletedAtIsNull(t.getAccountId()).orElse(null) : null;
-            String accName = acc != null ? acc.getName() : "";
+            String accName = t.getAccountId() == null ? ""
+                    : accountNames.computeIfAbsent(t.getAccountId(), id -> csv(accountRepository.findByIdAndDeletedAtIsNull(id)
+                            .map(Account::getName).orElse("")));
 
-            User user = userRepository.findByIdAndDeletedAtIsNull(t.getUserId()).orElse(null);
-            String userName = user != null ? user.getName() : "";
+            String userName = userNames.computeIfAbsent(t.getUserId(), id -> csv(userRepository.findByIdAndDeletedAtIsNull(id)
+                    .map(User::getName).orElse("")));
 
             String amount = t.getAmount() != null ? String.format(java.util.Locale.US, "%.2f", t.getAmount()) : "0.00";
             String status = t.getStatus() != null ? t.getStatus().name() : "";
-            String notes = t.getNotes() != null ? t.getNotes().replace(";", ",") : "";
+            String notes = csv(t.getNotes());
 
             sb.append(date).append(";")
                     .append(desc).append(";")

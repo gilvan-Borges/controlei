@@ -2,8 +2,11 @@ package br.com.controlei.application.services;
 
 import br.com.controlei.application.exceptions.BusinessException;
 import br.com.controlei.application.exceptions.NotFoundException;
+import br.com.controlei.application.exceptions.UnauthorizedException;
+import br.com.controlei.application.security.WebhookSignatureVerifier;
 import br.com.controlei.domain.contracts.repositories.AccountRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.BankConnectionRepositoryPort;
+import br.com.controlei.domain.contracts.repositories.CreditCardRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.BankSyncMappingRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.TransactionRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.UserRepositoryPort;
@@ -20,6 +23,7 @@ import br.com.controlei.domain.models.enums.BankConnectionStatus;
 import br.com.controlei.domain.models.enums.TransactionStatus;
 import br.com.controlei.domain.models.enums.TransactionType;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -37,25 +41,47 @@ public class BankConnectionService {
     private final TransactionRepositoryPort transactionRepository;
     private final UserRepositoryPort userRepository;
     private final AuthorizationService authorizationService;
+    private final CreditCardRepositoryPort creditCardRepository;
+    private final WebhookSignatureVerifier webhookVerifier;
+    private final ObjectMapper objectMapper;
 
     public BankConnectionService(BankConnectionRepositoryPort bankConnectionRepository,
                                  BankSyncMappingRepositoryPort bankSyncMappingRepository,
                                  AccountRepositoryPort accountRepository,
                                  TransactionRepositoryPort transactionRepository,
                                  UserRepositoryPort userRepository,
-                                 AuthorizationService authorizationService) {
+                                 AuthorizationService authorizationService,
+                                 CreditCardRepositoryPort creditCardRepository,
+                                 WebhookSignatureVerifier webhookVerifier,
+                                 ObjectMapper objectMapper) {
         this.bankConnectionRepository = bankConnectionRepository;
         this.bankSyncMappingRepository = bankSyncMappingRepository;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.authorizationService = authorizationService;
+        this.creditCardRepository = creditCardRepository;
+        this.webhookVerifier = webhookVerifier;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
     public BankConnectionResponse connectBank(ConnectBankRequest request) {
         UUID familyId = authorizationService.currentFamilyId();
         UUID userId = authorizationService.currentUserId();
+
+        // A conta e o cartao de destino precisam ser da MESMA familia: sem isso, um UUID de outra
+        // familia faria a sincronizacao lancar transacoes na conta dela.
+        if (request.targetAccountId() != null) {
+            Account target = accountRepository.findByIdAndDeletedAtIsNull(request.targetAccountId())
+                    .orElseThrow(() -> new NotFoundException("Conta de destino nao encontrada"));
+            authorizationService.requireSameFamily(target.getFamilyId());
+        }
+        if (request.targetCreditCardId() != null) {
+            var card = creditCardRepository.findByIdAndDeletedAtIsNull(request.targetCreditCardId())
+                    .orElseThrow(() -> new NotFoundException("Cartao de destino nao encontrado"));
+            authorizationService.requireSameFamily(card.getFamilyId());
+        }
 
         BankConnection connection = new BankConnection(
                 UUID.randomUUID(),
@@ -127,22 +153,21 @@ public class BankConnectionService {
         int skipped = 0;
 
         LocalDate today = LocalDate.now();
+        // Uma consulta so: ela nao depende do mapeamento, entao nao pode ficar dentro do laco
+        List<Transaction> existing = transactionRepository.findAllByFamilyIdAndPeriod(
+                connection.getFamilyId(), today, today);
 
         for (BankSyncMapping mapping : mappings) {
             if (mapping.getAccountId() != null) {
-                Account account = accountRepository.findByIdAndDeletedAtIsNull(mapping.getAccountId()).orElse(null);
+                Account account = accountRepository.findByIdAndDeletedAtIsNull(mapping.getAccountId())
+                        .filter(a -> a.getFamilyId().equals(connection.getFamilyId()))
+                        .orElse(null);
                 if (account != null) {
                     // Transação simulada vinda do Open Finance
                     BigDecimal mockAmount = BigDecimal.valueOf(52.50);
                     String mockDesc = "Padaria Central (Open Finance)";
 
                     // Deduplicação: verifica se já existe transação igual no mesmo dia com mesmo valor e conta
-                    List<Transaction> existing = transactionRepository.findAllByFamilyIdAndPeriod(
-                            connection.getFamilyId(),
-                            today,
-                            today
-                    );
-
                     boolean isDuplicate = existing.stream()
                             .anyMatch(t -> t.getAmount().compareTo(mockAmount) == 0 && t.getDescription().contains("Padaria Central"));
 
@@ -187,7 +212,20 @@ public class BankConnectionService {
         );
     }
 
-    public void handleWebhook(String signature, OpenFinanceWebhookPayload payload) {
+    /**
+     * O corpo precisa chegar como texto bruto: a assinatura HMAC vale sobre os bytes exatos enviados, e reserializar
+     * o JSON mudaria o resultado. Sem segredo configurado ou com assinatura errada, nada e processado.
+     */
+    public void handleWebhook(String signature, String rawBody) {
+        if (!webhookVerifier.isValid(rawBody, signature)) {
+            throw new UnauthorizedException("Assinatura do webhook invalida");
+        }
+        OpenFinanceWebhookPayload payload;
+        try {
+            payload = objectMapper.readValue(rawBody, OpenFinanceWebhookPayload.class);
+        } catch (RuntimeException e) {
+            throw new BusinessException("Corpo do webhook invalido");
+        }
         if (payload != null && payload.itemId() != null) {
             bankConnectionRepository.findByExternalItemIdAndDeletedAtIsNull(payload.itemId())
                     .ifPresent(conn -> {

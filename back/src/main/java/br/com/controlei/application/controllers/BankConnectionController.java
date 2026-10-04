@@ -3,7 +3,6 @@ package br.com.controlei.application.controllers;
 import br.com.controlei.application.services.BankConnectionService;
 import br.com.controlei.domain.models.dtos.openfinance.BankConnectionResponse;
 import br.com.controlei.domain.models.dtos.openfinance.ConnectBankRequest;
-import br.com.controlei.domain.models.dtos.openfinance.OpenFinanceWebhookPayload;
 import br.com.controlei.domain.models.dtos.openfinance.SyncTransactionsResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -53,8 +52,8 @@ public class BankConnectionController {
     @PostMapping("/webhook")
     public ResponseEntity<Void> handleWebhook(
             @RequestHeader(value = "X-OpenFinance-Signature", required = false) String signature,
-            @RequestBody OpenFinanceWebhookPayload payload) {
-        bankConnectionService.handleWebhook(signature, payload);
+            @RequestBody String rawBody) {
+        bankConnectionService.handleWebhook(signature, rawBody);
         return ResponseEntity.ok().build();
     }
 }
