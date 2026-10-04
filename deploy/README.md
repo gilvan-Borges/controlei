@@ -161,3 +161,11 @@ Depois, o Caddy do JavAI precisa ganhar a rede e o host novos: é a mudança em 
 Executado e verificado: rede, `.env`, usuário de deploy, primeiro deploy manual, rota no Caddy, Cloudflare Access (política "Somente o dono"), credencial OIDC da Tailscale e um **deploy automático completo pelo CI** (OIDC → Tailscale → SSH restrito → script, com os seis serviços saudáveis). O JavAI não foi afetado: `api.`, `conteudo.`, `admin.` e o portfólio responderam igual antes e depois.
 
 Problemas reais achados no caminho, todos corrigidos: uma diretiva nginx duplicada que o `nginx -t` teria pego (agora roda no CI), o `AllowUsers` do sshd e o subject do GitHub.
+
+### Acesso público (decisão de 2026-10-04)
+
+Por decisão do dono, o Controlei é **público**: o app do Cloudflare Access foi removido e o cadastro de famílias está aberto (`REGISTRATION_ENABLED=true` no `.env` da VPS). O padrão do `.env.vps.example` continua sendo `false`, de propósito: uma instalação nova nasce fechada.
+
+O que protege a instância aberta: limite de requisições por IP no gateway (cadastro e login: 5/min), bloqueio de login por e-mail, senhas de 10 a 72 caracteres, CSP sem `unsafe-inline` em scripts, IA **desligada** (nenhum custo com estranhos) e o `admin.` do JavAI continua atrás do Access. O que ainda falta para uma instância aberta de verdade: CAPTCHA no cadastro (Turnstile) e backup do Postgres.
+
+Para fechar de novo: `REGISTRATION_ENABLED=false` no `.env` e `docker compose up -d back`, ou recriar o app do Access (Zero Trust → Access controls → Applications → política "Somente o dono").
