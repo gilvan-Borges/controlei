@@ -93,15 +93,14 @@ describe('DashboardPageComponent', () => {
     const fixture = TestBed.createComponent(DashboardPageComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Individual');
-    expect(compiled.textContent).toContain('Familiar');
+    expect(compiled.textContent).toContain('Meu Extrato');
+    expect(compiled.textContent).toContain('Visão Familiar');
   });
 
-  it('should render period selectors', () => {
+  it('should render the period selector', () => {
     const fixture = TestBed.createComponent(DashboardPageComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    const selects = compiled.querySelectorAll('select');
-    expect(selects.length).toBeGreaterThanOrEqual(2);
+    expect(compiled.querySelector('app-period-selector')).not.toBeNull();
   });
 });
