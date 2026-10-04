@@ -5,6 +5,11 @@
 **Público-alvo & Escala:** 1.000+ Usuários Ativos Concorrentes  
 **Paradigma:** Arquitetura Orientada a Eventos (EDA), DDD Pragmático de Mercado, Clean Architecture Hexagonal, Microsserviços e Cache Distribuído.
 
+> **Status: plano, nao implementado.** Este documento descreve uma evolucao para 4 microsservicos com Keycloak.
+> Hoje o Controlei e uma API unica (Spring Boot) com autenticacao JWT propria, Kafka com Transactional Outbox e
+> Redis para idempotencia. O Keycloak nao esta integrado e nao faz parte do Compose. O estado real e as pendencias
+> estao em `specs/07-controlei.md` do repositorio JavAI.
+
 ---
 
 ## 1. Sumário Executivo & Decisões Arquiteturais
