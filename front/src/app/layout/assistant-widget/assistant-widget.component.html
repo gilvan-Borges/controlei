@@ -7,6 +7,7 @@
   aria-controls="assistant-panel"
   [attr.aria-label]="open ? 'Fechar assistente' : 'Abrir assistente de ajuda'"
   [class.attention]="!seen && !open"
+  [class.hide-on-mobile]="open"
 >
   <span class="fab-icon" aria-hidden="true">
     @if (open) {
@@ -30,15 +31,40 @@
 }
 
 @if (open) {
-  <section id="assistant-panel" class="assistant-panel" role="dialog" aria-label="Assistente de ajuda">
+  <section
+    id="assistant-panel"
+    class="assistant-panel"
+    [class.expanded]="expanded"
+    role="dialog"
+    aria-label="Assistente Controlei"
+  >
     <div class="assistant-header">
-      <div>
+      <span class="assistant-avatar" aria-hidden="true">R$</span>
+      <div class="assistant-title">
         <strong>Assistente Controlei</strong>
-        <small>Dúvidas sobre como usar o app</small>
+        <small>Consulta seus dados e faz por você, com a sua confirmação</small>
       </div>
-      <button type="button" class="assistant-close" (click)="close()" aria-label="Fechar assistente">
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
-      </button>
+      <div class="assistant-tools">
+        <button type="button" (click)="showCapabilities()" aria-label="O que o assistente sabe fazer" title="O que sei fazer">
+          <i class="bi bi-lightbulb" aria-hidden="true"></i>
+        </button>
+        <button type="button" (click)="reset()" aria-label="Nova conversa" title="Nova conversa">
+          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="only-desktop"
+          (click)="toggleExpanded()"
+          [attr.aria-label]="expanded ? 'Reduzir janela' : 'Ampliar janela'"
+          [attr.aria-pressed]="expanded"
+          [title]="expanded ? 'Reduzir' : 'Ampliar'"
+        >
+          <i [class]="expanded ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'" aria-hidden="true"></i>
+        </button>
+        <button type="button" (click)="close()" aria-label="Fechar assistente" title="Fechar">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
 
     @if (settings && !settings.enabled && settings.aiAvailable) {
@@ -46,7 +72,7 @@
         @if (settings.canManage) {
           @if (!consentOpen) {
             <p>O assistente com IA está <strong>desativado</strong>. Ative para ele consultar seus dados e fazer coisas por você.</p>
-            <button type="button" (click)="openConsent()">Ativar assistente com IA</button>
+            <button type="button" class="primary" (click)="openConsent()">Ativar assistente com IA</button>
           } @else {
             <p class="consent-title"><strong>Antes de ativar, saiba:</strong></p>
             <ul class="consent-list">
@@ -69,63 +95,116 @@
         }
       </div>
     }
+
+    <div #list class="assistant-messages" tabindex="0" role="log" aria-live="polite" aria-relevant="additions">
+      @for (m of messages; track $index) {
+        <div class="assistant-row" [class.user]="m.from === 'user'">
+          @if (m.from === 'assistant') {
+            <span class="assistant-avatar small" aria-hidden="true">R$</span>
+          }
+          <div class="assistant-msg" [class.user]="m.from === 'user'">
+            <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
+            @for (b of format(m.text); track $index) {
+              @if (b.type === 'li') {
+                <p class="li">
+                  <span class="dot" aria-hidden="true">•</span>
+                  <span>
+                    @for (p of b.parts; track $index) {
+                      @if (p.bold) {
+                        <strong>{{ p.text }}</strong>
+                      } @else {
+                        <span>{{ p.text }}</span>
+                      }
+                    }
+                  </span>
+                </p>
+              } @else {
+                <p>
+                  @for (p of b.parts; track $index) {
+                    @if (p.bold) {
+                      <strong>{{ p.text }}</strong>
+                    } @else {
+                      <span>{{ p.text }}</span>
+                    }
+                  }
+                </p>
+              }
+            }
+            @for (a of m.actions ?? []; track a.id) {
+              <div class="assistant-action" [class.destructive]="a.destructive" [attr.data-state]="a.state">
+                <p class="assistant-action-summary">
+                  <i [class]="a.destructive ? 'bi bi-trash3' : 'bi bi-check2-circle'" aria-hidden="true"></i>
+                  {{ a.summary }}
+                </p>
+                @if (a.state === 'pending' || a.state === 'working') {
+                  <div class="assistant-action-buttons">
+                    <button type="button" class="confirm" (click)="confirm(a)" [disabled]="a.state === 'working'">
+                      {{ a.state === 'working' ? 'Executando…' : a.destructive ? 'Excluir' : 'Confirmar' }}
+                    </button>
+                    <button type="button" class="cancel" (click)="cancel(a)" [disabled]="a.state === 'working'">Cancelar</button>
+                  </div>
+                } @else {
+                  <p class="assistant-action-state">
+                    {{ a.state === 'done' ? 'Feito' : a.state === 'canceled' ? 'Cancelado' : 'Não executado' }}
+                  </p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @if (loading) {
+        <div class="assistant-row">
+          <span class="assistant-avatar small" aria-hidden="true">R$</span>
+          <div class="assistant-msg typing" role="status" aria-label="O assistente está pensando">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+      }
+      @if (showExamples) {
+        <div class="assistant-examples">
+          @for (c of capabilities; track c.title) {
+            <div class="example-group">
+              <span class="example-title"><i [class]="'bi ' + c.icon" aria-hidden="true"></i> {{ c.title }}</span>
+              <div class="example-chips">
+                @for (e of c.examples; track e) {
+                  <button type="button" (click)="send(e)">{{ e }}</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
     @if (settings && settings.enabled && settings.canManage) {
       <div class="assistant-manage">
         <button type="button" (click)="setEnabled(false)" [disabled]="savingSettings">Desativar assistente com IA</button>
       </div>
     }
 
-    <div #list class="assistant-messages" tabindex="0" role="log" aria-live="polite" aria-relevant="additions">
-      @for (m of messages; track $index) {
-        <div class="assistant-msg" [class.user]="m.from === 'user'">
-          <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
-          {{ m.text }}
-          @for (a of m.actions ?? []; track a.id) {
-            <div class="assistant-action" [class.destructive]="a.destructive" [attr.data-state]="a.state">
-              <p class="assistant-action-summary">{{ a.summary }}</p>
-              @if (a.state === 'pending' || a.state === 'working') {
-                <div class="assistant-action-buttons">
-                  <button type="button" class="confirm" (click)="confirm(a)" [disabled]="a.state === 'working'">
-                    {{ a.state === 'working' ? 'Executando…' : a.destructive ? 'Excluir' : 'Confirmar' }}
-                  </button>
-                  <button type="button" class="cancel" (click)="cancel(a)" [disabled]="a.state === 'working'">Cancelar</button>
-                </div>
-              } @else {
-                <p class="assistant-action-state">
-                  {{ a.state === 'done' ? 'Feito' : a.state === 'canceled' ? 'Cancelado' : 'Não executado' }}
-                </p>
-              }
-            </div>
-          }
-        </div>
-      }
-      @if (loading) {
-        <div class="assistant-msg typing" role="status">Pensando…</div>
-      }
-      @if (messages.length === 1) {
-        <div class="assistant-suggestions">
-          @for (s of suggestions; track s) {
-            <button type="button" (click)="send(s)">{{ s }}</button>
-          }
-        </div>
-      }
-    </div>
-
     <form class="assistant-form" (submit)="$event.preventDefault(); submit(field)">
-      <label for="assistant-input" class="sr-only">Sua pergunta</label>
-      <input
+      <label for="assistant-input" class="sr-only">Sua pergunta ou pedido</label>
+      <textarea
         #input
         #field
         id="assistant-input"
-        type="text"
+        rows="1"
         autocomplete="off"
         [maxLength]="maxLength"
-        placeholder="Digite sua dúvida"
-      />
-      <button type="submit" [disabled]="loading" aria-label="Enviar pergunta">
+        placeholder="Pergunte ou peça algo… (Enter envia)"
+        (keydown)="onKey($event, field)"
+        (input)="onInput(field)"
+      ></textarea>
+      <button type="submit" [disabled]="loading" aria-label="Enviar">
         <i class="bi bi-send-fill" aria-hidden="true"></i>
       </button>
     </form>
-    <p class="assistant-note">Consulto seus dados para responder e só altero algo depois da sua confirmação. Não envie senhas.</p>
+    <p class="assistant-note">
+      Consulto seus dados para responder e só altero algo depois da sua confirmação. Não envie senhas.
+      @if (typed > maxLength - 80) {
+        <span class="counter" [class.limit]="typed >= maxLength">{{ typed }}/{{ maxLength }}</span>
+      }
+    </p>
   </section>
 }
