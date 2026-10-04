@@ -2,6 +2,7 @@ package br.com.controlei.application.services;
 
 import br.com.controlei.application.contracts.TokenProvider;
 import br.com.controlei.application.exceptions.BusinessException;
+import br.com.controlei.application.exceptions.ForbiddenException;
 import br.com.controlei.application.exceptions.UnauthorizedException;
 import br.com.controlei.application.security.LoginAttemptTracker;
 import br.com.controlei.application.security.TokenHasher;
@@ -38,6 +39,7 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final long refreshTokenExpirationDays;
     private final LoginAttemptTracker loginAttempts;
+    private final boolean registrationEnabled;
     /** Hash de uma senha qualquer, para gastar o mesmo tempo de BCrypt quando o e-mail nao existe. */
     private final String dummyHash;
 
@@ -48,6 +50,7 @@ public class AuthService {
                        PasswordHasher passwordHasher,
                        TokenProvider tokenProvider,
                        LoginAttemptTracker loginAttempts,
+                       @Value("${app.registration.enabled:true}") boolean registrationEnabled,
                        @Value("${jwt.refresh-expiration-days:7}") long refreshTokenExpirationDays) {
         this.userRepository = userRepository;
         this.familyRepository = familyRepository;
@@ -57,6 +60,7 @@ public class AuthService {
         this.tokenProvider = tokenProvider;
         this.refreshTokenExpirationDays = refreshTokenExpirationDays;
         this.loginAttempts = loginAttempts;
+        this.registrationEnabled = registrationEnabled;
         this.dummyHash = passwordHasher.hash("senha-ficticia-para-igualar-o-tempo");
     }
 
@@ -66,6 +70,9 @@ public class AuthService {
 
     @Transactional
     public LoginResponse registerFamily(RegisterFamilyRequest request) {
+        if (!registrationEnabled) {
+            throw new ForbiddenException("O cadastro de novas familias esta fechado");
+        }
         String email = normalize(request.email());
         if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
             throw new BusinessException("Email ja cadastrado");
