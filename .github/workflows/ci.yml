@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validar sintaxe e exigencia dos segredos
         env:
-          JWT_SECRET: 0123456789012345678901234567890123
+          JWT_SECRET: 'segredo-de-ci-com-mais-de-32-caracteres-xyz'
           DB_PASSWORD: ci-senha-descartavel
         run: |
           docker compose config -q
@@ -66,7 +66,7 @@ jobs:
           fi
       - name: So o gateway publica porta
         env:
-          JWT_SECRET: 0123456789012345678901234567890123
+          JWT_SECRET: 'segredo-de-ci-com-mais-de-32-caracteres-xyz'
           DB_PASSWORD: ci-senha-descartavel
         run: |
           # Postgres, Redis e Kafka ficam so na rede interna; portas de depuracao existem apenas no override de dev
@@ -76,7 +76,7 @@ jobs:
           fi
       - name: Compose da VPS nao publica porta nenhuma
         env:
-          JWT_SECRET: 0123456789012345678901234567890123
+          JWT_SECRET: 'segredo-de-ci-com-mais-de-32-caracteres-xyz'
           DB_PASSWORD: ci-senha-descartavel
           REDIS_PASSWORD: ci-redis-descartavel
           CONTROLEI_TAG: ci
@@ -85,7 +85,8 @@ jobs:
           docker compose -f docker-compose.vps.yml config -q
           # Em producao o unico caminho de entrada e o Caddy, pela rede externa; o Kafka UI so existe no override
           # da tailnet, preso ao IP da Tailscale.
-          published=$(docker compose -f docker-compose.vps.yml config | grep -c 'published:')
+          # grep -c devolve 1 quando a contagem e zero (o resultado certo aqui); sem o || true, o `bash -e` do runner aborta
+          published=$(docker compose -f docker-compose.vps.yml config | grep -c 'published:' || true)
           if [ "$published" != "0" ]; then
             echo "A VPS nao pode publicar porta (encontradas $published)" && exit 1
           fi
