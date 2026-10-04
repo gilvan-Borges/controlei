@@ -3,6 +3,7 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { ShellComponent } from './layout/shell/shell.component';
+import { AssistantWidgetComponent } from './layout/assistant-widget/assistant-widget.component';
 import { AuthService } from './core/services/auth.service';
 import { AuthGuard } from './core/guards/auth.guard';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
@@ -17,7 +18,8 @@ describe('ShellComponent', () => {
         HttpClientTestingModule
       ],
       declarations: [
-        ShellComponent
+        ShellComponent,
+        AssistantWidgetComponent
       ],
       providers: [
         AuthService
