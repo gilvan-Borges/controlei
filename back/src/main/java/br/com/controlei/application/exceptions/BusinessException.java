@@ -1,6 +1,8 @@
 package br.com.controlei.application.exceptions;
 
-public class BusinessException extends RuntimeException {
+import br.com.controlei.domain.exceptions.DomainRuleException;
+
+public class BusinessException extends DomainRuleException {
 
     public BusinessException(String message) {
         super(message);
