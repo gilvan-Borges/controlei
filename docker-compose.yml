@@ -108,7 +108,7 @@ services:
 
   # 6. Reverse Proxy / Gateway Nginx: a UNICA porta publicada
   nginx:
-    image: nginxinc/nginx-unprivileged:1.27-alpine
+    image: nginxinc/nginx-unprivileged:1.30-alpine
     container_name: controlei-nginx
     restart: unless-stopped
     ports:
