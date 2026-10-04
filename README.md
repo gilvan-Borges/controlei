@@ -17,6 +17,7 @@ Sistema de finanças para uma família, em **Java 25 + Spring Boot 4.1** e **Ang
 | Eventos: **Transactional Outbox** → Kafka → consumidor idempotente (+ DLT) | Pronto; verificado com H2 e dublês, **não com Postgres/Kafka reais** |
 | **Leitura de comprovantes com IA** | Pronto, desligada por padrão |
 | Open Finance | **Simulado.** Cria uma transação de exemplo; o webhook exige assinatura HMAC, mas não há banco real |
+| **PWA** (instalável no celular, abre offline) | Pronto: manifest, service worker, ícones próprios e aviso de versão nova. Só a "casca" do app fica em cache; **os dados financeiros nunca** (a API não é cacheada) |
 | Planos de assinatura | Pronto, **sem cobrança real** |
 | Keycloak | **Não usado** (removido do Compose). A autenticação é JWT próprio |
 | App Android (fase 1 do plano) | Não iniciado |
