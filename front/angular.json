@@ -70,6 +70,7 @@
                 "styles": { "minify": true, "inlineCritical": false },
                 "fonts": { "inline": false }
               },
+              "serviceWorker": "ngsw-config.json",
               "outputHashing": "all"
             },
             "development": {

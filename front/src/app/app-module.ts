@@ -1,4 +1,5 @@
-import { NgModule, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { NgModule, isDevMode, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ServiceWorkerModule } from '@angular/service-worker';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -20,7 +21,13 @@ import { AccessDeniedComponent } from './core/pages/access-denied/access-denied.
     HttpClientModule,
     AppRoutingModule,
     CoreModule,
-    AuthModule
+    AuthModule,
+    // Service worker so em producao (em `ng serve` ele atrapalharia o recarregamento). Registra depois que o app
+    // estabiliza, para nao competir com a primeira carga.
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    })
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),

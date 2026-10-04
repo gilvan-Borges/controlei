@@ -45,6 +45,19 @@ jobs:
       - name: Build de produção
         run: npx ng build
         working-directory: front
+      - name: PWA gerado (service worker, manifest e ícones) e sem handlers inline
+        working-directory: front
+        run: |
+          for f in ngsw.json ngsw-worker.js manifest.webmanifest icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
+            test -f "dist/front/browser/$f" || { echo "O build nao gerou $f"; exit 1; }
+          done
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('dist/front/browser/manifest.webmanifest','utf8'));
+            if(m.display!=='standalone'||!m.icons.some(i=>i.sizes==='512x512'&&i.purpose==='maskable')) throw new Error('manifest incompleto');
+            console.log('manifest ok:', m.short_name, m.display)"
+          # O CSP do gateway (script-src 'self') bloqueia onclick/onchange inline: eles quebram so em producao.
+          if grep -rEn --include=*.html '\son(click|change|input|submit|load|error)="' src; then
+            echo "Handler inline encontrado: use (click)/(change) do Angular"; exit 1
+          fi
 
   compose:
     name: Compose válido
