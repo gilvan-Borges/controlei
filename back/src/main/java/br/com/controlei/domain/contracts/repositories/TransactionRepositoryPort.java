@@ -16,6 +16,13 @@ public interface TransactionRepositoryPort {
 
     List<Transaction> findAllByFamilyIdAndPeriod(UUID familyId, LocalDate startDate, LocalDate endDate);
 
+    /**
+     * Total de despesas (nao canceladas) de uma categoria no periodo, calculado pelo banco.
+     *
+     * @param userId restringe a um membro; nulo soma a familia toda
+     */
+    java.math.BigDecimal sumExpenses(UUID familyId, UUID categoryId, UUID userId, LocalDate startDate, LocalDate endDate);
+
     PageResult<Transaction> findAllByFamilyIdAndFilters(UUID familyId, LocalDate startDate, LocalDate endDate,
                                                        UUID userId, UUID accountId, UUID categoryId,
                                                        TransactionType type, TransactionStatus status,

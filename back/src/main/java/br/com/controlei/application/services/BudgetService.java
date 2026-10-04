@@ -198,14 +198,9 @@ public class BudgetService {
         LocalDate startDate = ym.atDay(1);
         LocalDate endDate = ym.atEndOfMonth();
 
-        List<Transaction> transactions = transactionRepository.findAllByFamilyIdAndPeriod(budget.getFamilyId(), startDate, endDate);
-
-        BigDecimal spentAmount = transactions.stream()
-                .filter(tx -> tx.getType() == TransactionType.EXPENSE)
-                .filter(tx -> Objects.equals(tx.getCategoryId(), budget.getCategoryId()))
-                .filter(tx -> budget.getUserId() == null || Objects.equals(tx.getUserId(), budget.getUserId()))
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Soma feita pelo banco: antes cada orcamento carregava TODAS as transacoes do mes da familia
+        BigDecimal spentAmount = transactionRepository.sumExpenses(
+                budget.getFamilyId(), budget.getCategoryId(), budget.getUserId(), startDate, endDate);
 
         BigDecimal remainingAmount = budget.getPlannedAmount().subtract(spentAmount);
 
