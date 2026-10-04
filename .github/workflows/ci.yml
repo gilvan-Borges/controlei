@@ -96,6 +96,11 @@ jobs:
               echo "O compose da VPS deveria exigir $var" && exit 1
             fi
           done
+      - name: Configuracao do gateway e do front passa no nginx -t
+        run: |
+          # Os upstreams se chamam back e front; fora do Compose eles nao resolvem, entao apontam para o loopback
+          docker run --rm --add-host back:127.0.0.1 --add-host front:127.0.0.1             -v "$PWD/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"             -v "$PWD/nginx/proxy_api.conf:/etc/nginx/proxy_api.conf:ro"             nginxinc/nginx-unprivileged:1.30-alpine nginx -t
+          docker run --rm -v "$PWD/front/nginx.conf:/etc/nginx/conf.d/default.conf:ro"             nginxinc/nginx-unprivileged:1.30-alpine nginx -t
 
   # Imagens no GHCR: so depois que back, front e compose passaram, e so na main. A VPS nunca compila nada.
   images:
