@@ -35,20 +35,22 @@
             </div>
           }
 
-          <!-- Quick Demo Buttons -->
-          <div class="demo-quick-bar mb-3">
-            <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
-            <div class="demo-pills-row">
-              <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
-                <i class="bi bi-shield-check"></i>
-                <span>Administrador</span>
-              </button>
-              <button type="button" class="btn-demo-tag" (click)="fillDemo('member')">
-                <i class="bi bi-person"></i>
-                <span>Membro</span>
-              </button>
+          <!-- Contas de demonstracao: so aparecem no build de desenvolvimento -->
+          @if (demo) {
+            <div class="demo-quick-bar mb-3">
+              <span class="demo-bar-label">ACESSO RÁPIDO (DEMO):</span>
+              <div class="demo-pills-row">
+                <button type="button" class="btn-demo-tag" (click)="fillDemo('admin')">
+                  <i class="bi bi-shield-check"></i>
+                  <span>Administrador</span>
+                </button>
+                <button type="button" class="btn-demo-tag" (click)="fillDemo('member')">
+                  <i class="bi bi-person"></i>
+                  <span>Membro</span>
+                </button>
+              </div>
             </div>
-          </div>
+          }
 
           <form [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()" class="custom-auth-form">
             <div class="form-field-item mb-3">
@@ -230,7 +232,7 @@
                   [type]="showRegPassword ? 'text' : 'password'"
                   class="form-control-clean"
                   formControlName="password"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 10 caracteres"
                   [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
                 />
                 <button
@@ -243,7 +245,7 @@
                 </button>
               </div>
               @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-                <span class="error-msg-clean">A senha deve ter no mínimo 6 caracteres.</span>
+                <span class="error-msg-clean">A senha deve ter de 10 a 72 caracteres.</span>
               }
             </div>
 

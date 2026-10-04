@@ -90,7 +90,9 @@ docker run --rm -p 4200:80 controlei-front
 
 ## Usuarios locais de teste
 
-Quando o backend estiver no profile `local`, o seeder cria:
+So em desenvolvimento: com o backend no profile `local` e `APP_SEED_ENABLED=true`, o seeder cria as contas abaixo.
+O botao de acesso rapido da tela de login existe apenas no build de desenvolvimento (as credenciais ficam em
+`src/environments/environment.ts`, que o build de producao nao inclui). Em producao nao ha seed nem conta padrao.
 
 ```text
 superadmin@controlei.local / Controlei@123
