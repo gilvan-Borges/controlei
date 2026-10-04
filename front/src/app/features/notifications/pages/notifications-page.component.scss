@@ -1,0 +1,53 @@
+.notifications-page {
+  display: block;
+}
+
+.notification-card-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-card-item:hover {
+  background: var(--c-surface-elevated);
+}
+
+.notification-card-item.unread {
+  border-left: 4px solid var(--c-primary);
+  background: rgba(var(--c-primary-rgb), 0.04);
+}
+
+.notif-icon-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--c-surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.notif-body {
+  flex: 1;
+}
+.notif-body strong {
+  font-size: 0.92rem;
+}
+.notif-body p {
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.unread-indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  box-shadow: 0 0 8px var(--c-primary);
+  flex-shrink: 0;
+}

@@ -1,0 +1,78 @@
+<div class="container-fluid px-0">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <a routerLink="/app/investments" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0">{{ isEdit ? 'Editar investimento' : 'Novo investimento' }}</h5>
+  </div>
+
+  @if (loading) {
+    <app-loading message="Carregando..."></app-loading>
+  }
+
+  @if (errorMessage && !loading) {
+    <app-error-message [message]="errorMessage"></app-error-message>
+  }
+
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label class="form-label">Membro</label>
+        <select class="form-select" formControlName="userId">
+          <option value="">Selecione</option>
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input class="form-control" formControlName="name" placeholder="Tesouro Selic">
+      </div>
+
+      <div class="row g-2">
+        <div class="col-6 mb-3">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" formControlName="type">
+            @for (type of investmentTypes; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-6 mb-3">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" formControlName="categoryId">
+            <option [ngValue]="null">Sem categoria</option>
+            @for (category of categories; track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Valor atual</label>
+        <app-money-input formControlName="currentAmount"></app-money-input>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Data de referencia</label>
+        <app-date-input formControlName="referenceDate"></app-date-input>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Observacoes</label>
+        <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+      </div>
+
+      <app-action-button
+        type="submit"
+        label="Salvar"
+        icon="bi-check-lg"
+        [loading]="saving"
+        [disabled]="form.invalid"
+      ></app-action-button>
+    </form>
+  }
+</div>

@@ -1,0 +1,322 @@
+<div class="cards-page animate-in">
+  <!-- Page Header -->
+  <div class="page-header-luxury">
+    <div class="page-title-group">
+      <span class="badge-pill indigo">
+        <i class="bi bi-credit-card-2-front-fill"></i> CRÉDITO & FATURAS
+      </span>
+      <h1>Cartões de Crédito & Faturas</h1>
+      <p>Gerencie limites, datas de fechamento, parcelamentos e realize pagamentos de faturas.</p>
+    </div>
+
+    <button class="btn btn-primary" (click)="openCreateCardModal()">
+      <i class="bi bi-plus-circle"></i>
+      <span>Novo Cartão</span>
+    </button>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert alert-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger mb-4">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- KPI Overview -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+      <div class="stat-widget">
+        <div class="stat-icon-box" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
+          <i class="bi bi-credit-card"></i>
+        </div>
+        <span class="stat-label">Limite Total Concedido</span>
+        <div class="stat-value">R$ {{ getTotalCreditLimit() | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <div class="stat-widget">
+        <div class="stat-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <span class="stat-label">Limite Total Disponível</span>
+        <div class="stat-value">R$ {{ getTotalAvailableLimit() | number: '1.2-2' }}</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <div class="stat-widget">
+        <div class="stat-icon-box" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <span class="stat-label">Total Utilizado / Em Fatura</span>
+        <div class="stat-value">R$ {{ (getTotalCreditLimit() - getTotalAvailableLimit()) | number: '1.2-2' }}</div>
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="text-muted mt-2">Carregando cartões...</p>
+    </div>
+  } @else if (cards.length === 0) {
+    <div class="card-luxury text-center py-5">
+      <i class="bi bi-credit-card-2-front text-muted" style="font-size: 3.5rem;"></i>
+      <h4 class="mt-3">Nenhum cartão cadastrado</h4>
+      <p class="text-muted">Cadastre seus cartões de crédito para acompanhar faturas e parcelamentos automáticos.</p>
+      <button class="btn btn-primary mt-2" (click)="openCreateCardModal()">
+        <i class="bi bi-plus-lg"></i> Adicionar Cartão
+      </button>
+    </div>
+  } @else {
+    <div class="row g-4">
+      <!-- Left Column: Cards List -->
+      <div class="col-12 col-lg-5">
+        <h5 class="mb-3"><i class="bi bi-wallet2 text-primary me-2"></i> Meus Cartões</h5>
+        <div class="cards-stack">
+          @for (card of cards; track card.id) {
+            <div class="credit-card-preview"
+                 [class.active-card]="selectedCard?.id === card.id"
+                 (click)="selectCard(card)">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold tracking-wider fs-6">{{ card.name }}</span>
+                <span class="badge-pill bg-dark text-white border-0">{{ card.brand || 'Mastercard' }}</span>
+              </div>
+
+              <div class="credit-card-chip my-2"></div>
+
+              <div class="card-numbers-row">
+                <small class="text-white-50">•••• •••• •••• {{ card.lastDigits || '8842' }}</small>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-end mt-2 pt-2 border-top border-white-10">
+                <div>
+                  <small class="text-white-50 d-block font-xs">DISPONÍVEL</small>
+                  <strong>R$ {{ card.availableLimit | number: '1.2-2' }}</strong>
+                </div>
+                <div class="text-end">
+                  <small class="text-white-50 d-block font-xs">FECHA / VENCE</small>
+                  <strong>Dia {{ card.closingDay }} / Dia {{ card.dueDay }}</strong>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Column: Invoices & Card Details -->
+      <div class="col-12 col-lg-7">
+        @if (selectedCard) {
+          <div class="card-luxury">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h4>{{ selectedCard.name }}</h4>
+                <p class="text-muted mb-0">Limite Total: R$ {{ selectedCard.creditLimit | number: '1.2-2' }}</p>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" (click)="openExpenseModal(selectedCard)">
+                  <i class="bi bi-cart-plus"></i> Lançar Despesa
+                </button>
+                <button class="btn btn-outline-danger btn-sm" (click)="deleteCard(selectedCard.id)" title="Excluir Cartão">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Invoices Table -->
+            <h6 class="mt-4 mb-2"><i class="bi bi-receipt text-primary me-2"></i> Histórico de Faturas</h6>
+            @if (invoices.length === 0) {
+              <p class="text-muted py-3">Nenhuma fatura gerada ainda para este cartão.</p>
+            } @else {
+              <table class="table-luxury">
+                <thead>
+                  <tr>
+                    <th>Mês de Referência</th>
+                    <th>Vencimento</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (inv of invoices; track inv.id) {
+                    <tr>
+                      <td><strong>{{ inv.referenceMonth }}</strong></td>
+                      <td>{{ inv.dueDate | date: 'dd/MM/yyyy' }}</td>
+                      <td><strong>R$ {{ inv.totalAmount | number: '1.2-2' }}</strong></td>
+                      <td>
+                        <span class="badge-pill" [ngClass]="inv.status === 'PAID' ? 'success' : inv.status === 'CLOSED' ? 'danger' : 'warning'">
+                          {{ inv.status === 'PAID' ? 'Paga' : inv.status === 'CLOSED' ? 'Fechada' : 'Aberta' }}
+                        </span>
+                      </td>
+                      <td>
+                        @if (inv.status !== 'PAID') {
+                          <button class="btn btn-success btn-sm" (click)="openPayModal(inv)">
+                            <i class="bi bi-check-lg"></i> Pagar
+                          </button>
+                        } @else {
+                          <span class="text-success small fw-bold"><i class="bi bi-check-all"></i> Quitada</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Create Card Modal -->
+  @if (showCreateCardModal) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-credit-card-2-front-fill text-primary me-2"></i> Adicionar Cartão de Crédito</h5>
+          <button class="btn-close-luxury" (click)="showCreateCardModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="mb-3">
+            <label class="form-label">Nome do Cartão</label>
+            <input type="text" class="form-control" [(ngModel)]="newCard.name" placeholder="Ex: Nubank Ultravioleta, Itaú Personnalité" />
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Limite Total (R$)</label>
+              <input type="number" step="100" class="form-control" [(ngModel)]="newCard.creditLimit" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Bandeira</label>
+              <select class="form-select" [(ngModel)]="newCard.brand">
+                <option value="Mastercard">Mastercard</option>
+                <option value="Visa">Visa</option>
+                <option value="Elo">Elo</option>
+                <option value="American Express">American Express</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-4">
+              <label class="form-label">Dia do Fechamento</label>
+              <input type="number" min="1" max="31" class="form-control" [(ngModel)]="newCard.closingDay" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">Dia do Vencimento</label>
+              <input type="number" min="1" max="31" class="form-control" [(ngModel)]="newCard.dueDay" />
+            </div>
+            <div class="col-4">
+              <label class="form-label">Últimos 4 Dígitos</label>
+              <input type="text" maxlength="4" class="form-control" [(ngModel)]="newCard.lastDigits" placeholder="8842" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showCreateCardModal = false">Cancelar</button>
+          <button class="btn btn-primary" (click)="saveCard()">Salvar Cartão</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add Expense Modal -->
+  @if (showExpenseModal && selectedCard) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-cart-plus text-primary me-2"></i> Lançar Despesa em: {{ selectedCard.name }}</h5>
+          <button class="btn-close-luxury" (click)="showExpenseModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="mb-3">
+            <label class="form-label">Descrição da Compra</label>
+            <input type="text" class="form-control" [(ngModel)]="cardExpense.description" placeholder="Ex: Supermercado, Eletrônico" />
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Valor Total (R$)</label>
+              <input type="number" step="5" class="form-control" [(ngModel)]="cardExpense.amount" />
+            </div>
+            <div class="col-6">
+              <label class="form-label">Número de Parcelas</label>
+              <input type="number" min="1" max="48" class="form-control" [(ngModel)]="cardExpense.totalInstallments" />
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Categoria</label>
+              <select class="form-select" [(ngModel)]="cardExpense.categoryId">
+                @for (cat of categories; track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Data da Compra</label>
+              <input type="date" class="form-control" [(ngModel)]="cardExpense.transactionDate" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showExpenseModal = false">Cancelar</button>
+          <button class="btn btn-primary" (click)="submitExpense()">Confirmar Compra</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Pay Invoice Modal -->
+  @if (showPayInvoiceModal && selectedInvoice) {
+    <div class="modal-backdrop-luxury">
+      <div class="modal-dialog-luxury">
+        <div class="modal-header-luxury">
+          <h5><i class="bi bi-check-circle-fill text-success me-2"></i> Pagar Fatura {{ selectedInvoice.referenceMonth }}</h5>
+          <button class="btn-close-luxury" (click)="showPayInvoiceModal = false">&times;</button>
+        </div>
+
+        <div class="modal-body-luxury">
+          <div class="mb-3">
+            <label class="form-label">Valor a Pagar (R$)</label>
+            <input type="number" step="10" class="form-control" [(ngModel)]="payInvoiceReq.amount" />
+            <small class="text-muted">Total da fatura: R$ {{ selectedInvoice.totalAmount | number: '1.2-2' }}</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Debitar da Conta</label>
+            <select class="form-select" [(ngModel)]="payInvoiceReq.accountId">
+              @for (acc of accounts; track acc.id) {
+                <option [value]="acc.id">{{ acc.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Data do Pagamento</label>
+            <input type="date" class="form-control" [(ngModel)]="payInvoiceReq.paymentDate" />
+          </div>
+        </div>
+
+        <div class="modal-footer-luxury">
+          <button class="btn btn-secondary" (click)="showPayInvoiceModal = false">Cancelar</button>
+          <button class="btn btn-success" (click)="submitPayment()">Confirmar Pagamento</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

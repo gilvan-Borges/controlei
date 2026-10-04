@@ -1,0 +1,82 @@
+<div class="period-selector-container" [class.compact-mode]="compact">
+  <div class="period-controls-group">
+    @if (showQuickNav) {
+      <button
+        type="button"
+        class="nav-btn prev-btn"
+        (click)="prevMonth()"
+        title="Mês anterior"
+        aria-label="Mês anterior"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+    }
+
+    <!-- Main Pill Button to open Picker Popover -->
+    <button
+      type="button"
+      class="period-display-pill"
+      [class.active]="isPickerOpen"
+      [class.current-period]="isCurrentMonth"
+      (click)="togglePicker()"
+      aria-label="Selecionar mês e ano"
+    >
+      <i class="bi bi-calendar3 period-icon"></i>
+      <span class="period-text">
+        <strong>{{ currentMonthLabel }}</strong>
+        <span class="year-span">{{ year }}</span>
+      </span>
+      <i class="bi bi-chevron-down chevron-icon" [class.rotated]="isPickerOpen"></i>
+    </button>
+
+    @if (showQuickNav) {
+      <button
+        type="button"
+        class="nav-btn next-btn"
+        (click)="nextMonth()"
+        title="Próximo mês"
+        aria-label="Próximo mês"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    }
+  </div>
+
+  <!-- Custom Sleek Dropdown Popover (No Native Select!) -->
+  @if (isPickerOpen) {
+    <div class="period-popover-card animate-in">
+      <!-- Popover Year Navigation Header -->
+      <div class="popover-year-header">
+        <button type="button" class="year-nav-btn" (click)="changeYear(-1)" title="Ano anterior">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <span class="popover-year-label">{{ year }}</span>
+
+        <button type="button" class="year-nav-btn" (click)="changeYear(1)" title="Próximo ano">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+
+        @if (!isCurrentMonth) {
+          <button type="button" class="btn-today-shortcut" (click)="setToday()" title="Ir para o mês atual">
+            Hoje
+          </button>
+        }
+      </div>
+
+      <!-- 12 Months Grid -->
+      <div class="months-grid">
+        @for (m of months; track m.value) {
+          <button
+            type="button"
+            class="month-cell-btn"
+            [class.selected]="m.value === month"
+            (click)="selectMonth(m.value)"
+          >
+            <span class="month-name">{{ m.shortLabel }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>
