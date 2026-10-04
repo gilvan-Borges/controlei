@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -35,13 +36,13 @@ export class LoginComponent implements OnInit {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required]]
     });
 
     this.registerForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(72)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordsMatch });
   }
@@ -101,17 +102,13 @@ export class LoginComponent implements OnInit {
     return null;
   }
 
+  /** Contas de demonstracao: so existem no build de desenvolvimento (ver environment.ts). */
+  readonly demo = environment.demoLogin;
+
   fillDemo(role: 'admin' | 'member'): void {
-    if (role === 'admin') {
-      this.loginForm.patchValue({
-        email: 'superadmin@controlei.local',
-        password: 'Controlei@123'
-      });
-    } else {
-      this.loginForm.patchValue({
-        email: 'gilvan.borges@controlei.local',
-        password: 'Controlei@123'
-      });
+    const account = this.demo?.[role];
+    if (account) {
+      this.loginForm.patchValue({ email: account.email, password: account.password });
     }
   }
 

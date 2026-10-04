@@ -154,12 +154,12 @@
                 type="password"
                 class="form-control-clean"
                 formControlName="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 10 caracteres"
                 [class.is-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
               />
             </div>
             @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-              <span class="error-msg-clean">A senha deve ter no mínimo 6 caracteres.</span>
+              <span class="error-msg-clean">A senha deve ter de 10 a 72 caracteres.</span>
             }
           </div>
 
