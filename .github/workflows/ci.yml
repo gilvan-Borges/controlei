@@ -1,0 +1,59 @@
+# CI do Controlei (spec 07 do JavAI). Actions fixadas por SHA e permissões mínimas.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  back:
+    name: Back (Java 25)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Contratos de eventos
+        run: mvn -B -f back/shared-events/pom.xml install -DskipTests
+      - name: Build e testes
+        run: mvn -B -f back/pom.xml verify
+
+  front:
+    name: Front (Angular 21)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # O runner já traz Node LTS; sem action de terceiros além das fixadas acima.
+      - name: Instalar dependências
+        run: npm ci --prefix front
+      - name: Testes
+        run: npx ng test --watch=false
+        working-directory: front
+        env:
+          CI: 'true'
+      - name: Build de produção
+        run: npx ng build
+        working-directory: front
+
+  compose:
+    name: Compose válido
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validar sintaxe e exigência do segredo
+        run: |
+          JWT_SECRET=0123456789012345678901234567890123 docker compose config -q
+          if JWT_SECRET= docker compose config -q 2>/dev/null; then
+            echo "O compose deveria exigir JWT_SECRET" && exit 1
+          fi
