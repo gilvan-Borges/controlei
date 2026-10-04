@@ -119,7 +119,7 @@ services:
       DB_NAME: ${DB_NAME:-controlei}
       DB_USER: ${DB_USER:-controlei}
       DB_PASSWORD: ${DB_PASSWORD:-controlei123}
-      JWT_SECRET: ${JWT_SECRET:-625a00bc-2eb5-4f36-ab38-ab0e353069a5-controlei-production-secret-key-32chars}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env (minimo 32 caracteres)}
       JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
       REDIS_HOST: redis
       REDIS_PORT: 6379
