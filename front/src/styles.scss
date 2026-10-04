@@ -60,7 +60,7 @@
   /* Tipografia em Alto Contraste (Branco Puro e Cinzas Neutros Zinc) */
   --c-text: #ffffff;
   --c-text-muted: #a1a1aa;      /* Zinc 400 - Totalmente Legível */
-  --c-text-dim: #71717a;        /* Zinc 500 */
+  --c-text-dim: #8d8d97;        /* 5,3:1 sobre #141417 (o antigo #71717a dava 3,8:1, abaixo do minimo WCAG de 4,5:1) */
   --c-text-inverse: #000000;
 
   /* Bordas em Cinza Neutro Zinc (Sem azul) */
@@ -132,7 +132,7 @@
   /* High Contrast Typography */
   --c-text: #09090b;
   --c-text-muted: #52525b;      /* Zinc 600 - Nitido e Limpo */
-  --c-text-dim: #71717a;        /* Zinc 500 */
+  --c-text-dim: #62626b;        /* >= 4,5:1 tambem sobre os cinzas claros dos cartoes */
   --c-text-inverse: #ffffff;
 
   /* Borders & Dividers */
