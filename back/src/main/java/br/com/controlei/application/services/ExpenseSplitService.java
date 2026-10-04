@@ -1,6 +1,8 @@
 package br.com.controlei.application.services;
 
 import br.com.controlei.application.exceptions.BusinessException;
+import br.com.controlei.domain.services.DebtSimplifier;
+import br.com.controlei.domain.services.SplitCalculator;
 import br.com.controlei.application.exceptions.NotFoundException;
 import br.com.controlei.domain.contracts.repositories.ExpenseSplitRepositoryPort;
 import br.com.controlei.domain.contracts.repositories.ExpenseSplitShareRepositoryPort;
@@ -260,115 +262,20 @@ public class ExpenseSplitService {
     }
 
     private Map<UUID, BigDecimal> calculateShares(CreateSplitRequest request, BigDecimal totalAmount) {
-        Map<UUID, BigDecimal> result = new HashMap<>();
-        List<SplitShareItemRequest> items = request.shares();
-        int n = items.size();
-
-        if (request.splitType() == SplitType.EQUAL) {
-            BigDecimal share = totalAmount.divide(BigDecimal.valueOf(n), 2, RoundingMode.HALF_EVEN);
-            BigDecimal remainder = totalAmount.subtract(share.multiply(BigDecimal.valueOf(n)));
-
-            for (int i = 0; i < n; i++) {
-                UUID uId = items.get(i).userId();
-                BigDecimal amount = (i == 0) ? share.add(remainder) : share;
-                result.put(uId, amount);
-            }
-        } else if (request.splitType() == SplitType.EXACT_AMOUNT) {
-            BigDecimal sum = BigDecimal.ZERO;
-            for (SplitShareItemRequest item : items) {
-                if (item.amountOrPercentage() == null) {
-                    throw new BusinessException("Valor individual obrigatorio na divisao por valor exato");
-                }
-                result.put(item.userId(), item.amountOrPercentage());
-                sum = sum.add(item.amountOrPercentage());
-            }
-            if (sum.compareTo(totalAmount) != 0) {
-                throw new BusinessException("A soma das partes (" + sum + ") deve ser igual ao total da despesa (" + totalAmount + ")");
-            }
-        } else if (request.splitType() == SplitType.PERCENTAGE) {
-            BigDecimal percentSum = BigDecimal.ZERO;
-            for (SplitShareItemRequest item : items) {
-                if (item.amountOrPercentage() == null) {
-                    throw new BusinessException("Percentual obrigatorio na divisao por porcentagem");
-                }
-                percentSum = percentSum.add(item.amountOrPercentage());
-            }
-            if (percentSum.compareTo(BigDecimal.valueOf(100)) != 0) {
-                throw new BusinessException("A soma das porcentagens deve ser exatamente 100%");
-            }
-
-            BigDecimal runningTotal = BigDecimal.ZERO;
-            for (int i = 0; i < n; i++) {
-                SplitShareItemRequest item = items.get(i);
-                if (i == n - 1) {
-                    result.put(item.userId(), totalAmount.subtract(runningTotal));
-                } else {
-                    BigDecimal share = totalAmount.multiply(item.amountOrPercentage())
-                            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN);
-                    result.put(item.userId(), share);
-                    runningTotal = runningTotal.add(share);
-                }
-            }
-        }
-
-        return result;
+        // A regra de divisao e do dominio (domain.services.SplitCalculator), testada sem Spring nem banco
+        return SplitCalculator.calculate(request.splitType(), totalAmount, request.shares().stream()
+                .map(i -> new SplitCalculator.Input(i.userId(), i.amountOrPercentage()))
+                .toList());
     }
 
     private List<SuggestedSettlement> simplifyDebts(Map<UUID, BigDecimal> netBalances, List<User> members) {
-        Map<UUID, String> nameMap = new HashMap<>();
+        Map<UUID, String> names = new HashMap<>();
         for (User u : members) {
-            nameMap.put(u.getId(), u.getName());
+            names.put(u.getId(), u.getName());
         }
-
-        List<Map.Entry<UUID, BigDecimal>> debtors = new ArrayList<>();
-        List<Map.Entry<UUID, BigDecimal>> creditors = new ArrayList<>();
-
-        for (Map.Entry<UUID, BigDecimal> entry : netBalances.entrySet()) {
-            if (entry.getValue().compareTo(BigDecimal.ZERO) < 0) {
-                debtors.add(Map.entry(entry.getKey(), entry.getValue().abs()));
-            } else if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
-                creditors.add(Map.entry(entry.getKey(), entry.getValue()));
-            }
-        }
-
-        List<SuggestedSettlement> settlements = new ArrayList<>();
-        int dIdx = 0;
-        int cIdx = 0;
-
-        List<BigDecimal> debtorAmounts = new ArrayList<>(debtors.stream().map(Map.Entry::getValue).toList());
-        List<BigDecimal> creditorAmounts = new ArrayList<>(creditors.stream().map(Map.Entry::getValue).toList());
-
-        while (dIdx < debtors.size() && cIdx < creditors.size()) {
-            BigDecimal debt = debtorAmounts.get(dIdx);
-            BigDecimal credit = creditorAmounts.get(cIdx);
-
-            BigDecimal settleAmount = debt.min(credit);
-
-            if (settleAmount.compareTo(BigDecimal.ZERO) > 0) {
-                UUID fromId = debtors.get(dIdx).getKey();
-                UUID toId = creditors.get(cIdx).getKey();
-
-                settlements.add(new SuggestedSettlement(
-                        fromId,
-                        nameMap.get(fromId),
-                        toId,
-                        nameMap.get(toId),
-                        settleAmount
-                ));
-            }
-
-            debtorAmounts.set(dIdx, debt.subtract(settleAmount));
-            creditorAmounts.set(cIdx, credit.subtract(settleAmount));
-
-            if (debtorAmounts.get(dIdx).compareTo(BigDecimal.ZERO) == 0) {
-                dIdx++;
-            }
-            if (creditorAmounts.get(cIdx).compareTo(BigDecimal.ZERO) == 0) {
-                cIdx++;
-            }
-        }
-
-        return settlements;
+        return DebtSimplifier.simplify(netBalances).stream()
+                .map(t -> new SuggestedSettlement(t.from(), names.get(t.from()), t.to(), names.get(t.to()), t.amount()))
+                .toList();
     }
 
     private ExpenseSplitResponse buildSplitResponse(ExpenseSplit split) {

@@ -1,8 +1,8 @@
 package br.com.controlei.application.exceptions.handler;
 
 import br.com.controlei.application.exceptions.ApiError;
-import br.com.controlei.application.exceptions.BusinessException;
 import br.com.controlei.application.exceptions.ErrorCode;
+import br.com.controlei.domain.exceptions.DomainRuleException;
 import br.com.controlei.application.exceptions.ForbiddenException;
 import br.com.controlei.application.exceptions.NotFoundException;
 import br.com.controlei.application.exceptions.UnauthorizedException;
@@ -137,9 +137,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-    @ExceptionHandler(BusinessException.class)
+    /** Regra de negocio violada, venha da aplicacao (BusinessException) ou direto do dominio (DomainRuleException). */
+    @ExceptionHandler(DomainRuleException.class)
     public ResponseEntity<ApiError> handleBusinessException(
-            BusinessException ex, HttpServletRequest request) {
+            DomainRuleException ex, HttpServletRequest request) {
         ApiError error = new ApiError(
                 HttpStatus.UNPROCESSABLE_CONTENT.value(),
                 ErrorCode.BUSINESS_ERROR.getCode(),
