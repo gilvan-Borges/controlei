@@ -103,7 +103,7 @@ export class ReceiptsPageComponent implements OnInit {
     this.receiptService.simulateScan({ receiptText: this.simulatedText }).subscribe({
       next: (scan) => {
         this.scanning = false;
-        this.successMessage = 'Leitura OCR simulada com sucesso!';
+        this.successMessage = 'Texto lido. Confira os dados antes de criar a transação.';
         this.loadScans();
         this.openCreateTransFromScan(scan);
         setTimeout(() => (this.successMessage = ''), 5000);

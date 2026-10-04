@@ -3,9 +3,9 @@
   <div class="page-header-luxury">
     <div class="page-title-group">
       <span class="badge-pill primary">
-        <i class="bi bi-receipt-cutoff"></i> INTELIGÊNCIA ARTIFICIAL & OCR
+        <i class="bi bi-receipt-cutoff"></i> LEITURA DE COMPROVANTES
       </span>
-      <h1>Scanner de Cupons Fiscais & OCR</h1>
+      <h1>Leitura de Comprovantes</h1>
       <p>Tire foto ou anexe comprovantes, cupons NFC-e e notas fiscais para preenchimento automático de gastos.</p>
     </div>
   </div>
@@ -38,7 +38,7 @@
           
           <button class="btn btn-primary" onclick="document.getElementById('receiptFileInput').click()" [disabled]="scanning">
             @if (scanning) {
-              <span class="spinner-border spinner-border-sm me-2"></span> Processando OCR...
+              <span class="spinner-border spinner-border-sm me-2"></span> Lendo comprovante...
             } @else {
               <i class="bi bi-cloud-arrow-up-fill"></i> Selecionar Cupom Fiscal
             }
@@ -50,7 +50,7 @@
     <!-- Simulator Box -->
     <div class="col-12 col-lg-5">
       <div class="card-luxury">
-        <h5><i class="bi bi-cpu-fill text-primary me-2"></i> Teste Rápido de OCR</h5>
+        <h5><i class="bi bi-cpu-fill text-primary me-2"></i> Colar o texto do comprovante</h5>
         <p class="text-muted small">Teste o extrator regex/NLP inteligente colando o texto bruto de uma nota fiscal:</p>
 
         <textarea class="form-control mb-3" rows="5" [(ngModel)]="simulatedText"></textarea>

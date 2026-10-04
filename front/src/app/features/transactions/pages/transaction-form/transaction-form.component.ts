@@ -68,9 +68,30 @@ export class TransactionFormComponent implements OnInit {
   }
 
   private loadDropdowns(): void {
-    this.userService.listUsers().subscribe({ next: (u) => this.users = u, error: () => {} });
+    // Ao criar, o que so tem uma opcao ja vem escolhido (uma familia nova tem 1 membro e a conta "Carteira"), e a data
+    // da operacao comeca em hoje: menos tres cliques para lancar a primeira despesa.
+    this.userService.listUsers().subscribe({
+      next: (u) => {
+        this.users = u;
+        if (!this.isEdit && u.length === 1) {
+          this.form.patchValue({ userId: u[0].id });
+        }
+      },
+      error: () => {}
+    });
     this.categoryService.listCategories().subscribe({ next: (c) => this.categories = c, error: () => {} });
-    this.accountService.listAccounts().subscribe({ next: (a) => this.accounts = a, error: () => {} });
+    this.accountService.listAccounts().subscribe({
+      next: (a) => {
+        this.accounts = a;
+        if (!this.isEdit && a.length === 1) {
+          this.form.patchValue({ accountId: a[0].id });
+        }
+      },
+      error: () => {}
+    });
+    if (!this.isEdit) {
+      this.form.patchValue({ transactionDate: new Date().toISOString().slice(0, 10) });
+    }
   }
 
   private loadTransaction(): void {

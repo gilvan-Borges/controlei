@@ -64,7 +64,7 @@ export class ShellComponent implements OnInit {
     {
       title: 'Automação & Conexões',
       items: [
-        { label: 'Scanner OCR Cupons', icon: 'bi-receipt-cutoff', route: '/app/receipts' },
+        { label: 'Comprovantes (IA)', icon: 'bi-receipt-cutoff', route: '/app/receipts' },
         { label: 'Open Finance', icon: 'bi-shield-lock-fill', route: '/app/open-finance' }
       ]
     },
