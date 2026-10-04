@@ -33,7 +33,7 @@ class ReceiptScanIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void uploadReceiptImage_andExtractEntities() throws Exception {
+    void uploadReceiptImage_withoutAi_asksForReviewInsteadOfInventingData() throws Exception {
         AuthInfo auth = registerFamily("Familia OCR", "Rodrigo OCR", "rodrigo.ocr@email.com");
         createCategory(auth.token(), "Alimentacao", CategoryType.EXPENSE);
 
@@ -48,10 +48,9 @@ class ReceiptScanIntegrationTest {
                         .file(file)
                         .header("Authorization", "Bearer " + auth.token()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.extractedAmount").value(145.8))
-                .andExpect(jsonPath("$.extractedMerchant").value("Pao de Acucar Supermercados"))
-                .andExpect(jsonPath("$.suggestedCategoryName").value("Alimentacao"));
+                .andExpect(jsonPath("$.status").value("NEEDS_REVIEW"))
+                .andExpect(jsonPath("$.extractedAmount").doesNotExist())
+                .andExpect(jsonPath("$.extractedMerchant").doesNotExist());
     }
 
     @Test

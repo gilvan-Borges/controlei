@@ -120,6 +120,9 @@ services:
       DB_USER: ${DB_USER:-controlei}
       DB_PASSWORD: ${DB_PASSWORD:-controlei123}
       JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env (minimo 32 caracteres)}
+      CONTROLEI_AI_ENABLED: ${CONTROLEI_AI_ENABLED:-false}
+      CONTROLEI_AI_API_KEY: ${CONTROLEI_AI_API_KEY:-}
+      CONTROLEI_AI_MODEL: ${CONTROLEI_AI_MODEL:-google/gemini-2.5-flash}
       JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
       REDIS_HOST: redis
       REDIS_PORT: 6379

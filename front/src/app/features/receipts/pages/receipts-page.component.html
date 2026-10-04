@@ -82,7 +82,7 @@
             <th>Estabelecimento</th>
             <th>Valor Identificado</th>
             <th>Categoria Sugerida</th>
-            <th>Confiança OCR</th>
+            <th>Leitura</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -91,12 +91,16 @@
             <tr>
               <td>{{ s.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td><strong>{{ s.extractedMerchant || 'Não identificado' }}</strong></td>
-              <td><strong>R$ {{ s.extractedAmount | number: '1.2-2' }}</strong></td>
+              <td><strong>{{ s.extractedAmount != null ? 'R$ ' + (s.extractedAmount | number: '1.2-2') : '—' }}</strong></td>
               <td>
-                <span class="badge-pill indigo">{{ s.suggestedCategoryName || 'Alimentação' }}</span>
+                <span class="badge-pill indigo">{{ s.suggestedCategoryName || 'Sem categoria' }}</span>
               </td>
               <td>
-                <span class="badge-pill success">{{ (s.confidenceScore || 0.95) * 100 | number: '1.0-0' }}%</span>
+                @if (s.status === 'COMPLETED') {
+                  <span class="badge-pill success">{{ (s.confidenceScore ?? 0) * 100 | number: '1.0-0' }}%</span>
+                } @else {
+                  <span class="badge-pill warning" title="A leitura não foi confiável: confira os dados antes de criar a transação">Revisar</span>
+                }
               </td>
               <td>
                 <button class="btn btn-primary btn-sm" (click)="openCreateTransFromScan(s)">
