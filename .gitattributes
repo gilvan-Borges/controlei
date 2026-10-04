@@ -1,0 +1,6 @@
+# Scripts e configuracao que rodam em Linux (VPS, contêineres) precisam de LF mesmo se clonados no Windows;
+# com CRLF o bash falha com "\r: comando nao encontrado".
+deploy/** text eol=lf
+nginx/** text eol=lf
+docker-compose*.yml text eol=lf
+.github/** text eol=lf
