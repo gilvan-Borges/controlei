@@ -34,9 +34,11 @@
           <h4>Enviar Foto do Cupom / Comprovante</h4>
           <p class="text-muted mb-3">Arraste a imagem ou clique para selecionar arquivo (JPG, PNG, PDF)</p>
 
-          <input type="file" id="receiptFileInput" class="d-none" accept="image/*,.pdf" (change)="onFileSelected($event)" />
+          <!-- capture: no celular abre a camera traseira para fotografar o comprovante. O clique do botao e um binding do
+               Angular (nao um onclick inline): o CSP do gateway bloqueia handlers inline. -->
+          <input #receiptFile type="file" id="receiptFileInput" class="d-none" accept="image/*,.pdf" capture="environment" (change)="onFileSelected($event)" />
           
-          <button class="btn btn-primary" onclick="document.getElementById('receiptFileInput').click()" [disabled]="scanning">
+          <button class="btn btn-primary" (click)="receiptFile.click()" [disabled]="scanning">
             @if (scanning) {
               <span class="spinner-border spinner-border-sm me-2"></span> Lendo comprovante...
             } @else {
