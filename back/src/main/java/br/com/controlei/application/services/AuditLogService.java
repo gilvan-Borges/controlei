@@ -16,6 +16,9 @@ import java.util.UUID;
 @Service
 public class AuditLogService {
 
+    /** Teto da listagem: a trilha de auditoria so cresce, e devolver tudo escala mal. */
+    static final int MAX_LISTED = 200;
+
     private final AuditLogRepositoryPort auditLogRepository;
     private final UserRepositoryPort userRepository;
     private final AuthorizationService authorizationService;
@@ -53,7 +56,7 @@ public class AuditLogService {
 
     public List<AuditLogResponse> listAuditLogs() {
         UUID familyId = authorizationService.currentFamilyId();
-        return auditLogRepository.findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtDesc(familyId)
+        return auditLogRepository.findRecentByFamilyId(familyId, MAX_LISTED)
                 .stream()
                 .map(this::buildResponse)
                 .toList();

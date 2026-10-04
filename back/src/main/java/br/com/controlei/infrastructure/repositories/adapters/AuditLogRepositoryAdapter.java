@@ -32,6 +32,15 @@ public class AuditLogRepositoryAdapter implements AuditLogRepositoryPort {
     }
 
     @Override
+    public List<AuditLog> findRecentByFamilyId(UUID familyId, int limit) {
+        return repository.findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtDesc(
+                        familyId, org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<AuditLog> findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId) {
         return repository.findAllByFamilyIdAndDeletedAtIsNullOrderByCreatedAtDesc(familyId)
                 .stream()

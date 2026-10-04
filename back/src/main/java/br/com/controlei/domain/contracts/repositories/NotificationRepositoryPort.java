@@ -16,5 +16,8 @@ public interface NotificationRepositoryPort {
 
     List<Notification> findAllByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId);
 
+    /** As {@code limit} notificacoes mais recentes do usuario (todas, ou so as nao lidas). */
+    List<Notification> findRecent(UUID familyId, UUID userId, boolean unreadOnly, int limit);
+
     long countByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNull(UUID familyId, UUID userId);
 }

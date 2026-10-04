@@ -1,6 +1,7 @@
 package br.com.controlei.infrastructure.repositories;
 
 import br.com.controlei.infrastructure.persistence.entities.NotificationEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +17,10 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
     List<NotificationEntity> findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId);
 
     List<NotificationEntity> findAllByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId);
+
+    List<NotificationEntity> findAllByFamilyIdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId, Pageable pageable);
+
+    List<NotificationEntity> findAllByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNullOrderByCreatedAtDesc(UUID familyId, UUID userId, Pageable pageable);
 
     long countByFamilyIdAndUserIdAndReadIsFalseAndDeletedAtIsNull(UUID familyId, UUID userId);
 }
