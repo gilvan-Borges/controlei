@@ -6,7 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,10 +28,22 @@ public class AssistantController {
             @Size(max = 20, message = "Historico longo demais")
             List<AssistantService.Turn> history) {}
 
+    public record SettingsRequest(boolean enabled, boolean acknowledged) {}
+
     private final AssistantService assistantService;
 
     public AssistantController(AssistantService assistantService) {
         this.assistantService = assistantService;
+    }
+
+    @GetMapping("/settings")
+    public ResponseEntity<AssistantService.Settings> settings() {
+        return ResponseEntity.ok(assistantService.settings());
+    }
+
+    @PutMapping("/settings")
+    public ResponseEntity<AssistantService.Settings> updateSettings(@RequestBody SettingsRequest request) {
+        return ResponseEntity.ok(assistantService.updateSettings(request.enabled(), request.acknowledged()));
     }
 
     @PostMapping("/ask")

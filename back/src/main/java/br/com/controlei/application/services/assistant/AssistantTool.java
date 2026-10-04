@@ -16,13 +16,18 @@ public record AssistantTool(String name, String description, String schema, bool
     }
 
     /** {@code data} para leitura; {@code summary} + {@code action} para escrita. */
-    public record Result(String data, String summary, Supplier<String> action) {
+    public record Result(String data, String summary, Supplier<String> action, boolean destructive) {
         public static Result data(String data) {
-            return new Result(data, null, null);
+            return new Result(data, null, null, false);
         }
 
         public static Result pending(String summary, Supplier<String> action) {
-            return new Result(null, summary, action);
+            return new Result(null, summary, action, false);
+        }
+
+        /** Acao irreversivel (exclusao): a tela a destaca e pede confirmacao com o verbo claro. */
+        public static Result pendingDestructive(String summary, Supplier<String> action) {
+            return new Result(null, summary, action, true);
         }
 
         public boolean isPending() {

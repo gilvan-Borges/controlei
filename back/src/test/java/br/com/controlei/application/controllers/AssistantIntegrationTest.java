@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -137,6 +138,77 @@ class AssistantIntegrationTest {
     }
 
     @Test
+    void theAssistantIsOffUntilTheResponsibleEnablesItAndNothingReachesTheProvider() throws Exception {
+        String token = registerWithoutEnabling("Familia Fechada", "Fabio Fechado", "fabio.fechado@email.com");
+
+        mockMvc.perform(get("/api/v1/assistant/settings").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(false))
+                .andExpect(jsonPath("$.canManage").value(true));
+
+        JsonNode answer = ask(token, "quanto gastei este mês?");
+
+        assertEquals(false, answer.path("ai").asBoolean());
+        verify(ai, org.mockito.Mockito.never()).complete(any(), any());
+    }
+
+    @Test
+    void enablingRequiresTheAcknowledgement() throws Exception {
+        String token = registerWithoutEnabling("Familia Aceite", "Alice Aceite", "alice.aceite@email.com");
+
+        mockMvc.perform(put("/api/v1/assistant/settings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":true,\"acknowledged\":false}"))
+                .andExpect(status().is4xxClientError());
+        mockMvc.perform(get("/api/v1/assistant/settings").header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.enabled").value(false));
+    }
+
+    @Test
+    void aMemberCannotSwitchTheAssistantOnForTheFamily() throws Exception {
+        String owner = registerWithoutEnabling("Familia Membro", "Paulo Pai", "paulo.pai@email.com");
+        mockMvc.perform(post("/api/v1/users").header("Authorization", "Bearer " + owner)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Filho\",\"email\":\"filho.membro@email.com\",\"password\":\"senha12345\",\"role\":\"MEMBER\"}"))
+                .andExpect(status().isOk());
+        String login = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"filho.membro@email.com\",\"password\":\"senha12345\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String member = objectMapper.readTree(login).get("accessToken").asString();
+
+        mockMvc.perform(put("/api/v1/assistant/settings").header("Authorization", "Bearer " + member)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":true,\"acknowledged\":true}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/assistant/settings").header("Authorization", "Bearer " + member))
+                .andExpect(jsonPath("$.canManage").value(false))
+                .andExpect(jsonPath("$.enabled").value(false));
+    }
+
+    @Test
+    void deletingIsPreparedAsADestructiveActionAndOnlyHappensOnConfirm() throws Exception {
+        String token = register("Familia Exclui", "Elias Exclui", "elias.exclui@email.com");
+        when(ai.complete(any(), any())).thenReturn(new Completion("", List.of(new ToolCall("c1", "create_goal",
+                "{\"name\":\"Reserva\",\"targetAmount\":1000}"))));
+        String createId = ask(token, "crie a meta Reserva").path("actions").get(0).path("id").asString();
+        mockMvc.perform(post("/api/v1/assistant/actions/" + createId + "/confirm").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        when(ai.complete(any(), any())).thenReturn(new Completion("", List.of(new ToolCall("c2", "delete_goal",
+                "{\"goal\":\"reserva\"}"))));
+        JsonNode prepared = ask(token, "exclua a meta Reserva");
+
+        assertTrue(prepared.path("actions").get(0).path("destructive").asBoolean());
+        assertTrue(prepared.path("actions").get(0).path("summary").asString().startsWith("EXCLUIR"));
+        mockMvc.perform(get("/api/v1/goals").header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.length()").value(1));
+
+        String deleteId = prepared.path("actions").get(0).path("id").asString();
+        mockMvc.perform(post("/api/v1/assistant/actions/" + deleteId + "/confirm").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/goals").header("Authorization", "Bearer " + token))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void requiresAuthentication() throws Exception {
         mockMvc.perform(post("/api/v1/assistant/ask").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"question\":\"oi\"}"))
@@ -163,6 +235,19 @@ class AssistantIntegrationTest {
     }
 
     private String register(String family, String name, String email) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/auth/register-family")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RegisterFamilyRequest(family, name, email, "senha12345"))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String token = objectMapper.readTree(response).get("accessToken").asString();
+        mockMvc.perform(put("/api/v1/assistant/settings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":true,\"acknowledged\":true}"))
+                .andExpect(status().isOk());
+        return token;
+    }
+
+    private String registerWithoutEnabling(String family, String name, String email) throws Exception {
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RegisterFamilyRequest(family, name, email, "senha12345"))))

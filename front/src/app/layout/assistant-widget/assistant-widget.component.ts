@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { AssistantService, PreparedAction, Turn } from '../../core/services/assistant.service';
+import { AssistantService, AssistantSettings, PreparedAction, Turn } from '../../core/services/assistant.service';
 
 export interface ChatAction extends PreparedAction {
   state: 'pending' | 'working' | 'done' | 'canceled' | 'failed';
@@ -35,6 +35,11 @@ export class AssistantWidgetComponent {
 
   open = false;
   loading = false;
+  settings: AssistantSettings | null = null;
+  /** Painel de ciência aberto: o responsável precisa aceitar antes de ligar a IA. */
+  consentOpen = false;
+  acknowledged = false;
+  savingSettings = false;
   messages: ChatMessage[] = [
     {
       from: 'assistant',
@@ -55,8 +60,53 @@ export class AssistantWidgetComponent {
   toggle(): void {
     this.open = !this.open;
     if (this.open) {
+      this.loadSettings();
       setTimeout(() => this.input?.nativeElement.focus());
     }
+  }
+
+  loadSettings(): void {
+    this.assistant.getSettings().subscribe({
+      next: (s) => {
+        this.settings = s;
+        this.cdr.markForCheck();
+      },
+      error: () => (this.settings = null)
+    });
+  }
+
+  openConsent(): void {
+    this.consentOpen = true;
+    this.acknowledged = false;
+  }
+
+  closeConsent(): void {
+    this.consentOpen = false;
+    this.acknowledged = false;
+  }
+
+  setEnabled(enabled: boolean): void {
+    if (this.savingSettings || (enabled && !this.acknowledged)) {
+      return;
+    }
+    this.savingSettings = true;
+    this.assistant.updateSettings(enabled, this.acknowledged).subscribe({
+      next: (s) => {
+        this.settings = s;
+        this.savingSettings = false;
+        this.closeConsent();
+        this.reply({
+          from: 'assistant',
+          text: s.enabled
+            ? 'Assistente com IA ativado para a sua família. Pode perguntar!'
+            : 'Assistente com IA desativado. Continuo respondendo dúvidas básicas de uso.'
+        });
+      },
+      error: () => {
+        this.savingSettings = false;
+        this.reply({ from: 'assistant', text: 'Não consegui alterar a configuração. Tente de novo.' });
+      }
+    });
   }
 
   @HostListener('document:keydown.escape')

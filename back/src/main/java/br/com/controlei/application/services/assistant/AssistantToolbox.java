@@ -19,7 +19,10 @@ import br.com.controlei.domain.models.dtos.dashboard.DashboardQueryFilter;
 import br.com.controlei.domain.models.dtos.goal.CreateGoalContributionRequest;
 import br.com.controlei.domain.models.dtos.goal.CreateGoalRequest;
 import br.com.controlei.domain.models.dtos.goal.FinancialGoalResponse;
+import br.com.controlei.domain.models.dtos.budget.BudgetResponse;
+import br.com.controlei.domain.models.dtos.budget.UpdateBudgetRequest;
 import br.com.controlei.domain.models.dtos.transaction.CreateTransactionRequest;
+import br.com.controlei.domain.models.dtos.transaction.UpdateTransactionRequest;
 import br.com.controlei.domain.models.dtos.transaction.TransactionQueryFilter;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.GoalCategory;
@@ -79,7 +82,8 @@ public class AssistantToolbox {
         this.mapper = mapper;
         this.tools = List.of(
                 overview(), listAccounts(), listCategories(), listTransactions(), budgetsTool(), listGoals(),
-                createTransaction(), payTransaction(), createBudget(), createGoal(), contribute(), createCategory());
+                createTransaction(), payTransaction(), createBudget(), createGoal(), contribute(), createCategory(),
+                updateTransaction(), deleteTransaction(), updateBudget(), deleteBudget(), deleteGoal());
     }
 
     public List<AssistantTool> all() {
@@ -375,6 +379,130 @@ public class AssistantToolbox {
                     return Result.pending(summary, () -> {
                         categories.createCategory(request);
                         return "Categoria criada: " + name + ".";
+                    });
+                });
+    }
+
+    // ---------------------------------------------------------------- edicao e exclusao (tambem so preparam)
+
+    private AssistantTool updateTransaction() {
+        return new AssistantTool("update_transaction",
+                "Prepara a alteracao de uma transacao existente (so os campos informados mudam). NAO executa: a pessoa confirma. "
+                        + "Pegue o id em list_transactions.",
+                """
+                {"type":"object","properties":{
+                  "id":{"type":"string"},
+                  "description":{"type":"string"},
+                  "amount":{"type":"number"},
+                  "date":{"type":"string","description":"AAAA-MM-DD"},
+                  "category":{"type":"string","description":"nome da categoria"},
+                  "account":{"type":"string","description":"nome da conta"},
+                  "notes":{"type":"string"}},
+                 "required":["id"]}""",
+                true, args -> {
+                    UUID id = uuid(required(args, "id"));
+                    var tx = transactions.getTransaction(id);
+                    String description = text(args, "description") != null ? text(args, "description") : tx.description();
+                    if (description.length() < 2 || description.length() > 500) {
+                        throw new ToolException("descricao deve ter entre 2 e 500 caracteres");
+                    }
+                    BigDecimal amount = text(args, "amount") != null ? amount(args, "amount") : tx.amount();
+                    LocalDate date = date(args, "date", tx.transactionDate());
+                    UUID accountId = text(args, "account") != null
+                            ? resolve(activeAccounts(), AccountResponse::name, text(args, "account"), "conta").id() : tx.accountId();
+                    CategoryType wanted = tx.type() == TransactionType.INCOME ? CategoryType.INCOME : CategoryType.EXPENSE;
+                    UUID categoryId = text(args, "category") != null
+                            ? resolve(categories.listCategories(new CategoryQueryFilter(true, wanted)),
+                            CategoryResponse::name, text(args, "category"), "categoria").id() : tx.categoryId();
+                    String notes = text(args, "notes") != null ? text(args, "notes") : tx.notes();
+                    var request = new UpdateTransactionRequest(tx.userId(), accountId, categoryId, tx.type(), description, amount,
+                            date, tx.dueDate(), notes);
+                    String summary = "Alterar transação \"" + tx.description() + "\" (" + money(tx.amount()) + "): agora "
+                            + description + ", " + money(amount) + ", " + BR_DATE.format(date);
+                    return Result.pending(summary, () -> {
+                        transactions.updateTransaction(id, request);
+                        return "Transação atualizada: " + description + " (" + money(amount) + ").";
+                    });
+                });
+    }
+
+    private AssistantTool deleteTransaction() {
+        return new AssistantTool("delete_transaction",
+                "Prepara a EXCLUSAO de uma transacao. Irreversivel pela tela. NAO executa: a pessoa confirma. Pegue o id em list_transactions "
+                        + "e so use quando a pessoa pedir claramente para excluir.",
+                """
+                {"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}""",
+                true, args -> {
+                    UUID id = uuid(required(args, "id"));
+                    var tx = transactions.getTransaction(id);
+                    String summary = "EXCLUIR transação: " + tx.description() + " · " + money(tx.amount()) + " · "
+                            + BR_DATE.format(tx.transactionDate());
+                    return Result.pendingDestructive(summary, () -> {
+                        transactions.deleteTransaction(id);
+                        return "Transação excluída: " + tx.description() + ".";
+                    });
+                });
+    }
+
+    private AssistantTool updateBudget() {
+        return new AssistantTool("update_budget",
+                "Prepara a alteracao do valor planejado de um orcamento (categoria + mes). NAO executa: a pessoa confirma.",
+                """
+                {"type":"object","properties":{
+                  "category":{"type":"string"},
+                  "plannedAmount":{"type":"number"},
+                  "year":{"type":"integer"},"month":{"type":"integer"},
+                  "alertThresholdPercent":{"type":"integer"}},
+                 "required":["category","plannedAmount"]}""",
+                true, args -> {
+                    LocalDate today = LocalDate.now();
+                    int year = args.path("year").asInt(today.getYear());
+                    int month = args.path("month").asInt(today.getMonthValue());
+                    var budget = resolve(budgets.list(year, month), BudgetResponse::categoryName, required(args, "category"), "orcamento");
+                    BigDecimal planned = amount(args, "plannedAmount");
+                    Integer alert = args.has("alertThresholdPercent") ? Integer.valueOf(args.path("alertThresholdPercent").asInt()) : null;
+                    String summary = "Alterar orçamento de " + budget.categoryName() + " (" + String.format("%02d/%d", month, year) + "): de "
+                            + money(budget.plannedAmount()) + " para " + money(planned);
+                    return Result.pending(summary, () -> {
+                        budgets.update(budget.id(), new UpdateBudgetRequest(planned, alert));
+                        return "Orçamento de " + budget.categoryName() + " atualizado para " + money(planned) + ".";
+                    });
+                });
+    }
+
+    private AssistantTool deleteBudget() {
+        return new AssistantTool("delete_budget",
+                "Prepara a EXCLUSAO do orcamento de uma categoria em um mes. NAO executa: a pessoa confirma.",
+                """
+                {"type":"object","properties":{
+                  "category":{"type":"string"},
+                  "year":{"type":"integer"},"month":{"type":"integer"}},
+                 "required":["category"]}""",
+                true, args -> {
+                    LocalDate today = LocalDate.now();
+                    int year = args.path("year").asInt(today.getYear());
+                    int month = args.path("month").asInt(today.getMonthValue());
+                    var budget = resolve(budgets.list(year, month), BudgetResponse::categoryName, required(args, "category"), "orcamento");
+                    String summary = "EXCLUIR orçamento de " + budget.categoryName() + " (" + String.format("%02d/%d", month, year) + ", "
+                            + money(budget.plannedAmount()) + ")";
+                    return Result.pendingDestructive(summary, () -> {
+                        budgets.delete(budget.id());
+                        return "Orçamento de " + budget.categoryName() + " excluído.";
+                    });
+                });
+    }
+
+    private AssistantTool deleteGoal() {
+        return new AssistantTool("delete_goal",
+                "Prepara a EXCLUSAO de uma meta. NAO executa: a pessoa confirma.",
+                """
+                {"type":"object","properties":{"goal":{"type":"string","description":"nome da meta"}},"required":["goal"]}""",
+                true, args -> {
+                    FinancialGoalResponse goal = resolve(goals.listGoals(), FinancialGoalResponse::name, required(args, "goal"), "meta");
+                    String summary = "EXCLUIR meta \"" + goal.name() + "\" (" + money(goal.currentAmount()) + " de " + money(goal.targetAmount()) + ")";
+                    return Result.pendingDestructive(summary, () -> {
+                        goals.deleteGoal(goal.id());
+                        return "Meta excluída: " + goal.name() + ".";
                     });
                 });
     }
