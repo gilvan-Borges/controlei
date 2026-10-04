@@ -73,6 +73,12 @@ echo 'restrict,command="/usr/local/sbin/controlei-deploy",from="100.64.0.0/10" <
 sudo chown deploy-controlei:deploy-controlei /home/deploy-controlei/.ssh/authorized_keys
 sudo chmod 600 /home/deploy-controlei/.ssh/authorized_keys
 
+# O sshd da VPS so aceita os usuarios listados em AllowUsers (/etc/ssh/sshd_config.d/10-javai.conf). Sem esta linha
+# o CI recebe "Permission denied (publickey)" e o log mostra "not listed in AllowUsers". Antes de mexer no SSH, deixe
+# um rollback agendado (infra/README.md, secao 2) e so o cancele depois de abrir uma conexao NOVA:
+sudo sed -i 's/^AllowUsers gilvan deploy$/AllowUsers gilvan deploy deploy-controlei/' /etc/ssh/sshd_config.d/10-javai.conf
+sudo sshd -t && sudo systemctl reload ssh
+
 echo 'deploy-controlei ALL=(root) NOPASSWD: /usr/local/sbin/controlei-deploy-root' \
   | sudo tee /etc/sudoers.d/92-controlei-deploy && sudo chmod 440 /etc/sudoers.d/92-controlei-deploy
 sudo visudo -cf /etc/sudoers.d/92-controlei-deploy
@@ -89,7 +95,11 @@ ssh gilvan@100.74.45.1 'sudo install -o root -g root -m 755 /tmp/controlei-deplo
 
 1. **DNS:** registro `controlei` (CNAME ou A, **proxied/laranja**) apontando para o mesmo destino do `api`. O certificado de origem é o curinga `*.gilvanborges.com.br`, que já cobre o novo host.
 2. **Access:** Zero Trust → Access → Applications → *Self-hosted*, domínio `controlei.gilvanborges.com.br`, política *Allow* só com o seu e-mail, sessão de 6 h (igual ao `admin`). Remova ou amplie a política só quando decidir abrir ao público.
-3. **Tailscale, credencial OIDC do CI:** Settings → Trust credentials → o mesmo modelo do JavAI, com o **subject do repositório do Controlei** (`repo:gilvan-Borges@<id-da-conta>/controlei@<id-do-repo>:environment:producao`; os ids vêm de `gh api repos/gilvan-Borges/controlei`), escopo *Auth Keys: Write* e tag `tag:ci-javai`. A política da tailnet que já deixa `tag:ci-javai` chegar na porta 22 da `javai-vps` vale para os dois projetos.
+3. **Subject imutável do GitHub:** o JavAI usa o subject com IDs (`repo:dono@id/repo@id`), que resiste a renomear ou recriar o
+   repositório. O Controlei vinha com o subject clássico; ligue o imutável:
+   `echo '{"use_default":true,"use_immutable_subject":true}' | gh api -X PUT repos/gilvan-Borges/controlei/actions/oidc/customization/sub --input -`.
+   Sem isso a troca do token na Tailscale falha com 403.
+4. **Tailscale, credencial OIDC do CI:** Settings → Trust credentials → o mesmo modelo do JavAI, com o **subject do repositório do Controlei** (`repo:gilvan-Borges@<id-da-conta>/controlei@<id-do-repo>:environment:producao`; os ids vêm de `gh api repos/gilvan-Borges/controlei`), escopo *Auth Keys: Write* e tag `tag:ci-javai`. A política da tailnet que já deixa `tag:ci-javai` chegar na porta 22 da `javai-vps` vale para os dois projetos.
 
 ## 3. Variáveis e segredos no GitHub (repositório `controlei`)
 
@@ -101,13 +111,13 @@ Environment `producao`, e:
 | Variável | `TS_OIDC_CLIENT_ID`, `TS_OIDC_AUDIENCE` | os da credencial do passo 2.3 |
 | Segredo | `DEPLOY_SSH_KEY` | conteúdo de `controlei-deploy` (a chave **privada** do passo 1) |
 | Segredo | `DEPLOY_KNOWN_HOSTS` | `ssh-keyscan -t ed25519 100.74.45.1` |
-| Variável | `DEPLOY_ENABLED` | `true`, **só depois** do primeiro deploy manual funcionar |
+| Variável **do repositório** (não do ambiente) | `DEPLOY_ENABLED` | `true`, **só depois** do primeiro deploy manual funcionar. Tem de ser do repositório: o `if` do job é avaliado antes de o ambiente existir |
 
 Apague `controlei-deploy` e `controlei-deploy.pub` do seu PC depois de cadastrar o segredo.
 
 ## 4. Primeiro deploy (à mão, como o do JavAI)
 
-O CI precisa já ter publicado as imagens daquele commit (aba Actions).
+O CI precisa já ter publicado as imagens daquele commit (aba Actions). As imagens são públicas (o repositório é público), então a VPS baixa sem token e nenhuma credencial sua precisa ir para o servidor.
 
 ```bash
 ssh gilvan@100.74.45.1
@@ -145,3 +155,9 @@ Depois, o Caddy do JavAI precisa ganhar a rede e o host novos: é a mudança em 
 - **Abrir ao público:** tire a política do Access, ponha `REGISTRATION_ENABLED=true` se quiser cadastro livre, e decida sobre a IA (`CONTROLEI_AI_ENABLED`, com a cota por família já ativa).
 - **Backup (pendente):** o Postgres está num volume Docker, sem backup automático. Mínimo: `docker compose exec -T postgres pg_dump -U controlei controlei | gzip > /opt/javai/backups/controlei-$(date +%F).sql.gz` num `cron`, e copiar para fora da VPS.
 - **Tailscale como padrão:** nada interno é publicado na internet. Para depurar, use SSH pela tailnet; para ferramentas web, o override `docker-compose.tailnet.yml`, que prende a porta ao IP da Tailscale.
+
+## 7. Estado (2026-10-04)
+
+Executado e verificado: rede, `.env`, usuário de deploy, primeiro deploy manual, rota no Caddy, Cloudflare Access (política "Somente o dono"), credencial OIDC da Tailscale e um **deploy automático completo pelo CI** (OIDC → Tailscale → SSH restrito → script, com os seis serviços saudáveis). O JavAI não foi afetado: `api.`, `conteudo.`, `admin.` e o portfólio responderam igual antes e depois.
+
+Problemas reais achados no caminho, todos corrigidos: uma diretiva nginx duplicada que o `nginx -t` teria pego (agora roda no CI), o `AllowUsers` do sshd e o subject do GitHub.
