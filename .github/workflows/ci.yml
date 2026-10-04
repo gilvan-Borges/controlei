@@ -51,9 +51,26 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Validar sintaxe e exigência do segredo
+      - name: Validar sintaxe e exigencia dos segredos
+        env:
+          JWT_SECRET: 0123456789012345678901234567890123
+          DB_PASSWORD: ci-senha-descartavel
         run: |
-          JWT_SECRET=0123456789012345678901234567890123 docker compose config -q
+          docker compose config -q
+          docker compose -f docker-compose.yml -f docker-compose.dev.yml config -q
           if JWT_SECRET= docker compose config -q 2>/dev/null; then
             echo "O compose deveria exigir JWT_SECRET" && exit 1
+          fi
+          if DB_PASSWORD= docker compose config -q 2>/dev/null; then
+            echo "O compose deveria exigir DB_PASSWORD" && exit 1
+          fi
+      - name: So o gateway publica porta
+        env:
+          JWT_SECRET: 0123456789012345678901234567890123
+          DB_PASSWORD: ci-senha-descartavel
+        run: |
+          # Postgres, Redis e Kafka ficam so na rede interna; portas de depuracao existem apenas no override de dev
+          published=$(docker compose config | grep -c 'published:')
+          if [ "$published" != "1" ]; then
+            echo "Esperada 1 porta publicada (nginx), encontradas $published" && exit 1
           fi
