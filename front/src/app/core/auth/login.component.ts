@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { UserService } from '../services/user.service';
 
 @Component({
   selector: 'app-login',
@@ -31,8 +30,7 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private authService: AuthService,
-    private userService: UserService
+    private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -40,6 +38,7 @@ export class LoginComponent implements OnInit {
     });
 
     this.registerForm = this.fb.group({
+      familyName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(72)]],
@@ -145,25 +144,24 @@ export class LoginComponent implements OnInit {
     this.registerError = '';
     this.registerSuccess = '';
 
-    const { name, email, password } = this.registerForm.value;
+    const { familyName, name, email, password } = this.registerForm.value;
 
-    this.userService.createUser({
-      name,
-      email,
-      password,
-      role: 'RESPONSIBLE'
+    // Cria a familia e o responsavel e ja devolve a sessao: nao ha motivo para mandar a pessoa digitar tudo de novo.
+    // (Antes esta tela chamava POST /users, que cria um MEMBRO de uma familia existente e exige estar logado: por isso
+    // ninguem conseguia se cadastrar e o erro 401 virava "Sessao expirada".)
+    this.authService.registerFamily({
+      familyName: familyName.trim(),
+      responsibleName: name.trim(),
+      email: email.trim(),
+      password
     }).subscribe({
       next: () => {
         this.registerLoading = false;
-        this.registerSuccess = 'Família cadastrada com sucesso! Redirecionando para o login...';
-        setTimeout(() => {
-          this.loginSuccess = 'Conta criada com sucesso! Faça login para continuar.';
-          this.goToLogin();
-        }, 1200);
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.registerLoading = false;
-        this.registerError = err?.error?.message || err?.message || 'Erro ao criar conta. Tente novamente.';
+        this.registerError = err?.message || 'Erro ao criar conta. Tente novamente.';
       }
     });
   }

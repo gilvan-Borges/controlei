@@ -432,67 +432,30 @@
   }
 }
 
-.account-type-group {
-  .section-micro-label {
-    font-size: 0.72rem;
-    font-weight: 750;
-    color: #334155;
-    margin-bottom: 0.35rem;
-    display: block;
+.register-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.4;
+
+  i {
+    color: #059669;
+    font-size: 0.95rem;
+    margin-top: 0.05rem;
   }
 
-  .type-selector-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-
-    .type-card {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.55rem 0.65rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      background: #fafafa;
-
-      .type-icon {
-        font-size: 1.1rem;
-        color: #64748b;
-      }
-
-      .type-text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.15;
-
-        strong {
-          font-size: 0.78rem;
-          color: #0f172a;
-        }
-
-        small {
-          font-size: 0.65rem;
-          color: #64748b;
-        }
-      }
-
-      &.selected {
-        border-color: #059669;
-        background: #f0fdf4;
-
-        .type-icon {
-          color: #059669;
-        }
-
-        .type-text strong {
-          color: #059669;
-        }
-      }
-    }
+  strong {
+    color: #0f172a;
   }
 }
+
 
 .form-label-clean {
   font-size: 0.78rem;
