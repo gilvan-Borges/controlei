@@ -61,7 +61,7 @@ class AuthAndFamilyIntegrationTest {
                 "Familia Silva",
                 "Joao Silva",
                 "joao@email.com",
-                "senha123"
+                "senha12345"
         );
 
         mockMvc.perform(post("/api/v1/auth/register-family")
@@ -77,12 +77,12 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void createUser_createsMemberInFamily() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         CreateUserRequest request = new CreateUserRequest(
                 "Maria Silva",
                 "maria@email.com",
-                "senha123",
+                "senha12345",
                 Role.MEMBER
         );
 
@@ -97,12 +97,12 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void createUser_blocksDuplicateEmail() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         CreateUserRequest request = new CreateUserRequest(
                 "Joao Silva",
                 "joao@email.com",
-                "senha123",
+                "senha12345",
                 Role.MEMBER
         );
 
@@ -116,7 +116,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void listUsers_returnsFamilyUsers() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
         createMember(token, "Maria Silva", "maria@email.com");
 
         mockMvc.perform(get("/api/v1/users")
@@ -129,9 +129,9 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void login_success() throws Exception {
-        registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
-        LoginRequest request = new LoginRequest("joao@email.com", "senha123");
+        LoginRequest request = new LoginRequest("joao@email.com", "senha12345");
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +143,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void login_wrongPassword_returns401() throws Exception {
-        registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         LoginRequest request = new LoginRequest("joao@email.com", "senhaErrada");
 
@@ -167,12 +167,12 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void login_inactiveUser_returns401() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
         UserEntity responsible = userRepository.findByEmailAndDeletedAtIsNull("joao@email.com").orElseThrow();
         responsible.setActive(false);
         userRepository.save(responsible);
 
-        LoginRequest request = new LoginRequest("joao@email.com", "senha123");
+        LoginRequest request = new LoginRequest("joao@email.com", "senha12345");
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -189,7 +189,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void privateEndpoint_withValidToken_returns200() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         mockMvc.perform(get("/api/v1/me")
                         .header("Authorization", "Bearer " + token))
@@ -206,7 +206,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void me_returnsAuthenticatedUser() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         mockMvc.perform(get("/api/v1/me")
                         .header("Authorization", "Bearer " + token))
@@ -218,7 +218,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void responsible_canEditMember() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
         String memberId = createMember(token, "Maria Silva", "maria@email.com");
 
         UpdateUserRequest request = new UpdateUserRequest(
@@ -238,11 +238,11 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void member_cannotEditOtherMember() throws Exception {
-        String responsibleToken = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
         String memberOneId = createMember(responsibleToken, "Maria Silva", "maria@email.com");
         String memberTwoId = createMember(responsibleToken, "Pedro Silva", "pedro@email.com");
 
-        String memberOneToken = login("maria@email.com", "senha123");
+        String memberOneToken = login("maria@email.com", "senha12345");
 
         UpdateUserRequest request = new UpdateUserRequest(
                 "Pedro Modificado",
@@ -260,7 +260,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void user_cannotAccessResourceFromAnotherFamily() throws Exception {
-        String familyAToken = registerFamily("Familia A", "Joao A", "joao.a@email.com", "senha123");
+        String familyAToken = registerFamily("Familia A", "Joao A", "joao.a@email.com", "senha12345");
         String familyBMemberId = createMemberInAnotherFamily("Familia B", "Maria B", "maria.b@email.com");
 
         mockMvc.perform(put("/api/v1/users/" + familyBMemberId)
@@ -277,7 +277,7 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void tokenOfInactiveUser_isRejectedOnPrivateEndpoints() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
         UserEntity responsible = userRepository.findByEmailAndDeletedAtIsNull("joao@email.com").orElseThrow();
         responsible.setActive(false);
         userRepository.save(responsible);
@@ -289,12 +289,12 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void createUser_withResponsibleRole_isBlocked() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         CreateUserRequest request = new CreateUserRequest(
                 "Outro Responsavel",
                 "outro@email.com",
-                "senha123",
+                "senha12345",
                 Role.RESPONSIBLE
         );
 
@@ -308,14 +308,14 @@ class AuthAndFamilyIntegrationTest {
 
     @Test
     void responses_doNotContainPasswordHash() throws Exception {
-        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha123");
+        String token = registerFamily("Familia Silva", "Joao Silva", "joao@email.com", "senha12345");
 
         mockMvc.perform(get("/api/v1/users")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].passwordHash").doesNotExist())
                 .andExpect(contentAsString(not(containsString("password_hash"))))
-                .andExpect(contentAsString(not(containsString(passwordEncoder.encode("senha123")))));
+                .andExpect(contentAsString(not(containsString(passwordEncoder.encode("senha12345")))));
 
         mockMvc.perform(get("/api/v1/me")
                         .header("Authorization", "Bearer " + token))
@@ -357,7 +357,7 @@ class AuthAndFamilyIntegrationTest {
     }
 
     private String createMember(String token, String name, String email) throws Exception {
-        CreateUserRequest request = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest request = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
 
         String response = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + token)
@@ -371,7 +371,7 @@ class AuthAndFamilyIntegrationTest {
     }
 
     private String createMemberInAnotherFamily(String familyName, String responsibleName, String email) throws Exception {
-        String token = registerFamily(familyName, responsibleName, "other-" + email, "senha123");
+        String token = registerFamily(familyName, responsibleName, "other-" + email, "senha12345");
         return createMember(token, "Member " + familyName, email);
     }
 }

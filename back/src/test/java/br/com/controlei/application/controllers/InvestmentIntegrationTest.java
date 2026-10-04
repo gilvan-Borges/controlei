@@ -48,7 +48,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void createInvestment() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Renda Fixa", CategoryType.INVESTMENT);
 
@@ -70,7 +70,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void createInvestmentWithoutCategory() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         CreateInvestmentRequest request = new CreateInvestmentRequest(
@@ -89,7 +89,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void blockInvestmentWithNegativeAmount() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         CreateInvestmentRequest request = new CreateInvestmentRequest(
@@ -106,8 +106,8 @@ class InvestmentIntegrationTest {
 
     @Test
     void blockCategoryFromAnotherFamily() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
         String userIdA = getCurrentUserId(tokenA);
         UUID categoryBId = createCategory(tokenB, "Categoria B", CategoryType.INVESTMENT);
 
@@ -125,7 +125,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void blockIncompatibleCategoryType() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID expenseCategoryId = createCategory(token, "Alimentacao", CategoryType.EXPENSE);
 
@@ -143,7 +143,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void updateInvestmentBalance() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         UUID investmentId = createInvestment(token, userId, "Tesouro Direto",
@@ -165,7 +165,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void listInvestmentsByFamily() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         createInvestment(token, userId, "Investimento 1", InvestmentType.SAVINGS, BigDecimal.valueOf(1000));
@@ -179,7 +179,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void listInvestmentsByType() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         createInvestment(token, userId, "Poupanca", InvestmentType.SAVINGS, BigDecimal.valueOf(1000));
@@ -195,9 +195,9 @@ class InvestmentIntegrationTest {
 
     @Test
     void memberCannotEditOtherMemberInvestment() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
-        String memberToken = login("maria@email.com", "senha123");
+        String memberToken = login("maria@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
 
         UUID investmentId = createInvestment(responsibleToken, responsibleUserId, "Investimento do responsavel",
@@ -217,7 +217,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void responsibleCanEditMemberInvestment() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
 
         UUID investmentId = createInvestment(responsibleToken, memberId, "Investimento do membro",
@@ -238,7 +238,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void softDeleteInvestment() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         UUID investmentId = createInvestment(token, userId, "Investimento Para Deletar",
@@ -255,8 +255,8 @@ class InvestmentIntegrationTest {
 
     @Test
     void preventAccessBetweenFamilies() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
         String userIdA = getCurrentUserId(tokenA);
 
         UUID investmentId = createInvestment(tokenA, userIdA, "Investimento A",
@@ -269,7 +269,7 @@ class InvestmentIntegrationTest {
 
     @Test
     void testInvestmentTransactionsAndPortfolioSummary() throws Exception {
-        String token = registerFamily("Familia Investidora", "Carlos Invest", "carlos.invest@email.com", "senha123");
+        String token = registerFamily("Familia Investidora", "Carlos Invest", "carlos.invest@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         CreateAccountRequest accReq = new CreateAccountRequest("Conta Rico", AccountType.INVESTMENT, true, null, BigDecimal.valueOf(20000));
@@ -409,7 +409,7 @@ class InvestmentIntegrationTest {
     }
 
     private String createMember(String token, String name, String email) throws Exception {
-        CreateUserRequest request = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest request = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
         String response = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

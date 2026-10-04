@@ -46,7 +46,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void createDebtWith10Installments() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -77,7 +77,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void validateInstallmentSumEqualsTotal() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -115,7 +115,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void createDebtWithBrokenDivision_adjustLastInstallment() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -154,7 +154,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void validateMonthlyDueDates() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -189,7 +189,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void payInstallment_fillsPaidAt() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -212,7 +212,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void payAllInstallments_debtBecomesPaid() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -240,7 +240,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void cancelInstallment_recalculatesDebtStatus() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -263,9 +263,9 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void memberCannotPayOtherMemberInstallment() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
-        String memberToken = login("maria@email.com", "senha123");
+        String memberToken = login("maria@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
         UUID categoryId = createCategory(responsibleToken, "Financiamento", CategoryType.DEBT);
 
@@ -286,7 +286,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void responsibleCanPayMemberInstallment() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
         UUID categoryId = createCategory(responsibleToken, "Financiamento", CategoryType.DEBT);
 
@@ -308,7 +308,7 @@ class DebtInstallmentIntegrationTest {
 
     @Test
     void softDeleteDebt_doesNotRemoveInstallments() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -384,7 +384,7 @@ class DebtInstallmentIntegrationTest {
     }
 
     private String createMember(String token, String name, String email) throws Exception {
-        CreateUserRequest request = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest request = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
         String response = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

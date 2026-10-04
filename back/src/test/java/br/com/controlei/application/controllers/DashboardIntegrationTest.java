@@ -46,7 +46,7 @@ class DashboardIntegrationTest {
 
     @Test
     void calculateIndividualIncomeExpense() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(token, "Salario", CategoryType.INCOME);
@@ -70,10 +70,10 @@ class DashboardIntegrationTest {
 
     @Test
     void calculateFamilyConsolidated() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
-        String memberToken = login("maria@email.com", "senha123");
+        String memberToken = login("maria@email.com", "senha12345");
 
         UUID accountId = createAccount(responsibleToken, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(responsibleToken, "Salario", CategoryType.INCOME);
@@ -100,7 +100,7 @@ class DashboardIntegrationTest {
 
     @Test
     void validateUserDetailsInFamilyDashboard() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
 
@@ -123,7 +123,7 @@ class DashboardIntegrationTest {
 
     @Test
     void excludeCanceledTransactions() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(token, "Salario", CategoryType.INCOME);
@@ -149,7 +149,7 @@ class DashboardIntegrationTest {
 
     @Test
     void excludeCanceledInstallments() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID categoryId = createCategory(token, "Financiamento", CategoryType.DEBT);
 
@@ -191,7 +191,7 @@ class DashboardIntegrationTest {
 
     @Test
     void excludeDeletedData() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         UUID investmentId = createInvestment(token, userId, "Tesouro", InvestmentType.FIXED_INCOME,
@@ -215,9 +215,9 @@ class DashboardIntegrationTest {
 
     @Test
     void validateIsolationBetweenFamilies() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userIdA = getCurrentUserId(tokenA);
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
 
         UUID accountAId = createAccount(tokenA, "Conta A", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(tokenA, "Salario", CategoryType.INCOME);
@@ -234,7 +234,7 @@ class DashboardIntegrationTest {
 
     @Test
     void defaultToCurrentMonth() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(token, "Salario", CategoryType.INCOME);
@@ -251,10 +251,10 @@ class DashboardIntegrationTest {
 
     @Test
     void memberCanAccessFamilyDashboard() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
-        String memberToken = login("maria@email.com", "senha123");
+        String memberToken = login("maria@email.com", "senha12345");
 
         UUID accountId = createAccount(responsibleToken, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(responsibleToken, "Salario", CategoryType.INCOME);
@@ -354,7 +354,7 @@ class DashboardIntegrationTest {
     }
 
     private String createMember(String token, String name, String email) throws Exception {
-        CreateUserRequest request = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest request = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
         String response = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

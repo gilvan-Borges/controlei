@@ -143,7 +143,7 @@ class BudgetIntegrationTest {
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
-        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha123");
+        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha12345");
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

@@ -51,7 +51,7 @@ class AuthRefreshTokenIntegrationTest {
                 "Familia Token",
                 "Carlos Token",
                 "carlos.token@email.com",
-                "senha123"
+                "senha12345"
         );
 
         String registerRes = mockMvc.perform(post("/api/v1/auth/register-family")
@@ -67,7 +67,7 @@ class AuthRefreshTokenIntegrationTest {
         String registerRefreshToken = registerNode.get("refreshToken").asString();
         assertThat(registerRefreshToken).isNotBlank();
 
-        LoginRequest login = new LoginRequest("carlos.token@email.com", "senha123");
+        LoginRequest login = new LoginRequest("carlos.token@email.com", "senha12345");
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(login)))
@@ -83,7 +83,7 @@ class AuthRefreshTokenIntegrationTest {
                 "Familia Rotacao",
                 "Ana Rotacao",
                 "ana.rotacao@email.com",
-                "senha123"
+                "senha12345"
         );
 
         String registerRes = mockMvc.perform(post("/api/v1/auth/register-family")
@@ -132,7 +132,7 @@ class AuthRefreshTokenIntegrationTest {
                 "Familia Logout",
                 "Marcos Logout",
                 "marcos.logout@email.com",
-                "senha123"
+                "senha12345"
         );
 
         String registerRes = mockMvc.perform(post("/api/v1/auth/register-family")

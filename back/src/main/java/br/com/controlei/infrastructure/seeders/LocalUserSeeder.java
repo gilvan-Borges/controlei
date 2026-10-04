@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@Profile("local")
 public class LocalUserSeeder implements CommandLineRunner {
 
     private final FamilyRepository familyRepository;
@@ -37,10 +38,10 @@ public class LocalUserSeeder implements CommandLineRunner {
                            @Value("${app.seed.family-name:Familia Controlei}") String familyName,
                            @Value("${app.seed.super-admin-name:Super Admin}") String superAdminName,
                            @Value("${app.seed.super-admin-email:superadmin@controlei.local}") String superAdminEmail,
-                           @Value("${app.seed.super-admin-password:Controlei@123}") String superAdminPassword,
+                           @Value("${app.seed.super-admin-password:}") String superAdminPassword,
                            @Value("${app.seed.member-name:Gilvan Borges}") String memberName,
                            @Value("${app.seed.member-email:gilvan.borges@controlei.local}") String memberEmail,
-                           @Value("${app.seed.member-password:Controlei@123}") String memberPassword) {
+                           @Value("${app.seed.member-password:}") String memberPassword) {
         this.familyRepository = familyRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -59,6 +60,11 @@ public class LocalUserSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (!enabled) {
             return;
+        }
+        // Sem senha definida por quem liga o seed, nada e criado: nao existe senha padrao publica.
+        if (superAdminPassword.isBlank() || memberPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "APP_SEED_ENABLED exige app.seed.super-admin-password e app.seed.member-password");
         }
 
         UserEntity superAdmin = userRepository.findByEmailAndDeletedAtIsNull(superAdminEmail)

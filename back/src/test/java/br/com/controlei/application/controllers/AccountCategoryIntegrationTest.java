@@ -45,7 +45,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void createIndividualAccount() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
 
         CreateAccountRequest request = new CreateAccountRequest(
@@ -64,7 +64,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void createSharedAccount() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateAccountRequest request = new CreateAccountRequest(
                 "Conta Conjunta", AccountType.CHECKING, true, null, BigDecimal.valueOf(1000));
@@ -80,7 +80,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void blockIndividualAccountWithoutUserId() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateAccountRequest request = new CreateAccountRequest(
                 "Conta Sem User", AccountType.CHECKING, false, null, BigDecimal.ZERO);
@@ -94,7 +94,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void createCategory() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateCategoryRequest request = new CreateCategoryRequest(
                 "Salario", CategoryType.INCOME, "#00FF00", "money");
@@ -110,7 +110,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void blockDuplicateCategory() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateCategoryRequest request = new CreateCategoryRequest(
                 "Salario", CategoryType.INCOME, "#00FF00", "money");
@@ -130,8 +130,8 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void allowSameCategoryNameInDifferentFamilies() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
 
         CreateCategoryRequest request = new CreateCategoryRequest(
                 "Salario", CategoryType.INCOME, "#00FF00", "money");
@@ -151,8 +151,8 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void preventAccessBetweenFamilies() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
 
         CreateAccountRequest request = new CreateAccountRequest(
                 "Conta A", AccountType.CHECKING, true, null, BigDecimal.ZERO);
@@ -174,7 +174,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void softDeleteAccount() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateAccountRequest request = new CreateAccountRequest(
                 "Conta Para Deletar", AccountType.CHECKING, true, null, BigDecimal.ZERO);
@@ -200,7 +200,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void softDeleteCategory() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateCategoryRequest request = new CreateCategoryRequest(
                 "Categoria Para Deletar", CategoryType.EXPENSE, "#FF0000", "trash");
@@ -226,7 +226,7 @@ class AccountCategoryIntegrationTest {
 
     @Test
     void recreateCategoryAfterSoftDelete() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
 
         CreateCategoryRequest request = new CreateCategoryRequest(
                 "Alimentacao", CategoryType.EXPENSE, "#FF0000", "food");

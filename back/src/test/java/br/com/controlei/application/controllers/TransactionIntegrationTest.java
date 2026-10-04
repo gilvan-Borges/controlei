@@ -48,7 +48,7 @@ class TransactionIntegrationTest {
 
     @Test
     void createIncome() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID categoryId = createCategory(token, "Salario", CategoryType.INCOME);
@@ -70,7 +70,7 @@ class TransactionIntegrationTest {
 
     @Test
     void createExpense() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID categoryId = createCategory(token, "Alimentacao", CategoryType.EXPENSE);
@@ -91,7 +91,7 @@ class TransactionIntegrationTest {
 
     @Test
     void blockAmountZeroOrNegative() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
 
@@ -109,8 +109,8 @@ class TransactionIntegrationTest {
 
     @Test
     void blockAccountFromAnotherFamily() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
         String userIdB = getCurrentUserId(tokenB);
         UUID accountBId = createAccount(tokenB, "Conta B", AccountType.CHECKING, true, null);
 
@@ -128,8 +128,8 @@ class TransactionIntegrationTest {
 
     @Test
     void blockCategoryFromAnotherFamily() throws Exception {
-        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
-        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha123");
+        String tokenA = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
+        String tokenB = registerFamily("Familia B", "Maria", "maria.b@email.com", "senha12345");
         String userIdA = getCurrentUserId(tokenA);
         UUID accountAId = createAccount(tokenA, "Conta A", AccountType.CHECKING, true, null);
         UUID categoryBId = createCategory(tokenB, "Categoria B", CategoryType.EXPENSE);
@@ -148,7 +148,7 @@ class TransactionIntegrationTest {
 
     @Test
     void blockIncompatibleCategoryType() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
         UUID incomeCategoryId = createCategory(token, "Salario", CategoryType.INCOME);
@@ -167,7 +167,7 @@ class TransactionIntegrationTest {
 
     @Test
     void listWithDateFilter() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
 
@@ -187,7 +187,7 @@ class TransactionIntegrationTest {
 
     @Test
     void listWithPagination() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
 
@@ -208,7 +208,7 @@ class TransactionIntegrationTest {
 
     @Test
     void payPendingTransaction() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
 
@@ -224,7 +224,7 @@ class TransactionIntegrationTest {
 
     @Test
     void cancelTransaction() throws Exception {
-        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String token = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String userId = getCurrentUserId(token);
         UUID accountId = createAccount(token, "Conta", AccountType.CHECKING, true, null);
 
@@ -239,9 +239,9 @@ class TransactionIntegrationTest {
 
     @Test
     void memberCannotEditOtherMemberTransaction() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
-        String memberToken = login("maria@email.com", "senha123");
+        String memberToken = login("maria@email.com", "senha12345");
         String responsibleUserId = getCurrentUserId(responsibleToken);
         UUID accountId = createAccount(responsibleToken, "Conta", AccountType.CHECKING, true, null);
 
@@ -263,7 +263,7 @@ class TransactionIntegrationTest {
 
     @Test
     void responsibleCanEditMemberTransaction() throws Exception {
-        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha123");
+        String responsibleToken = registerFamily("Familia A", "Joao", "joao.a@email.com", "senha12345");
         String memberId = createMember(responsibleToken, "Maria", "maria@email.com");
         UUID accountId = createAccount(responsibleToken, "Conta", AccountType.CHECKING, true, null);
 
@@ -343,7 +343,7 @@ class TransactionIntegrationTest {
     }
 
     private String createMember(String token, String name, String email) throws Exception {
-        CreateUserRequest request = new CreateUserRequest(name, email, "senha123", Role.MEMBER);
+        CreateUserRequest request = new CreateUserRequest(name, email, "senha12345", Role.MEMBER);
         String response = mockMvc.perform(post("/api/v1/users")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

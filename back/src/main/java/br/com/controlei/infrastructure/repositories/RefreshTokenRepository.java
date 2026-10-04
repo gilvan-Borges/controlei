@@ -14,7 +14,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity
 
     Optional<RefreshTokenEntity> findByToken(String token);
 
-    @Modifying
+    // clearAutomatically: o UPDATE em lote passa por fora do cache de persistencia; sem limpar, uma leitura
+    // seguinte na mesma transacao ainda veria o token como nao revogado (revogacao "invisivel").
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RefreshTokenEntity r SET r.revoked = true WHERE r.userId = :userId")
     void revokeAllByUserId(UUID userId);
 }

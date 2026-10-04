@@ -21,13 +21,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private static final int MAX_TRACKED_CLIENTS = 5000;
+
     private final boolean enabled;
     private final int maxRequestsPerMinute;
+    private final boolean trustProxyHeaders;
     private final Map<String, RequestCounter> requestCounts = new ConcurrentHashMap<>();
 
     public RateLimitFilter(
             @Value("${app.security.rate-limit.enabled:true}") boolean enabled,
-            @Value("${app.security.rate-limit.max-requests:30}") int maxRequestsPerMinute) {
+            @Value("${app.security.rate-limit.max-requests:30}") int maxRequestsPerMinute,
+            @Value("${app.security.rate-limit.trust-proxy-headers:false}") boolean trustProxyHeaders) {
+        this.trustProxyHeaders = trustProxyHeaders;
         this.enabled = enabled;
         this.maxRequestsPerMinute = maxRequestsPerMinute;
     }
@@ -73,20 +78,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return existing;
         });
 
-        if (requestCounts.size() > 5000) {
+        if (requestCounts.size() > MAX_TRACKED_CLIENTS) {
             requestCounts.entrySet().removeIf(entry -> entry.getValue().minute < currentMinute);
         }
 
         return counter.count.get() > maxRequestsPerMinute;
     }
 
+    /**
+     * O nginx sobrescreve X-Real-IP e X-Forwarded-For com o IP da conexao ($remote_addr), entao o primeiro valor
+     * nao pode mais ser forjado pelo cliente. Sem o nginx na frente, o IP vem direto da conexao.
+     */
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
         String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isBlank()) {
+        if (xRealIp != null && !xRealIp.isBlank() && trustProxyHeaders) {
             return xRealIp.trim();
         }
         return request.getRemoteAddr();
