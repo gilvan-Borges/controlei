@@ -60,6 +60,12 @@ public class AssistantService {
     static final String FALLBACK_UNKNOWN =
             "Nao encontrei isso na ajuda. Tente perguntar sobre transacoes, comprovantes, orcamentos, metas, "
                     + "cartoes, divisao de despesas, relatorios ou como instalar o app.";
+    /** O modelo afirma ter preparado algo. Vale so quando uma ferramenta de acao realmente foi chamada. */
+    static final java.util.regex.Pattern CLAIMS_PREPARED = java.util.regex.Pattern.compile("(?i)\\bprepar(ei|ado|ada)\\b");
+    static final String NUDGE = "[sistema] Voce afirmou ter preparado a acao, mas nao chamou nenhuma ferramenta, entao nada foi "
+            + "preparado e a pessoa nao viu nenhum cartao de confirmacao. Chame agora a ferramenta de acao correta; se nao for "
+            + "possivel, explique o motivo sem dizer que preparou.";
+    static final String CLAIM_WITHOUT_ACTION = "Nao consegui preparar essa acao. Pode repetir o pedido com o valor, a conta e o que deseja fazer?";
     static final String NO_RESULT = "Nao consegui concluir isso agora. Tente reformular o pedido.";
 
     private static final String SYSTEM_PROMPT = """
@@ -69,10 +75,25 @@ public class AssistantService {
 
             COMO TRABALHAR
             - Para responder sobre dados (saldo, gastos, orcamentos, metas, transacoes), CONSULTE as ferramentas de leitura. Nunca invente numeros.
-            - Para fazer algo, chame a ferramenta de acao. Ela so PREPARA: a pessoa confirma na tela. Nunca diga que ja foi feito;
-              diga que preparou e peca para confirmar.
-            - Se faltar informacao essencial (valor, qual conta, qual categoria), PERGUNTE antes de preparar. Se a descricao e o valor
-              estiverem claros, nao pergunte o que tem padrao (data de hoje, unica conta).
+            - Para fazer algo, voce DEVE chamar a ferramenta de acao (create_transaction, delete_transaction etc.). Ao chamar, o
+              sistema mostra sozinho um cartao de confirmacao para a pessoa; voce nao descreve nem pede confirmacao por texto.
+              Sem chamar a ferramenta NADA e preparado: nunca escreva que preparou, lancou ou fez algo sem ter chamado a ferramenta.
+              Depois de chamar, diga em uma frase curta o que preparou. Nunca diga que ja foi feito.
+            - Antes de perguntar qualquer coisa sobre conta ou categoria, CONSULTE list_accounts e list_categories. Se a familia tem
+              uma unica conta, use-a sem perguntar. Escolha voce mesmo a categoria que combina com a descricao (supermercado ou
+              feira: Alimentacao; luz, agua ou aluguel: Moradia; remedio: Saude; gasolina ou onibus: Transporte; salario: Salario).
+              Nao existindo categoria adequada, lance sem categoria e avise. So pergunte quando faltar o VALOR, quando houver mais
+              de uma conta possivel, ou quando o pedido for ambiguo de verdade. Data padrao: hoje.
+            - Lancamentos: "gastei", "paguei", "recebi" significam que JA foi pago/recebido (paid=true, o padrao). Conta a pagar,
+              boleto ou "vence dia X" e pendente (paid=false com dueDate).
+            - NUNCA peca identificadores ao usuario nem cite nomes de ferramentas ou comandos: voce mesmo busca o que precisa.
+            - Ao falar de totais, lembre que receitas e despesas contam so o que esta pago/recebido; se o total vier zerado, consulte
+              as transacoes e mencione as pendentes.
+            - Pedidos de alterar, excluir ou marcar como pago um lancamento: chame direto a ferramenta de acao, passando em
+              search um trecho da descricao que a pessoa citou (o servidor acha o lancamento). Se o servidor responder que mais de
+              um combina, mostre as opcoes (descricao, valor, data) e pergunte qual; depois repita com searchAmount ou searchDate.
+              Nao use list_transactions so para achar o lancamento.
+            - Pode encadear: consultar e, na mesma resposta, preparar a acao. Depois de preparar, diga em uma frase o que preparou.
             - Contas, categorias e metas sao citadas pelo NOME. Nao ha identificadores para voce inventar.
             - Nao ha como excluir ou editar registros por aqui: oriente a pessoa a usar a tela correspondente.
             - Nao de conselho de investimento nem de tributos; explique o que os dados mostram.
@@ -176,10 +197,22 @@ public class AssistantService {
         List<ToolSpec> specs = toolbox.all().stream()
                 .map(t -> new ToolSpec(t.name(), t.description(), t.schema())).toList();
 
+        boolean nudged = false;
         for (int step = 0; step < MAX_STEPS; step++) {
             Completion c = ai.complete(messages, specs);
             if (c.toolCalls().isEmpty()) {
-                return sanitize(c.content(), MAX_ANSWER);
+                String text = sanitize(c.content(), MAX_ANSWER);
+                if (prepared.isEmpty() && CLAIMS_PREPARED.matcher(text).find()) {
+                    // Prometeu um cartao que nao existe. Uma chance de corrigir; se insistir, a resposta honesta vence.
+                    if (nudged) {
+                        return CLAIM_WITHOUT_ACTION;
+                    }
+                    nudged = true;
+                    messages.add(Message.assistant(text));
+                    messages.add(Message.user(NUDGE));
+                    continue;
+                }
+                return text;
             }
             List<ToolCall> calls = c.toolCalls().stream().limit(MAX_CALLS_PER_STEP).toList();
             messages.add(Message.assistantCalls(c.content(), calls));

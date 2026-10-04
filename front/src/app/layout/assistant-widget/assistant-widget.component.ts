@@ -11,6 +11,28 @@ export interface ChatMessage {
   text: string;
   ai?: boolean;
   actions?: ChatAction[];
+  /** Mensagem local (não vai ao servidor nem entra no histórico enviado ao modelo). */
+  local?: boolean;
+  /** Mensagem da lista "o que sei fazer": mostra os exemplos tocáveis logo abaixo. */
+  caps?: boolean;
+}
+
+/** Trecho de texto da resposta: pode estar em negrito. */
+export interface Part {
+  text: string;
+  bold: boolean;
+}
+
+/** Bloco da resposta: parágrafo ou item de lista. Evita innerHTML: o texto do modelo nunca vira HTML. */
+export interface Block {
+  type: 'p' | 'li';
+  parts: Part[];
+}
+
+export interface Capability {
+  icon: string;
+  title: string;
+  examples: string[];
 }
 
 /**
@@ -26,30 +48,51 @@ export interface ChatMessage {
 })
 export class AssistantWidgetComponent {
   readonly maxLength = 500;
-  readonly suggestions = [
-    'Quanto gastei este mês?',
-    'Lance uma despesa de 50 reais no mercado',
-    'Como estão meus orçamentos?',
-    'Como dividir uma conta?'
+
+  readonly capabilities: Capability[] = [
+    {
+      icon: 'bi-search',
+      title: 'Consultar',
+      examples: ['Quanto gastei este mês?', 'Como estão meus orçamentos?', 'Mostre minhas últimas transações', 'Como estão minhas metas?']
+    },
+    {
+      icon: 'bi-plus-circle',
+      title: 'Lançar',
+      examples: ['Lance uma despesa de 50 reais no mercado', 'Recebi 3000 de salário hoje', 'Crie a categoria Pets']
+    },
+    {
+      icon: 'bi-piggy-bank',
+      title: 'Planejar',
+      examples: ['Crie um orçamento de 800 para Alimentação', 'Crie a meta Viagem de 5000', 'Aporte 200 na meta Viagem']
+    },
+    {
+      icon: 'bi-pencil-square',
+      title: 'Corrigir',
+      examples: ['Altere o valor da última despesa para 60', 'Marque a conta de luz como paga', 'Exclua o lançamento do mercado']
+    }
   ];
 
   open = false;
+  expanded = false;
   loading = false;
+  settings: AssistantSettings | null = null;
   /** Já abriu o assistente alguma vez: depois disso o ícone para de chamar atenção. */
   seen = AssistantWidgetComponent.readSeen();
-  settings: AssistantSettings | null = null;
   /** Painel de ciência aberto: o responsável precisa aceitar antes de ligar a IA. */
   consentOpen = false;
   acknowledged = false;
   savingSettings = false;
-  messages: ChatMessage[] = [
-    {
-      from: 'assistant',
-      text: 'Oi! Posso responder sobre seus dados, tirar dúvidas e fazer coisas por você, como lançar despesas ou criar metas. Antes de alterar qualquer coisa, peço sua confirmação.'
-    }
-  ];
+  /** Quantos caracteres já digitados, para o contador perto do limite. */
+  typed = 0;
 
-  @ViewChild('input') input?: ElementRef<HTMLInputElement>;
+  messages: ChatMessage[] = [this.welcome()];
+
+  /** Exemplos tocáveis: na conversa nova e logo depois de "o que sei fazer". */
+  get showExamples(): boolean {
+    return this.messages.length === 1 || this.messages.at(-1)?.caps === true;
+  }
+
+  @ViewChild('input') input?: ElementRef<HTMLTextAreaElement>;
   @ViewChild('list') list?: ElementRef<HTMLElement>;
   @ViewChild('fab') fab?: ElementRef<HTMLButtonElement>;
 
@@ -68,21 +111,41 @@ export class AssistantWidgetComponent {
     }
   }
 
-  private markSeen(): void {
-    this.seen = true;
-    try {
-      localStorage.setItem('controlei-assistant-seen', '1');
-    } catch {
-      // armazenamento bloqueado: o ícone só volta a chamar atenção na próxima visita
+  @HostListener('document:keydown.escape')
+  close(): void {
+    if (this.open) {
+      this.open = false;
+      this.fab?.nativeElement.focus();
     }
   }
 
-  private static readSeen(): boolean {
-    try {
-      return localStorage.getItem('controlei-assistant-seen') === '1';
-    } catch {
-      return false;
-    }
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+    this.scrollDown();
+  }
+
+  /** Recomeça a conversa. Ações ainda pendentes continuam valendo no servidor por 10 min, mas somem da tela. */
+  reset(): void {
+    this.messages = [this.welcome()];
+    this.loading = false;
+    this.typed = 0;
+    this.input?.nativeElement.focus();
+  }
+
+  /** Mostra, sem chamar o servidor, tudo o que o assistente sabe fazer, com exemplos para tocar. */
+  showCapabilities(): void {
+    this.messages.push({
+      from: 'assistant',
+      local: true,
+      caps: true,
+      text:
+        'Posso ajudar de quatro jeitos. Toque em um exemplo ou escreva do seu jeito:\n' +
+        '- **Consultar**: saldo, gastos, orçamentos, metas, transações.\n' +
+        '- **Lançar**: despesas, receitas, categorias.\n' +
+        '- **Planejar**: orçamentos, metas e aportes.\n' +
+        '- **Corrigir**: alterar valores, marcar como pago ou excluir. Excluir sempre pede confirmação em vermelho.'
+    });
+    this.scrollDown();
   }
 
   loadSettings(): void {
@@ -117,6 +180,7 @@ export class AssistantWidgetComponent {
         this.closeConsent();
         this.reply({
           from: 'assistant',
+          local: true,
           text: s.enabled
             ? 'Assistente com IA ativado para a sua família. Pode perguntar!'
             : 'Assistente com IA desativado. Continuo respondendo dúvidas básicas de uso.'
@@ -124,17 +188,9 @@ export class AssistantWidgetComponent {
       },
       error: () => {
         this.savingSettings = false;
-        this.reply({ from: 'assistant', text: 'Não consegui alterar a configuração. Tente de novo.' });
+        this.reply({ from: 'assistant', local: true, text: 'Não consegui alterar a configuração. Tente de novo.' });
       }
     });
-  }
-
-  @HostListener('document:keydown.escape')
-  close(): void {
-    if (this.open) {
-      this.open = false;
-      this.fab?.nativeElement.focus();
-    }
   }
 
   send(question: string): void {
@@ -165,10 +221,27 @@ export class AssistantWidgetComponent {
     });
   }
 
-  submit(field: HTMLInputElement): void {
+  submit(field: HTMLInputElement | HTMLTextAreaElement): void {
     const value = field.value;
     field.value = '';
+    this.typed = 0;
+    field.style.height = '';
     this.send(value);
+  }
+
+  /** Enter envia; Shift+Enter quebra a linha. */
+  onKey(event: KeyboardEvent, field: HTMLTextAreaElement): void {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      this.submit(field);
+    }
+  }
+
+  /** A caixa cresce com o texto, até um limite, e conta os caracteres. */
+  onInput(field: HTMLTextAreaElement): void {
+    this.typed = field.value.length;
+    field.style.height = 'auto';
+    field.style.height = Math.min(field.scrollHeight, 120) + 'px';
   }
 
   confirm(action: ChatAction): void {
@@ -200,9 +273,38 @@ export class AssistantWidgetComponent {
     this.assistant.cancel(action.id).subscribe({ error: () => undefined });
   }
 
-  /** Só texto de usuário e de assistente vai como histórico; os cartões de ação ficam de fora. */
+  /** Quebra o texto em parágrafos e itens de lista, com **negrito**. Nunca gera HTML. */
+  format(text: string): Block[] {
+    return text
+      .split('\n')
+      .map((line) => line.trimEnd())
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const item = /^\s*[-•*]\s+(.*)$/.exec(line);
+        return { type: item ? ('li' as const) : ('p' as const), parts: this.bold(item ? item[1] : line) };
+      });
+  }
+
+  private bold(text: string): Part[] {
+    return text
+      .split(/\*\*(.+?)\*\*/g)
+      .map((chunk, i) => ({ text: chunk, bold: i % 2 === 1 }))
+      .filter((p) => p.text.length > 0);
+  }
+
+  private welcome(): ChatMessage {
+    return {
+      from: 'assistant',
+      local: true,
+      text:
+        'Oi! Eu **consulto os dados da sua família**, tiro dúvidas e **faço coisas por você**: lançar despesas, criar metas e orçamentos, corrigir ou excluir lançamentos.\n' +
+        'Antes de alterar qualquer coisa, eu peço a sua confirmação.'
+    };
+  }
+
+  /** Só texto de usuário e de assistente vai como histórico; mensagens locais e cartões de ação ficam de fora. */
   private history(): Turn[] {
-    return this.messages.slice(1).map((m) => ({ role: m.from, text: m.text }));
+    return this.messages.filter((m) => !m.local).map((m) => ({ role: m.from, text: m.text }));
   }
 
   /** Depois de uma ação executada, recarrega a tela atual para ela mostrar o dado novo. */
@@ -228,12 +330,32 @@ export class AssistantWidgetComponent {
     this.scrollDown();
   }
 
+  /** Rola até o fim depois que o Angular desenhar a mensagem; a segunda passada cobre o cartão de ação e as listas. */
   private scrollDown(): void {
-    setTimeout(() => {
+    const down = () => {
       const el = this.list?.nativeElement;
       if (el) {
         el.scrollTop = el.scrollHeight;
       }
-    });
+    };
+    setTimeout(down);
+    setTimeout(down, 80);
+  }
+
+  private markSeen(): void {
+    this.seen = true;
+    try {
+      localStorage.setItem('controlei-assistant-seen', '1');
+    } catch {
+      // armazenamento bloqueado: o ícone só volta a chamar atenção na próxima visita
+    }
+  }
+
+  private static readSeen(): boolean {
+    try {
+      return localStorage.getItem('controlei-assistant-seen') === '1';
+    } catch {
+      return false;
+    }
   }
 }

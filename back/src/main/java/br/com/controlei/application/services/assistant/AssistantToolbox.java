@@ -24,6 +24,7 @@ import br.com.controlei.domain.models.dtos.budget.UpdateBudgetRequest;
 import br.com.controlei.domain.models.dtos.transaction.CreateTransactionRequest;
 import br.com.controlei.domain.models.dtos.transaction.UpdateTransactionRequest;
 import br.com.controlei.domain.models.dtos.transaction.TransactionQueryFilter;
+import br.com.controlei.domain.models.dtos.transaction.TransactionResponse;
 import br.com.controlei.domain.models.enums.CategoryType;
 import br.com.controlei.domain.models.enums.GoalCategory;
 import br.com.controlei.domain.models.enums.TransactionStatus;
@@ -115,6 +116,7 @@ public class AssistantToolbox {
                     out.put("dividasEmAberto", r.totalOpenDebts());
                     out.put("parcelasPendentes", r.totalPendingInstallments());
                     out.put("investido", r.totalInvested());
+                    out.put("observacao", "receitas e despesas contam so transacoes PAGAS/recebidas; as pendentes aparecem em list_transactions");
                     out.put("porMembro", r.userDetails().stream().map(u -> Map.of(
                             "nome", u.userName(), "receitas", u.income(), "despesas", u.expense(), "saldo", u.balance())).toList());
                     return Result.data(json(out));
@@ -231,7 +233,9 @@ public class AssistantToolbox {
                   "date":{"type":"string","description":"AAAA-MM-DD; padrao hoje"},
                   "category":{"type":"string","description":"nome da categoria (opcional)"},
                   "account":{"type":"string","description":"nome da conta"},
-                  "notes":{"type":"string"}},
+                  "notes":{"type":"string"},
+                  "paid":{"type":"boolean","description":"true (padrao) se ja foi pago/recebido; false para conta a pagar/receber"},
+                  "dueDate":{"type":"string","description":"AAAA-MM-DD, vencimento quando paid=false"}},
                  "required":["type","description","amount"]}""",
                 true, args -> {
                     TransactionType type = enumOrNull(TransactionType.class, text(args, "type"));
@@ -249,14 +253,22 @@ public class AssistantToolbox {
                     CategoryResponse category = text(args, "category") == null ? null
                             : resolve(categories.listCategories(new CategoryQueryFilter(true, wanted)),
                             CategoryResponse::name, text(args, "category"), "categoria");
+                    // "Gastei 50 no mercado" ja foi pago: sem isto a transacao nasceria pendente e nao entraria nos totais.
+                    boolean paid = !args.has("paid") || args.path("paid").asBoolean(true);
+                    LocalDate dueDate = paid ? null : date(args, "dueDate", date);
                     var request = new CreateTransactionRequest(authorization.currentUserId(), account.id(),
-                            category == null ? null : category.id(), type, description, amount, date, null, text(args, "notes"));
+                            category == null ? null : category.id(), type, description, amount, date, dueDate, text(args, "notes"));
                     String label = type == TransactionType.EXPENSE ? "despesa" : "receita";
+                    String situation = paid ? (type == TransactionType.EXPENSE ? "paga" : "recebida")
+                            : "pendente, vence em " + BR_DATE.format(dueDate);
                     String summary = "Lançar " + label + " de " + money(amount) + ": " + description
                             + (category != null ? " · categoria " + category.name() : "")
-                            + " · conta " + account.name() + " · " + BR_DATE.format(date);
+                            + " · conta " + account.name() + " · " + BR_DATE.format(date) + " · " + situation;
                     return Result.pending(summary, () -> {
-                        transactions.createTransaction(request);
+                        var saved = transactions.createTransaction(request);
+                        if (paid) {
+                            transactions.payTransaction(saved.id());
+                        }
                         return capitalize(label) + " lançada: " + description + " (" + money(amount) + ").";
                     });
                 });
@@ -264,12 +276,16 @@ public class AssistantToolbox {
 
     private AssistantTool payTransaction() {
         return new AssistantTool("mark_transaction_paid",
-                "Prepara marcar uma transacao pendente como paga. NAO executa: a pessoa confirma. Pegue o id em list_transactions.",
+                "Prepara marcar uma transacao pendente como paga. NAO executa: a pessoa confirma. Identifique o lancamento por search.",
                 """
-                {"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}""",
+                {"type":"object","properties":{
+                  "id":{"type":"string","description":"id da transacao, se voce ja o conhece"},
+                  "search":{"type":"string","description":"parte da descricao do lancamento (o servidor acha sozinho)"},
+                  "searchAmount":{"type":"number","description":"valor atual do lancamento, para desempatar"},
+                  "searchDate":{"type":"string","description":"data atual AAAA-MM-DD, para desempatar"}}}""",
                 true, args -> {
-                    UUID id = uuid(required(args, "id"));
-                    var tx = transactions.getTransaction(id);
+                    var tx = pick(args);
+                    UUID id = tx.id();
                     if (tx.status() != TransactionStatus.PENDING && tx.status() != TransactionStatus.OVERDUE) {
                         throw new ToolException("Essa transacao nao esta pendente (status " + tx.status().name() + ")");
                     }
@@ -388,20 +404,22 @@ public class AssistantToolbox {
     private AssistantTool updateTransaction() {
         return new AssistantTool("update_transaction",
                 "Prepara a alteracao de uma transacao existente (so os campos informados mudam). NAO executa: a pessoa confirma. "
-                        + "Pegue o id em list_transactions.",
+                        + "Identifique o lancamento por search (parte da descricao); use searchAmount/searchDate so para desempatar.",
                 """
                 {"type":"object","properties":{
-                  "id":{"type":"string"},
-                  "description":{"type":"string"},
-                  "amount":{"type":"number"},
-                  "date":{"type":"string","description":"AAAA-MM-DD"},
+                  "id":{"type":"string","description":"id da transacao, se voce ja o conhece"},
+                  "search":{"type":"string","description":"parte da descricao do lancamento (o servidor acha sozinho)"},
+                  "searchAmount":{"type":"number","description":"valor atual do lancamento, para desempatar"},
+                  "searchDate":{"type":"string","description":"data atual AAAA-MM-DD, para desempatar"},
+                  "description":{"type":"string","description":"NOVA descricao"},
+                  "amount":{"type":"number","description":"NOVO valor"},
+                  "date":{"type":"string","description":"NOVA data AAAA-MM-DD"},
                   "category":{"type":"string","description":"nome da categoria"},
                   "account":{"type":"string","description":"nome da conta"},
-                  "notes":{"type":"string"}},
-                 "required":["id"]}""",
+                  "notes":{"type":"string"}}}""",
                 true, args -> {
-                    UUID id = uuid(required(args, "id"));
-                    var tx = transactions.getTransaction(id);
+                    var tx = pick(args);
+                    UUID id = tx.id();
                     String description = text(args, "description") != null ? text(args, "description") : tx.description();
                     if (description.length() < 2 || description.length() > 500) {
                         throw new ToolException("descricao deve ter entre 2 e 500 caracteres");
@@ -428,13 +446,17 @@ public class AssistantToolbox {
 
     private AssistantTool deleteTransaction() {
         return new AssistantTool("delete_transaction",
-                "Prepara a EXCLUSAO de uma transacao. Irreversivel pela tela. NAO executa: a pessoa confirma. Pegue o id em list_transactions "
+                "Prepara a EXCLUSAO de uma transacao. Irreversivel pela tela. NAO executa: a pessoa confirma. Identifique o lancamento por search "
                         + "e so use quando a pessoa pedir claramente para excluir.",
                 """
-                {"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}""",
+                {"type":"object","properties":{
+                  "id":{"type":"string","description":"id da transacao, se voce ja o conhece"},
+                  "search":{"type":"string","description":"parte da descricao do lancamento (o servidor acha sozinho)"},
+                  "searchAmount":{"type":"number","description":"valor atual do lancamento, para desempatar"},
+                  "searchDate":{"type":"string","description":"data atual AAAA-MM-DD, para desempatar"}}}""",
                 true, args -> {
-                    UUID id = uuid(required(args, "id"));
-                    var tx = transactions.getTransaction(id);
+                    var tx = pick(args);
+                    UUID id = tx.id();
                     String summary = "EXCLUIR transação: " + tx.description() + " · " + money(tx.amount()) + " · "
                             + BR_DATE.format(tx.transactionDate());
                     return Result.pendingDestructive(summary, () -> {
@@ -508,6 +530,36 @@ public class AssistantToolbox {
     }
 
     // ---------------------------------------------------------------- apoio
+
+    /**
+     * Acha UM lancamento: pelo id, ou por parte da descricao (mais valor e data para desempatar). Quem filtra e o servidor,
+     * nao o modelo: se nada combina ou combina mais de um, o erro volta para o modelo perguntar a pessoa.
+     */
+    private TransactionResponse pick(JsonNode args) {
+        String id = text(args, "id");
+        if (id != null) {
+            return transactions.getTransaction(uuid(id));
+        }
+        String search = required(args, "search");
+        BigDecimal amount = text(args, "searchAmount") != null ? amount(args, "searchAmount") : null;
+        LocalDate date = dateOrNull(args, "searchDate");
+        var all = transactions.listTransactions(new TransactionQueryFilter(null, null, null, null, null, null, null), 0, 200).content();
+        var matches = all.stream()
+                .filter(t -> fold(t.description()).contains(fold(search)))
+                .filter(t -> amount == null || t.amount().compareTo(amount) == 0)
+                .filter(t -> date == null || t.transactionDate().equals(date))
+                .toList();
+        if (matches.isEmpty()) {
+            throw new ToolException("Nenhum lancamento combina com '" + search + "'. Confira o texto com list_transactions.");
+        }
+        if (matches.size() > 1) {
+            throw new ToolException("Mais de um lancamento combina com '" + search + "': "
+                    + String.join("; ", matches.stream().limit(8).map(m -> m.description() + " " + money(m.amount()) + " em "
+                    + BR_DATE.format(m.transactionDate())).toList())
+                    + ". Pergunte a pessoa qual deles (valor ou data) e repita usando searchAmount ou searchDate.");
+        }
+        return matches.get(0);
+    }
 
     private List<AccountResponse> activeAccounts() {
         return accounts.listAccounts(new AccountQueryFilter(true, null, null, null));

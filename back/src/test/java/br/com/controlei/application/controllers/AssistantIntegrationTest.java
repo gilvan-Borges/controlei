@@ -66,11 +66,61 @@ class AssistantIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Mercado")));
         assertEquals(1, transactionCount(token));
+        assertEquals("PAID", firstTransactionStatus(token), "'gastei' ja foi pago: precisa entrar nos totais");
 
         // Uso unico: confirmar de novo nao lanca outra vez.
         mockMvc.perform(post("/api/v1/assistant/actions/" + id + "/confirm").header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
         assertEquals(1, transactionCount(token));
+    }
+
+    @Test
+    void aBillToPayIsCreatedPendingWithItsDueDate() throws Exception {
+        String token = register("Familia Boleto", "Bia Boleto", "bia.boleto@email.com");
+        when(ai.complete(any(), any())).thenReturn(new Completion("", List.of(new ToolCall("c1", "create_transaction",
+                "{\"type\":\"EXPENSE\",\"description\":\"Boleto da luz\",\"amount\":210,\"paid\":false,\"dueDate\":\"2099-01-10\"}"))));
+
+        JsonNode ask = ask(token, "tenho um boleto da luz de 210 que vence em 10/01/2099");
+        assertTrue(ask.path("actions").get(0).path("summary").asString().contains("pendente"));
+        String id = ask.path("actions").get(0).path("id").asString();
+        mockMvc.perform(post("/api/v1/assistant/actions/" + id + "/confirm").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+
+        assertEquals("PENDING", firstTransactionStatus(token));
+    }
+
+    @Test
+    void editingAndDeletingFindTheTransactionByDescriptionAndRefuseAmbiguity() throws Exception {
+        String token = register("Familia Busca", "Beto Busca", "beto.busca@email.com");
+        launch(token, "Padaria", 12);
+        launch(token, "Mercado Central", 80);
+        launch(token, "Mercado Bairro", 45);
+
+        // Um unico "padaria": o servidor acha sozinho, sem o modelo conhecer o id.
+        when(ai.complete(any(), any())).thenReturn(new Completion("", List.of(new ToolCall("c1", "delete_transaction",
+                "{\"search\":\"padaria\"}"))));
+        JsonNode one = ask(token, "exclua a padaria");
+        assertTrue(one.path("actions").get(0).path("destructive").asBoolean());
+        assertTrue(one.path("actions").get(0).path("summary").asString().contains("Padaria"));
+
+        // "mercado" combina com dois: nada e preparado e o erro lista as opcoes para o modelo perguntar.
+        when(ai.complete(any(), any()))
+                .thenReturn(new Completion("", List.of(new ToolCall("c2", "delete_transaction", "{\"search\":\"mercado\"}"))))
+                .thenReturn(new Completion("Qual deles?", List.of()));
+        JsonNode ambiguous = ask(token, "exclua o mercado");
+        assertEquals(0, ambiguous.path("actions").size());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Message>> captor = ArgumentCaptor.forClass(List.class);
+        verify(ai, org.mockito.Mockito.atLeastOnce()).complete(captor.capture(), any());
+        String error = captor.getValue().stream().filter(m -> "tool".equals(m.role())).map(Message::content)
+                .reduce((a, b) -> b).orElseThrow();
+        assertTrue(error.startsWith("ERRO") && error.contains("Mercado Central") && error.contains("Mercado Bairro"), error);
+
+        // Desempatando pelo valor, edita so o certo.
+        when(ai.complete(any(), any())).thenReturn(new Completion("", List.of(new ToolCall("c3", "update_transaction",
+                "{\"search\":\"mercado\",\"searchAmount\":45,\"amount\":50}"))));
+        JsonNode edit = ask(token, "o mercado de 45 foi 50");
+        assertTrue(edit.path("actions").get(0).path("summary").asString().contains("Mercado Bairro"));
     }
 
     @Test
@@ -225,6 +275,26 @@ class AssistantIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(body);
+    }
+
+    /** Lanca direto pela API (sem IA) para montar o cenario do teste. */
+    private void launch(String token, String description, int amount) throws Exception {
+        String account = objectMapper.readTree(mockMvc.perform(get("/api/v1/accounts").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString()).get(0).path("id").asString();
+        String user = objectMapper.readTree(mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString()).path("id").asString();
+        mockMvc.perform(post("/api/v1/transactions").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":\"" + user + "\",\"accountId\":\"" + account + "\",\"type\":\"EXPENSE\","
+                                + "\"description\":\"" + description + "\",\"amount\":" + amount + ",\"transactionDate\":\"2026-10-01\"}"))
+                .andExpect(status().isOk());
+    }
+
+    private String firstTransactionStatus(String token) throws Exception {
+        String body = mockMvc.perform(get("/api/v1/transactions").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(body).path("content").get(0).path("status").asString();
     }
 
     private int transactionCount(String token) throws Exception {

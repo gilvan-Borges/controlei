@@ -253,6 +253,40 @@ class AssistantServiceTest {
     }
 
     @Test
+    void claimingToHavePreparedWithoutCallingATooIsCorrectedByANudge() {
+        when(toolbox.find("create_goal")).thenReturn(new AssistantTool("create_goal", "d", "{}", true,
+                args -> AssistantTool.Result.pending("Criar meta X", () -> "feito")));
+        when(ai.complete(any(), any()))
+                .thenReturn(text("Preparei a meta. Confirme na tela."))
+                .thenReturn(new Completion("Preparei a meta.", List.of(new ToolCall("c1", "create_goal", "{}"))));
+
+        var answer = service(ai, 10).ask("crie a meta X", List.of());
+
+        assertEquals(1, answer.actions().size());
+        verify(ai, times(2)).complete(any(), any());
+    }
+
+    @Test
+    void aFalseClaimThatSurvivesTheNudgeIsReplacedByAnHonestMessage() {
+        when(ai.complete(any(), any())).thenReturn(text("Preparei o lançamento, confirme na tela."));
+
+        var answer = service(ai, 10).ask("lance 10 reais", List.of());
+
+        assertEquals(AssistantService.CLAIM_WITHOUT_ACTION, answer.answer());
+        assertTrue(answer.actions().isEmpty());
+        verify(ai, times(2)).complete(any(), any());
+    }
+
+    @Test
+    void anOrdinaryAnswerIsNotNudged() {
+        when(ai.complete(any(), any())).thenReturn(text("Você gastou R$ 10,00 este mês."));
+
+        service(ai, 10).ask("quanto gastei?", List.of());
+
+        verify(ai, times(1)).complete(any(), any());
+    }
+
+    @Test
     void blankQuestionIsRejected() {
         assertThrows(BusinessException.class, () -> service(null, 10).ask("   ", List.of()));
     }
