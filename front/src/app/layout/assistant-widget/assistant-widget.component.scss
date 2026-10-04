@@ -23,6 +23,9 @@
   background: #047857;
   color: #fff;
   font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 
@@ -326,5 +329,82 @@
     font-size: 0.75rem;
     text-decoration: underline;
     cursor: pointer;
+  }
+}
+
+.fab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistant-fab .banknote {
+  display: block;
+  overflow: hidden;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+  animation: banknote-bob 3.2s ease-in-out infinite;
+
+  .shine {
+    animation: banknote-shine 4.5s ease-in-out infinite;
+  }
+}
+
+// Anel pulsante e rotulo só até a primeira abertura: chama a atenção sem ficar irritando depois.
+.assistant-fab.attention::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #34d399;
+  animation: fab-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.fab-hint {
+  position: fixed;
+  right: 5.1rem;
+  bottom: calc(var(--assistant-bottom) + 0.8rem);
+  z-index: 1040;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #064e3b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: hint-in 0.5s ease-out 1.2s both;
+}
+
+@keyframes banknote-bob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-2px) rotate(4deg); }
+}
+
+@keyframes banknote-shine {
+  0%, 55% { transform: translateX(0) skewX(-20deg); }
+  100% { transform: translateX(80px) skewX(-20deg); }
+}
+
+@keyframes fab-pulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes hint-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-fab .banknote,
+  .assistant-fab .banknote .shine,
+  .assistant-fab.attention::after,
+  .fab-hint {
+    animation: none;
+  }
+
+  .fab-hint {
+    opacity: 1;
   }
 }

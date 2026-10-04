@@ -35,6 +35,8 @@ export class AssistantWidgetComponent {
 
   open = false;
   loading = false;
+  /** Já abriu o assistente alguma vez: depois disso o ícone para de chamar atenção. */
+  seen = AssistantWidgetComponent.readSeen();
   settings: AssistantSettings | null = null;
   /** Painel de ciência aberto: o responsável precisa aceitar antes de ligar a IA. */
   consentOpen = false;
@@ -60,8 +62,26 @@ export class AssistantWidgetComponent {
   toggle(): void {
     this.open = !this.open;
     if (this.open) {
+      this.markSeen();
       this.loadSettings();
       setTimeout(() => this.input?.nativeElement.focus());
+    }
+  }
+
+  private markSeen(): void {
+    this.seen = true;
+    try {
+      localStorage.setItem('controlei-assistant-seen', '1');
+    } catch {
+      // armazenamento bloqueado: o ícone só volta a chamar atenção na próxima visita
+    }
+  }
+
+  private static readSeen(): boolean {
+    try {
+      return localStorage.getItem('controlei-assistant-seen') === '1';
+    } catch {
+      return false;
     }
   }
 
