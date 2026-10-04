@@ -41,7 +41,7 @@ class ReceiptScanIntegrationTest {
                 "file",
                 "cupom_fiscal.jpg",
                 "image/jpeg",
-                "fake image content".getBytes()
+                new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 16, 0x4A, 0x46}
         );
 
         mockMvc.perform(multipart("/api/v1/receipts/scan")
@@ -93,7 +93,7 @@ class ReceiptScanIntegrationTest {
     }
 
     private AuthInfo registerFamily(String familyName, String responsibleName, String email) throws Exception {
-        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha123");
+        RegisterFamilyRequest request = new RegisterFamilyRequest(familyName, responsibleName, email, "senha12345");
         String response = mockMvc.perform(post("/api/v1/auth/register-family")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

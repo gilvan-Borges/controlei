@@ -2,10 +2,17 @@ package br.com.controlei.application.services.receipt;
 
 import br.com.controlei.domain.contracts.ai.ReceiptAiClient;
 import org.junit.jupiter.api.Test;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +25,12 @@ class LlmReceiptExtractorTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 4);
     private static final List<String> CATEGORIES = List.of("Alimentacao", "Saude", "Transporte");
+    private static final ObjectProvider<MeterRegistry> NO_METERS =
+            new StaticListableBeanFactory(Map.of()).getBeanProvider(MeterRegistry.class);
     private static final String TEXT = "Estabelecimento: Farmacia Drogasil\nValor: R$ 89,50\nData: 15/08/2026";
 
     private final LlmReceiptExtractor extractor = new LlmReceiptExtractor(
-            new StaticListableBeanFactory(Map.of()).getBeanProvider(ReceiptAiClient.class), JsonMapper.builder().build());
+            new StaticListableBeanFactory(Map.of()).getBeanProvider(ReceiptAiClient.class), JsonMapper.builder().build(), NO_METERS);
 
     private Optional<ReceiptExtraction> validate(String json) {
         return extractor.validate(json, CATEGORIES, TODAY, TEXT);
@@ -117,7 +126,7 @@ class LlmReceiptExtractorTest {
         };
         var withBroken = new LlmReceiptExtractor(
                 new StaticListableBeanFactory(Map.of("ai", broken)).getBeanProvider(ReceiptAiClient.class),
-                JsonMapper.builder().build());
+                JsonMapper.builder().build(), NO_METERS);
 
         assertThat(withBroken.available()).isTrue();
         assertThat(withBroken.extract(TEXT, null, CATEGORIES, TODAY)).isEmpty();
@@ -132,9 +141,76 @@ class LlmReceiptExtractorTest {
         };
         var ex = new LlmReceiptExtractor(
                 new StaticListableBeanFactory(Map.of("ai", spy)).getBeanProvider(ReceiptAiClient.class),
-                JsonMapper.builder().build());
+                JsonMapper.builder().build(), NO_METERS);
 
         assertThat(ex.extract(TEXT, null, CATEGORIES, TODAY)).isPresent();
         assertThat(seen[0]).contains("<comprovante>").contains("</comprovante>").contains("Categorias permitidas");
+    }
+
+    @Test
+    void afterRepeatedFailuresTheCircuitOpensAndTheProviderIsNotCalledAgain() {
+        AtomicInteger calls = new AtomicInteger();
+        ReceiptAiClient broken = (system, text, image) -> {
+            calls.incrementAndGet();
+            throw new IllegalStateException("timeout");
+        };
+        var registry = new SimpleMeterRegistry();
+        var clock = new MutableClock(Instant.parse("2026-10-04T12:00:00Z"));
+        var ex = new LlmReceiptExtractor(
+                new StaticListableBeanFactory(Map.of("ai", broken)).getBeanProvider(ReceiptAiClient.class),
+                JsonMapper.builder().build(),
+                new StaticListableBeanFactory(Map.of("m", registry)).getBeanProvider(MeterRegistry.class), clock);
+
+        for (int i = 0; i < LlmReceiptExtractor.FAILURES_TO_OPEN; i++) {
+            assertThat(ex.extract(TEXT, null, CATEGORIES, TODAY)).isEmpty();
+        }
+        assertThat(ex.circuitOpen()).isTrue();
+
+        ex.extract(TEXT, null, CATEGORIES, TODAY);
+        assertThat(calls.get()).isEqualTo(LlmReceiptExtractor.FAILURES_TO_OPEN); // a chamada seguinte nem saiu
+
+        clock.advance(LlmReceiptExtractor.OPEN_FOR.plusSeconds(1));
+        assertThat(ex.circuitOpen()).isFalse();
+        ex.extract(TEXT, null, CATEGORIES, TODAY);
+        assertThat(calls.get()).isEqualTo(LlmReceiptExtractor.FAILURES_TO_OPEN + 1);
+
+        assertThat(registry.counter("controlei.receipts.ai", "outcome", "failed").count()).isEqualTo(4.0);
+        assertThat(registry.counter("controlei.receipts.ai", "outcome", "skipped_circuit_open").count()).isEqualTo(1.0);
+    }
+
+    @Test
+    void aSuccessResetsTheFailureCount() {
+        AtomicInteger n = new AtomicInteger();
+        ReceiptAiClient flaky = (system, text, image) -> {
+            if (n.incrementAndGet() % 3 != 0) {
+                throw new IllegalStateException("503");
+            }
+            return "{\"amount\": 89.50, \"confidence\": 0.8}";
+        };
+        var ex = new LlmReceiptExtractor(
+                new StaticListableBeanFactory(Map.of("ai", flaky)).getBeanProvider(ReceiptAiClient.class),
+                JsonMapper.builder().build(), NO_METERS);
+
+        for (int i = 0; i < 9; i++) {
+            ex.extract(TEXT, null, CATEGORIES, TODAY);
+        }
+        assertThat(ex.circuitOpen()).isFalse(); // duas falhas e um sucesso: nunca chega a tres seguidas
+    }
+
+    /** Relogio controlavel, so para o teste do disjuntor. */
+    private static final class MutableClock extends Clock {
+        private Instant now;
+
+        MutableClock(Instant start) {
+            this.now = start;
+        }
+
+        void advance(java.time.Duration d) {
+            now = now.plus(d);
+        }
+
+        @Override public java.time.ZoneId getZone() { return ZoneOffset.UTC; }
+        @Override public Clock withZone(java.time.ZoneId zone) { return this; }
+        @Override public Instant instant() { return now; }
     }
 }
