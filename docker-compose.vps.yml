@@ -174,7 +174,7 @@ services:
   # JavAI chega nele pelo alias "controlei-gateway".
   gateway:
     <<: *endurecido
-    image: nginxinc/nginx-unprivileged:1.27-alpine
+    image: nginxinc/nginx-unprivileged:1.30-alpine
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/proxy_api.conf:/etc/nginx/proxy_api.conf:ro
