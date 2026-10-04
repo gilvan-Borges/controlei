@@ -4,18 +4,25 @@ import br.com.controlei.domain.contracts.ai.ReceiptAiClient;
 import br.com.controlei.domain.contracts.ai.ReceiptAiClient.ReceiptImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Le comprovantes com um modelo de linguagem, tratando a resposta dele como entrada hostil.
@@ -47,17 +54,39 @@ public class LlmReceiptExtractor {
             Se um campo nao estiver legivel, use null. Nunca invente valores.
             """;
 
+    /** Falhas seguidas que abrem o disjuntor, e por quanto tempo a IA fica de fora. */
+    static final int FAILURES_TO_OPEN = 3;
+    static final Duration OPEN_FOR = Duration.ofSeconds(60);
+
     private final ObjectProvider<ReceiptAiClient> client;
     private final ObjectMapper mapper;
+    private final ObjectProvider<MeterRegistry> meters;
+    private final Clock clock;
+    private final AtomicInteger consecutiveFailures = new AtomicInteger();
+    private final AtomicReference<Instant> openUntil = new AtomicReference<>(Instant.MIN);
 
-    public LlmReceiptExtractor(ObjectProvider<ReceiptAiClient> client, ObjectMapper mapper) {
+    @Autowired
+    public LlmReceiptExtractor(ObjectProvider<ReceiptAiClient> client, ObjectMapper mapper,
+                               ObjectProvider<MeterRegistry> meters) {
+        this(client, mapper, meters, Clock.systemUTC());
+    }
+
+    LlmReceiptExtractor(ObjectProvider<ReceiptAiClient> client, ObjectMapper mapper,
+                        ObjectProvider<MeterRegistry> meters, Clock clock) {
         this.client = client;
         this.mapper = mapper;
+        this.meters = meters;
+        this.clock = clock;
     }
 
     /** Verdadeiro quando ha um provedor de IA configurado. */
     public boolean available() {
         return client.getIfAvailable() != null;
+    }
+
+    /** O disjuntor esta aberto: o provedor falhou varias vezes seguidas e esperamos antes de tentar de novo. */
+    public boolean circuitOpen() {
+        return clock.instant().isBefore(openUntil.get());
     }
 
     /** Vazio quando nao ha IA, quando ela falha ou quando a resposta nao passa na validacao. */
@@ -66,17 +95,43 @@ public class LlmReceiptExtractor {
         if (ai == null) {
             return Optional.empty();
         }
+        if (circuitOpen()) {
+            count("skipped_circuit_open");
+            return Optional.empty();
+        }
         String untrusted = "Categorias permitidas: " + String.join(", ", categories);
         if (text != null) {
             untrusted += "\n<comprovante>\n" + text + "\n</comprovante>";
         }
+        long started = System.nanoTime();
         try {
             String json = ai.completeJson(SYSTEM_PROMPT, untrusted, image);
-            return validate(json, categories, today, text);
+            consecutiveFailures.set(0);
+            Optional<ReceiptExtraction> result = validate(json, categories, today, text);
+            count(result.isPresent() ? "ok" : "rejected");
+            return result;
         } catch (RuntimeException e) {
             // Nunca loga o conteudo do comprovante: so o tipo da falha.
             log.warn("Leitura de comprovante por IA falhou: {}", e.getClass().getSimpleName());
+            if (consecutiveFailures.incrementAndGet() >= FAILURES_TO_OPEN) {
+                openUntil.set(clock.instant().plus(OPEN_FOR));
+                consecutiveFailures.set(0);
+                log.warn("Disjuntor da IA aberto por {} s", OPEN_FOR.toSeconds());
+            }
+            count("failed");
             return Optional.empty();
+        } finally {
+            MeterRegistry registry = meters.getIfAvailable();
+            if (registry != null) {
+                registry.timer("controlei.receipts.ai.latency").record(Duration.ofNanos(System.nanoTime() - started));
+            }
+        }
+    }
+
+    private void count(String outcome) {
+        MeterRegistry registry = meters.getIfAvailable();
+        if (registry != null) {
+            registry.counter("controlei.receipts.ai", "outcome", outcome).increment();
         }
     }
 
