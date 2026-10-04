@@ -181,3 +181,66 @@
     max-height: 65vh;
   }
 }
+
+.assistant-action {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #34d399;
+  border-radius: 0.75rem;
+  background: rgba(4, 120, 87, 0.15);
+
+  &[data-state='done'] {
+    border-color: var(--c-border, #3f3f46);
+    opacity: 0.85;
+  }
+
+  &[data-state='canceled'],
+  &[data-state='failed'] {
+    border-color: var(--c-border, #3f3f46);
+    opacity: 0.7;
+  }
+
+  .assistant-action-summary {
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+  }
+
+  .assistant-action-state {
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  .assistant-action-buttons {
+    display: flex;
+    gap: 0.5rem;
+
+    button {
+      flex: 1;
+      min-height: 2.75rem;
+      border-radius: 0.6rem;
+      border: 1px solid #34d399;
+      font-size: 0.9rem;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      &:focus-visible {
+        outline: 3px solid #34d399;
+        outline-offset: 2px;
+      }
+    }
+
+    .confirm {
+      background: #047857;
+      color: #fff;
+    }
+
+    .cancel {
+      background: transparent;
+      color: inherit;
+    }
+  }
+}

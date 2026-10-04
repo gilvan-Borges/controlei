@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
+import { Router } from '@angular/router';
 import { AssistantWidgetComponent } from './assistant-widget.component';
 import { AssistantService } from '../../core/services/assistant.service';
 
@@ -8,12 +9,19 @@ describe('AssistantWidgetComponent', () => {
   let fixture: ComponentFixture<AssistantWidgetComponent>;
   let component: AssistantWidgetComponent;
   const ask = vi.fn();
+  const confirm = vi.fn();
+  const cancel = vi.fn();
 
   beforeEach(async () => {
     ask.mockReset();
+    confirm.mockReset();
+    cancel.mockReset();
     await TestBed.configureTestingModule({
       declarations: [AssistantWidgetComponent],
-      providers: [{ provide: AssistantService, useValue: { ask } }]
+      providers: [
+        { provide: AssistantService, useValue: { ask, confirm, cancel } },
+        { provide: Router, useValue: { url: '/app/dashboard', routeReuseStrategy: { shouldReuseRoute: () => true }, onSameUrlNavigation: 'ignore', navigateByUrl: () => Promise.resolve(true) } }
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(AssistantWidgetComponent);
     component = fixture.componentInstance;
@@ -37,11 +45,11 @@ describe('AssistantWidgetComponent', () => {
   });
 
   it('sends the question and shows the answer', () => {
-    ask.mockReturnValue(of({ answer: 'Use Transações.', ai: false }));
+    ask.mockReturnValue(of({ answer: 'Use Transações.', ai: false, actions: [] }));
     component.send('  como lançar?  ');
 
-    expect(ask).toHaveBeenCalledWith('como lançar?');
-    expect(component.messages.at(-1)).toEqual({ from: 'assistant', text: 'Use Transações.', ai: false });
+    expect(ask).toHaveBeenCalledWith('como lançar?', []);
+    expect(component.messages.at(-1)).toEqual({ from: 'assistant', text: 'Use Transações.', ai: false, actions: [] });
     expect(component.loading).toBe(false);
   });
 
@@ -60,5 +68,59 @@ describe('AssistantWidgetComponent', () => {
     ask.mockReturnValue(throwError(() => ({ status: 500 })));
     component.send('oi');
     expect(component.messages.at(-1)?.text).toContain('Não consegui responder');
+  });
+
+  it('shows a prepared action as a card and runs it only after Confirmar', () => {
+    ask.mockReturnValue(of({ answer: 'Preparei.', ai: true, actions: [{ id: 'a1', summary: 'Lançar despesa de R$ 50,00' }] }));
+    confirm.mockReturnValue(of({ message: 'Despesa lançada.' }));
+    component.send('gastei 50');
+
+    const action = component.messages.at(-1)!.actions![0];
+    expect(action.state).toBe('pending');
+    expect(confirm).not.toHaveBeenCalled();
+
+    component.confirm(action);
+
+    expect(confirm).toHaveBeenCalledWith('a1');
+    expect(action.state).toBe('done');
+    expect(component.messages.at(-1)?.text).toBe('Despesa lançada.');
+  });
+
+  it('cancels a prepared action without executing it', () => {
+    ask.mockReturnValue(of({ answer: 'Preparei.', ai: true, actions: [{ id: 'a2', summary: 'Criar meta' }] }));
+    cancel.mockReturnValue(of(undefined));
+    component.send('crie uma meta');
+
+    const action = component.messages.at(-1)!.actions![0];
+    component.cancel(action);
+
+    expect(cancel).toHaveBeenCalledWith('a2');
+    expect(confirm).not.toHaveBeenCalled();
+    expect(action.state).toBe('canceled');
+  });
+
+  it('never executes the same action twice', () => {
+    ask.mockReturnValue(of({ answer: 'Preparei.', ai: true, actions: [{ id: 'a3', summary: 'x' }] }));
+    confirm.mockReturnValue(of({ message: 'ok' }));
+    component.send('faça');
+    const action = component.messages.at(-1)!.actions![0];
+
+    component.confirm(action);
+    component.confirm(action);
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends only user and assistant text as history, never the action cards', () => {
+    ask.mockReturnValue(of({ answer: 'Preparei.', ai: true, actions: [{ id: 'a4', summary: 'x' }] }));
+    component.send('primeira');
+    ask.mockReturnValue(of({ answer: 'ok', ai: true, actions: [] }));
+    component.send('segunda');
+
+    const history = ask.mock.calls[1][1];
+    expect(history).toEqual([
+      { role: 'user', text: 'primeira' },
+      { role: 'assistant', text: 'Preparei.' }
+    ]);
   });
 });
