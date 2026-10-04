@@ -27,6 +27,23 @@
         <div class="assistant-msg" [class.user]="m.from === 'user'">
           <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
           {{ m.text }}
+          @for (a of m.actions ?? []; track a.id) {
+            <div class="assistant-action" [attr.data-state]="a.state">
+              <p class="assistant-action-summary">{{ a.summary }}</p>
+              @if (a.state === 'pending' || a.state === 'working') {
+                <div class="assistant-action-buttons">
+                  <button type="button" class="confirm" (click)="confirm(a)" [disabled]="a.state === 'working'">
+                    {{ a.state === 'working' ? 'Executando…' : 'Confirmar' }}
+                  </button>
+                  <button type="button" class="cancel" (click)="cancel(a)" [disabled]="a.state === 'working'">Cancelar</button>
+                </div>
+              } @else {
+                <p class="assistant-action-state">
+                  {{ a.state === 'done' ? 'Feito' : a.state === 'canceled' ? 'Cancelado' : 'Não executado' }}
+                </p>
+              }
+            </div>
+          }
         </div>
       }
       @if (loading) {
@@ -56,6 +73,6 @@
         <i class="bi bi-send-fill" aria-hidden="true"></i>
       </button>
     </form>
-    <p class="assistant-note">Não vejo seus dados financeiros. Não envie senhas nem documentos.</p>
+    <p class="assistant-note">Consulto seus dados para responder e só altero algo depois da sua confirmação. Não envie senhas.</p>
   </section>
 }
