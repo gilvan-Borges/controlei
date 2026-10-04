@@ -26,6 +26,13 @@ public class RedisIdempotencyService {
      * Retorna true se é a primeira vez que o evento está sendo processado (sucesso).
      * Retorna false se o evento já foi processado anteriormente (duplicata evitada).
      */
+    /** Desfaz a reserva de um evento cujo processamento falhou, para a reentrega poder tentar de novo. */
+    public void release(UUID eventId) {
+        if (eventId != null) {
+            redisTemplate.delete(IDEMPOTENCY_PREFIX + eventId);
+        }
+    }
+
     public boolean acquireIdempotency(UUID eventId) {
         if (eventId == null) {
             return true;

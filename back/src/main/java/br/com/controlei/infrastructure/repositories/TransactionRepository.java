@@ -6,6 +6,8 @@ import br.com.controlei.infrastructure.persistence.entities.TransactionEntity;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -16,6 +18,27 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<TransactionEntity, UUID>, JpaSpecificationExecutor<TransactionEntity> {
 
     Optional<TransactionEntity> findByIdAndDeletedAtIsNull(UUID id);
+
+    /** Despesas da categoria no periodo, somadas pelo banco. Canceladas nao contam como gasto. */
+    @Query("""
+            SELECT COALESCE(SUM(t.amount), 0) FROM TransactionEntity t
+            WHERE t.familyId = :familyId AND t.categoryId = :categoryId
+              AND t.type = br.com.controlei.domain.models.enums.TransactionType.EXPENSE
+              AND t.status <> br.com.controlei.domain.models.enums.TransactionStatus.CANCELED
+              AND t.deletedAt IS NULL AND t.transactionDate BETWEEN :start AND :end""")
+    java.math.BigDecimal sumExpensesByCategory(@Param("familyId") UUID familyId, @Param("categoryId") UUID categoryId,
+                                               @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    /** Igual, restrita a um membro (orcamento individual). */
+    @Query("""
+            SELECT COALESCE(SUM(t.amount), 0) FROM TransactionEntity t
+            WHERE t.familyId = :familyId AND t.categoryId = :categoryId AND t.userId = :userId
+              AND t.type = br.com.controlei.domain.models.enums.TransactionType.EXPENSE
+              AND t.status <> br.com.controlei.domain.models.enums.TransactionStatus.CANCELED
+              AND t.deletedAt IS NULL AND t.transactionDate BETWEEN :start AND :end""")
+    java.math.BigDecimal sumExpensesByCategoryAndUser(@Param("familyId") UUID familyId, @Param("categoryId") UUID categoryId,
+                                                      @Param("userId") UUID userId,
+                                                      @Param("start") LocalDate start, @Param("end") LocalDate end);
 
     static Specification<TransactionEntity> byFamilyId(UUID familyId) {
         return (root, query, cb) -> cb.equal(root.get("familyId"), familyId);

@@ -44,6 +44,14 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     }
 
     @Override
+    public java.math.BigDecimal sumExpenses(UUID familyId, UUID categoryId, UUID userId,
+                                            LocalDate startDate, LocalDate endDate) {
+        return userId == null
+                ? repository.sumExpensesByCategory(familyId, categoryId, startDate, endDate)
+                : repository.sumExpensesByCategoryAndUser(familyId, categoryId, userId, startDate, endDate);
+    }
+
+    @Override
     public PageResult<Transaction> findAllByFamilyIdAndFilters(UUID familyId, LocalDate startDate, LocalDate endDate,
                                                                UUID userId, UUID accountId, UUID categoryId,
                                                                TransactionType type, TransactionStatus status,

@@ -29,6 +29,10 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         configProps.put(ProducerConfig.RETRIES_CONFIG, 3);
         configProps.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 500);
+        // O relay do outbox espera no maximo 5 s por envio; sem teto, o primeiro envio com o broker fora bloquearia 60 s
+        configProps.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 5000);
+        // Junta mensagens enviadas em rajada num unico lote de rede (latencia de ate 5 ms por throughput)
+        configProps.put(ProducerConfig.LINGER_MS_CONFIG, 5);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 

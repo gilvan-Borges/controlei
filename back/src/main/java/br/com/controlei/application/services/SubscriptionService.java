@@ -8,7 +8,7 @@ import br.com.controlei.domain.models.dtos.subscription.UpgradeSubscriptionReque
 import br.com.controlei.domain.models.entities.Subscription;
 import br.com.controlei.domain.models.enums.PlanType;
 import br.com.controlei.domain.models.enums.SubscriptionStatus;
-import br.com.controlei.infrastructure.kafka.EventPublisher;
+import br.com.controlei.application.contracts.DomainEventPublisher;
 import br.com.controlei.shared.events.KafkaTopics;
 import br.com.controlei.shared.events.MemberQuotaUpdatedEvent;
 import br.com.controlei.shared.events.SubscriptionActivatedEvent;
@@ -34,11 +34,11 @@ public class SubscriptionService {
 
     private final SubscriptionRepositoryPort subscriptionRepository;
     private final AuthorizationService authorizationService;
-    private final EventPublisher eventPublisher;
+    private final DomainEventPublisher eventPublisher;
 
     public SubscriptionService(SubscriptionRepositoryPort subscriptionRepository,
                                AuthorizationService authorizationService,
-                               EventPublisher eventPublisher) {
+                               DomainEventPublisher eventPublisher) {
         this.subscriptionRepository = subscriptionRepository;
         this.authorizationService = authorizationService;
         this.eventPublisher = eventPublisher;
@@ -95,9 +95,8 @@ public class SubscriptionService {
 
         Subscription saved = subscriptionRepository.save(subscription);
 
-        // Emite eventos Kafka
-        try {
-            eventPublisher.publish(KafkaTopics.BILLING,
+        // Eventos gravados no outbox, na mesma transacao da assinatura
+        eventPublisher.publish(KafkaTopics.BILLING,
                     SubscriptionActivatedEvent.builder()
                             .subscriptionId(saved.getId())
                             .familyId(saved.getFamilyId())
@@ -118,9 +117,6 @@ public class SubscriptionService {
                             .totalAllowedMembers(saved.getTotalMembersAllowed())
                             .build()
             );
-        } catch (Exception ex) {
-            log.error("Erro ao emitir eventos de assinatura no Kafka: {}", ex.getMessage());
-        }
 
         return toResponse(saved);
     }
