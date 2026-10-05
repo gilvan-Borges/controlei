@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/bank-connections/webhook").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-family").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/config").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/demo").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/subscriptions/plans").permitAll()

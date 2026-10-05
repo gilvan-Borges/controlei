@@ -1,4 +1,5 @@
-import { TestBed } from '@angular/core/testing';
+import { ChangeDetectorRef } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
@@ -162,9 +163,23 @@ describe('LoginComponent: experiencia da tela', () => {
     expect(localStorage.getItem('controlei-theme')).toBe('light');
   });
 
+  /**
+   * Responde o GET /auth/config e redesenha. Os testes rodam sem zone.js (o app usa), entao a resposta simulada nao
+   * marca o componente sozinha: marcamos aqui, como a zona faria.
+   */
+  const answerConfig = (
+    fixture: ComponentFixture<LoginComponent>,
+    config: { registrationEnabled: boolean; demoEnabled: boolean }
+  ) => {
+    TestBed.inject(HttpTestingController).expectOne(`${environment.apiUrl}/auth/config`).flush(config);
+    fixture.componentRef.injector.get(ChangeDetectorRef).markForCheck();
+    fixture.detectChanges();
+  };
+
   it('troca entre entrar e criar conta pelas abas', () => {
     const fixture = TestBed.createComponent(LoginComponent);
     fixture.detectChanges();
+    answerConfig(fixture, { registrationEnabled: true, demoEnabled: false });
     const el: HTMLElement = fixture.nativeElement;
 
     (el.querySelector('#tab-register') as HTMLButtonElement).click();
@@ -173,5 +188,40 @@ describe('LoginComponent: experiencia da tela', () => {
     expect(el.querySelector('#regFamily')).toBeTruthy();
     expect(el.querySelector('#loginEmail')).toBeNull();
     expect(el.querySelector('#tab-register')?.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('com o cadastro fechado, esconde a aba e os convites para criar conta', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    answerConfig(fixture, { registrationEnabled: false, demoEnabled: false });
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('#tab-register')).toBeNull();
+    expect(el.textContent).not.toContain('Crie a da sua família');
+    fixture.componentInstance.goToRegister();
+    expect(fixture.componentInstance.isRegister).toBe(false);
+  });
+
+  it('no modo demonstracao, entra como visitante sem senha e vai ao painel', () => {
+    const router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    answerConfig(fixture, { registrationEnabled: false, demoEnabled: true });
+    const el: HTMLElement = fixture.nativeElement;
+
+    (el.querySelector('.btn-visitor') as HTMLButtonElement).click();
+    const req = TestBed.inject(HttpTestingController).expectOne(`${environment.apiUrl}/auth/demo`);
+    expect(req.request.method).toBe('POST');
+    req.flush({
+      accessToken: 'demo-token',
+      refreshToken: 'r',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+      user: { id: '1', name: 'Visitante', email: 'visitante@demo.controlei', familyId: 'f', role: 'RESPONSIBLE', active: true }
+    });
+
+    expect(localStorage.getItem('controlei_token')).toBe('demo-token');
+    expect(router.navigate).toHaveBeenCalledWith(['/app/dashboard']);
   });
 });

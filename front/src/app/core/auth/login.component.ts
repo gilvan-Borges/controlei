@@ -23,6 +23,11 @@ export class LoginComponent implements OnInit {
   registerError = '';
   registerSuccess = '';
 
+  /** Vem do back (GET /auth/config). Comeca fechado para a aba "Criar conta" nao piscar numa instancia fechada. */
+  registrationEnabled = false;
+  demoEnabled = false;
+  visitorLoading = false;
+
   showPassword = false;
   showRegPassword = false;
   capsLockOn = false;
@@ -52,11 +57,40 @@ export class LoginComponent implements OnInit {
     this.initTheme();
     // Check initial route to set mode
     this.checkCurrentRoute();
+    this.loadPublicConfig();
 
     this.route.queryParams.subscribe(params => {
       if (params['registered'] === 'true') {
         this.loginSuccess = 'Conta criada com sucesso! Faça login para continuar.';
         this.isRegister = false;
+      }
+    });
+  }
+
+  private loadPublicConfig(): void {
+    this.authService.getPublicConfig().subscribe({
+      next: config => {
+        this.registrationEnabled = config.registrationEnabled;
+        this.demoEnabled = config.demoEnabled;
+        if (!this.registrationEnabled && this.isRegister) {
+          this.goToLogin();
+        }
+      },
+      // Back antigo (sem a rota) ou fora do ar: mantem o comportamento de antes, com o cadastro visivel
+      error: () => {
+        this.registrationEnabled = true;
+      }
+    });
+  }
+
+  enterAsVisitor(): void {
+    this.visitorLoading = true;
+    this.loginError = '';
+    this.authService.loginAsVisitor().subscribe({
+      next: () => this.router.navigate(['/app/dashboard']),
+      error: (err) => {
+        this.visitorLoading = false;
+        this.loginError = err?.message || 'Não foi possível abrir a demonstração. Tente novamente.';
       }
     });
   }
@@ -72,6 +106,9 @@ export class LoginComponent implements OnInit {
 
   goToRegister(event?: Event): void {
     if (event) event.preventDefault();
+    if (!this.registrationEnabled) {
+      return;
+    }
     this.isRegister = true;
     this.loginError = '';
     this.loginSuccess = '';

@@ -90,35 +90,45 @@
     </header>
 
     <div class="form-shell">
-      <div class="mode-switch" role="tablist" aria-label="Entrar ou criar conta" [class.is-register]="isRegister">
-        <span class="mode-switch-pill" aria-hidden="true"></span>
-        <button
-          type="button"
-          role="tab"
-          id="tab-login"
-          aria-controls="panel-auth"
-          [attr.aria-selected]="!isRegister"
-          [class.active]="!isRegister"
-          (click)="goToLogin($event)"
-        >Entrar</button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-register"
-          aria-controls="panel-auth"
-          [attr.aria-selected]="isRegister"
-          [class.active]="isRegister"
-          (click)="goToRegister($event)"
-        >Criar conta</button>
-      </div>
+      @if (registrationEnabled) {
+        <div class="mode-switch" role="tablist" aria-label="Entrar ou criar conta" [class.is-register]="isRegister">
+          <span class="mode-switch-pill" aria-hidden="true"></span>
+          <button
+            type="button"
+            role="tab"
+            id="tab-login"
+            aria-controls="panel-auth"
+            [attr.aria-selected]="!isRegister"
+            [class.active]="!isRegister"
+            (click)="goToLogin($event)"
+          >Entrar</button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-register"
+            aria-controls="panel-auth"
+            [attr.aria-selected]="isRegister"
+            [class.active]="isRegister"
+            (click)="goToRegister($event)"
+          >Criar conta</button>
+        </div>
+      }
 
-      <section id="panel-auth" role="tabpanel" [attr.aria-labelledby]="isRegister ? 'tab-register' : 'tab-login'">
-        @if (!isRegister) {
+      <section
+        id="panel-auth"
+        [attr.role]="registrationEnabled ? 'tabpanel' : null"
+        [attr.aria-labelledby]="registrationEnabled ? (isRegister ? 'tab-register' : 'tab-login') : null"
+      >
+        @if (!isRegister || !registrationEnabled) {
           <!-- ======================= LOGIN ======================= -->
           <div class="form-view" data-view="login">
             <div class="form-heading">
-              <h2>Bem-vindo de volta</h2>
-              <p>Entre para ver como estão as finanças da sua família.</p>
+              <h2>{{ demoEnabled ? 'Conheça o Controlei' : 'Bem-vindo de volta' }}</h2>
+              <p>
+                {{ demoEnabled
+                  ? 'Entre como visitante e use o app à vontade: os dados são de exemplo e voltam ao início todo dia.'
+                  : 'Entre para ver como estão as finanças da sua família.' }}
+              </p>
             </div>
 
             @if (loginSuccess) {
@@ -133,6 +143,23 @@
                 <i class="bi bi-exclamation-octagon-fill"></i>
                 <span>{{ loginError }}</span>
               </div>
+            }
+
+            <!-- Modo demonstracao (back com DEMO_MODE=true): entrada sem senha numa familia ficticia -->
+            @if (demoEnabled) {
+              <button type="button" class="btn-visitor" (click)="enterAsVisitor()" [disabled]="visitorLoading" [attr.aria-busy]="visitorLoading">
+                <span class="btn-visitor-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
+                <span class="btn-visitor-text">
+                  <strong>{{ visitorLoading ? 'Abrindo a demonstração...' : 'Entrar como visitante' }}</strong>
+                  <small>Sem cadastro · família de exemplo com 3 meses de dados</small>
+                </span>
+                @if (visitorLoading) {
+                  <span class="spinner spinner-dark" aria-hidden="true"></span>
+                } @else {
+                  <i class="bi bi-arrow-right btn-visitor-arrow" aria-hidden="true"></i>
+                }
+              </button>
+              <div class="divider"><span>ou entre com sua conta</span></div>
             }
 
             <!-- Contas de demonstracao: so aparecem no build de desenvolvimento -->
@@ -216,10 +243,12 @@
               </button>
             </form>
 
-            <p class="form-footer">
-              Ainda não tem conta?
-              <button type="button" class="link-btn" (click)="goToRegister($event)">Crie a da sua família</button>
-            </p>
+            @if (registrationEnabled) {
+              <p class="form-footer">
+                Ainda não tem conta?
+                <button type="button" class="link-btn" (click)="goToRegister($event)">Crie a da sua família</button>
+              </p>
+            }
           </div>
         } @else {
           <!-- ======================= CADASTRO ======================= -->

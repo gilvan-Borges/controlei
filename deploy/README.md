@@ -169,3 +169,16 @@ Por decisão do dono, o Controlei é **público**: o app do Cloudflare Access fo
 O que protege a instância aberta: limite de requisições por IP no gateway (cadastro e login: 5/min), bloqueio de login por e-mail, senhas de 10 a 72 caracteres, CSP sem `unsafe-inline` em scripts, IA **desligada** (nenhum custo com estranhos) e o `admin.` do JavAI continua atrás do Access. O que ainda falta para uma instância aberta de verdade: CAPTCHA no cadastro (Turnstile) e backup do Postgres.
 
 Para fechar de novo: `REGISTRATION_ENABLED=false` no `.env` e `docker compose up -d back`, ou recriar o app do Access (Zero Trust → Access controls → Applications → política "Somente o dono").
+
+### Modo demonstração (para divulgar sem abrir o cadastro)
+
+Com `DEMO_MODE=true`, a tela de login ganha o botão **"Entrar como visitante"**: entra sem senha numa família fictícia ("Família Demonstração", e-mails `@demo.controlei`) com 3 meses de lançamentos, orçamentos e metas. O visitante usa o app normalmente (cria, edita e apaga), mas não mexe em usuários, assinatura, interruptor da IA, Open Finance nem envio de arquivos (403 com aviso). Os dados voltam ao estado inicial em cada subida do back e todo dia às 4h de Brasília (`DEMO_RESET_CRON` muda o horário). A sua família e as demais não são tocadas.
+
+```bash
+# no /opt/controlei/.env
+DEMO_MODE=true
+REGISTRATION_ENABLED=false   # a aba "Criar conta" some da tela
+docker compose up -d back
+```
+
+A IA continua seguindo `CONTROLEI_AI_ENABLED`. Se ligar, a família de demonstração já vem com o assistente ativado (os dados são fictícios); a cota é a de `CONTROLEI_AI_DAILY_LIMIT` por família, então baixe-a (ex.: 5) antes de divulgar. Para desligar a demonstração: `DEMO_MODE=false` e `docker compose up -d back`.

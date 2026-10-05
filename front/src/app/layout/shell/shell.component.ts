@@ -22,6 +22,10 @@ export interface NavGroup {
 })
 export class ShellComponent implements OnInit {
   isMobile = false;
+
+  get isDemoVisitor(): boolean {
+    return this.authService.isDemoVisitor;
+  }
   isDark = true;
   showNotificationsDrawer = false;
   unreadCount = 0;
