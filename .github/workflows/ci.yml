@@ -48,7 +48,7 @@ jobs:
       - name: PWA gerado (service worker, manifest e ícones) e sem handlers inline
         working-directory: front
         run: |
-          for f in ngsw.json ngsw-worker.js manifest.webmanifest icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
+          for f in ngsw.json ngsw-worker.js manifest.webmanifest favicon.ico icons/favicon.svg icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
             test -f "dist/front/browser/$f" || { echo "O build nao gerou $f"; exit 1; }
           done
           node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('dist/front/browser/manifest.webmanifest','utf8'));
