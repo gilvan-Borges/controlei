@@ -103,3 +103,75 @@ describe('LoginComponent: cadastro de familia', () => {
     expect(component.registerForm.get('password')?.invalid).toBe(true);
   });
 });
+
+describe('LoginComponent: experiencia da tela', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+    TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule, RouterModule.forRoot([]), HttpClientTestingModule],
+      declarations: [LoginComponent]
+    });
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+  });
+
+  it('corrigir a senha (e nao a confirmacao) libera o formulario', () => {
+    const component = TestBed.createComponent(LoginComponent).componentInstance;
+    component.registerForm.setValue({
+      familyName: 'Familia Silva',
+      name: 'Joao',
+      email: 'joao@example.com',
+      password: 'uma-senha-longa-12',
+      confirmPassword: 'uma-senha-longa-123'
+    });
+    expect(component.registerForm.get('confirmPassword')?.hasError('mismatch')).toBe(true);
+
+    component.registerForm.get('password')?.setValue('uma-senha-longa-123');
+
+    expect(component.registerForm.get('confirmPassword')?.hasError('mismatch')).toBe(false);
+    expect(component.registerForm.valid).toBe(true);
+  });
+
+  it('mede a forca da senha sem mudar a regra do formulario', () => {
+    const component = TestBed.createComponent(LoginComponent).componentInstance;
+    const strengthOf = (value: string) => {
+      component.registerForm.get('password')?.setValue(value);
+      return component.passwordStrength.level;
+    };
+
+    expect(strengthOf('')).toBe(0);
+    expect(strengthOf('curta')).toBe(1);
+    expect(strengthOf('somenteletras')).toBe(2);
+    expect(strengthOf('Senha12345')).toBe(3);
+    expect(strengthOf('Uma-Senha-Forte-2024')).toBe(4);
+  });
+
+  it('alterna o tema e guarda a escolha com a mesma chave do app', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    expect(component.isDark).toBe(true);
+
+    component.toggleTheme();
+
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('controlei-theme')).toBe('light');
+  });
+
+  it('troca entre entrar e criar conta pelas abas', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    (el.querySelector('#tab-register') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(el.querySelector('#regFamily')).toBeTruthy();
+    expect(el.querySelector('#loginEmail')).toBeNull();
+    expect(el.querySelector('#tab-register')?.getAttribute('aria-selected')).toBe('true');
+  });
+});
