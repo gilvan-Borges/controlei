@@ -521,6 +521,30 @@
     }
   }
 
+  // Microfone: contorno verde parado; vermelho, pulsando, enquanto grava
+  button.mic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    border: 1px solid var(--c-border, #3f3f46);
+    background: transparent;
+    color: var(--assistant-green);
+
+    &.recording {
+      border-color: transparent;
+      background: #b91c1c;
+      color: #fff;
+      animation: mic-pulse 1.4s ease-in-out infinite;
+    }
+  }
+
+  .mic-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
   textarea:focus-visible,
   button:focus-visible {
     outline: 3px solid var(--assistant-green-soft);
@@ -621,7 +645,32 @@
   40% { transform: translateY(-4px); opacity: 1; }
 }
 
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(185, 28, 28, 0); }
+}
+
+.voice-tag {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.voice-player {
+  display: block;
+  width: 100%;
+  height: 2.25rem;
+  margin-top: 0.5rem;
+}
+
+.voice-banner p i {
+  margin-right: 0.25rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .assistant-form .mic.recording,
   .assistant-fab .banknote,
   .assistant-fab .banknote .shine,
   .assistant-fab.attention::after,
