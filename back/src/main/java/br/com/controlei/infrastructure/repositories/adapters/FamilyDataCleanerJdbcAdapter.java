@@ -38,6 +38,7 @@ public class FamilyDataCleanerJdbcAdapter implements FamilyDataCleaner {
             "notifications",
             "audit_logs",
             "assistant_settings",
+            "voice_settings",
             "accounts",
             "categories");
 
