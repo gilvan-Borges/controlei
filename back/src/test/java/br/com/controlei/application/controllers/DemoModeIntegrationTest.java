@@ -128,6 +128,13 @@ class DemoModeIntegrationTest {
                                 {"enabled":false,"acknowledged":true}"""))
                 .andExpect(status().isForbidden());
 
+        // A voz manda audio a um provedor externo: o visitante nao liga
+        mockMvc.perform(put("/api/v1/assistant/voice/settings").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"enabled":true,"acknowledged":true}"""))
+                .andExpect(status().isForbidden());
+
         mockMvc.perform(post("/api/v1/subscriptions/upgrade").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());

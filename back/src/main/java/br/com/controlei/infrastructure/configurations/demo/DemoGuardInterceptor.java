@@ -29,6 +29,7 @@ public class DemoGuardInterceptor implements HandlerInterceptor {
             new Rule(null, "/api/v1/subscriptions"),
             new Rule(null, "/api/v1/bank-connections"),
             new Rule("PUT", "/api/v1/assistant/settings"),
+            new Rule("PUT", "/api/v1/assistant/voice/settings"),
             new Rule("POST", "/api/v1/receipts/scan"));
 
     private final DemoService demo;
