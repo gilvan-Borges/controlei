@@ -416,3 +416,7 @@ A lista completa e priorizada está na spec 07 do JavAI.
 ## Autor
 
 Gilvan Borges. Projeto pessoal; parte do código foi escrita com assistente de IA sob minha revisão.
+
+## Licença
+
+[MIT](LICENSE): pode usar, copiar e modificar, mantendo o aviso de copyright.
