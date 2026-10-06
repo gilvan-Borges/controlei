@@ -82,9 +82,11 @@ class VoiceAssistantServiceTest {
     static class FakeTts implements TextToSpeechClient {
         RuntimeException failure;
         String lastText;
+        int calls;
 
         @Override
         public byte[] synthesize(String text) {
+            calls++;
             lastText = text;
             if (failure != null) {
                 throw failure;
@@ -225,6 +227,45 @@ class VoiceAssistantServiceTest {
         stt.failure = null;
         clock.now = clock.now.plus(VoiceAssistantService.OPEN_FOR).plusSeconds(1);
         assertEquals("quanto gastei este mes?", service.ask(clip(), List.of()).transcript());
+    }
+
+    @Test
+    void speechFailuresNeverBlockTranscription() {
+        var service = service(20);
+        tts.failure = new IllegalStateException("tts fora");
+        for (int i = 0; i < VoiceAssistantService.FAILURES_TO_OPEN; i++) {
+            assertNull(service.ask(clip(), List.of()).audio());
+        }
+
+        // Disjuntor da fala aberto: a pergunta seguinte ainda transcreve e responde, so que em texto
+        var answer = service.ask(clip(), List.of());
+
+        assertEquals("quanto gastei este mes?", answer.transcript());
+        assertEquals("Você gastou R$ 1.200,00 este mês.", answer.answer());
+        assertNull(answer.audio());
+        assertEquals(VoiceAssistantService.FAILURES_TO_OPEN + 1, stt.calls);
+        assertEquals(VoiceAssistantService.FAILURES_TO_OPEN, tts.calls, "com o disjuntor da fala aberto, nem tenta sintetizar");
+    }
+
+    @Test
+    void providerFailureInTranscriptionGivesTheQuotaBack() {
+        var service = service(1);
+        stt.failure = new IllegalStateException("provedor fora");
+        assertEquals(422, assertThrows(VoiceException.class, () -> service.ask(clip(), List.of())).getStatus());
+
+        stt.failure = null;
+        assertEquals("quanto gastei este mes?", service.ask(clip(), List.of()).transcript());
+        assertEquals(429, assertThrows(VoiceException.class, () -> service.ask(clip(), List.of())).getStatus());
+    }
+
+    @Test
+    void emptyTranscriptionStillCountsInTheQuota() {
+        var service = service(1);
+        stt.text = "";
+        assertEquals(422, assertThrows(VoiceException.class, () -> service.ask(clip(), List.of())).getStatus());
+
+        stt.text = "quanto gastei este mes?";
+        assertEquals(429, assertThrows(VoiceException.class, () -> service.ask(clip(), List.of())).getStatus());
     }
 
     @Test

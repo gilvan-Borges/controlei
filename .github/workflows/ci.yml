@@ -109,6 +109,14 @@ jobs:
               echo "O compose da VPS deveria exigir $var" && exit 1
             fi
           done
+      - name: Gateway libera o microfone so para o proprio site (voz do assistente)
+        run: |
+          # microphone=() bloqueia o getUserMedia atras do gateway e a voz para de funcionar so em producao
+          policy=$(grep -o 'Permissions-Policy "[^"]*"' nginx/nginx.conf)
+          echo "$policy"
+          echo "$policy" | grep -q 'microphone=(self)' || { echo "Permissions-Policy precisa de microphone=(self)"; exit 1; }
+          echo "$policy" | grep -q 'camera=()' || { echo "camera deve continuar bloqueada"; exit 1; }
+          echo "$policy" | grep -q 'geolocation=()' || { echo "geolocation deve continuar bloqueada"; exit 1; }
       - name: Configuracao do gateway e do front passa no nginx -t
         run: |
           # Os upstreams se chamam back e front; fora do Compose eles nao resolvem, entao apontam para o loopback

@@ -16,7 +16,8 @@ import java.util.Map;
 /**
  * Transcricao pelo OpenRouter. O /audio/transcriptions dele NAO e o multipart da OpenAI: recebe JSON com o audio em
  * base64 ({@code input_audio: {data, format}}) e devolve {@code {text}}. Por isso este adapter usa RestClient direto,
- * e nao o OpenAiAudioTranscriptionModel do Spring AI (que manda multipart). O audio so passa pela memoria.
+ * e nao o OpenAiAudioTranscriptionModel do Spring AI (que manda multipart). O audio so passa pela memoria e o pedido
+ * proibe o provedor de guardar ou treinar com ele ({@code data_collection=deny}), como o chat e os comprovantes.
  */
 public class OpenRouterSpeechToTextClient implements SpeechToTextClient {
 
@@ -44,6 +45,7 @@ public class OpenRouterSpeechToTextClient implements SpeechToTextClient {
         body.put("input_audio", Map.of("data", Base64.getEncoder().encodeToString(audio), "format", format(filename)));
         body.put("language", "pt");
         body.put("temperature", 0);
+        body.put("provider", Map.of("data_collection", "deny"));
         String response = http.post()
                 .uri("/audio/transcriptions")
                 .contentType(MediaType.APPLICATION_JSON)

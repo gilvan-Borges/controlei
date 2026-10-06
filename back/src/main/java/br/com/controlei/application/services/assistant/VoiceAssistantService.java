@@ -36,7 +36,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>Regras proprias da voz:
  * <ul>
  *   <li>interruptor proprio por familia, desligado por padrao, e so funciona com o assistente tambem ligado;</li>
- *   <li>cota diaria propria e disjuntor proprio ({@value #FAILURES_TO_OPEN} falhas seguidas do provedor de voz);</li>
+ *   <li>cota diaria propria (devolvida quando o provedor falha na transcricao) e DOIS disjuntores, um para a transcricao
+ *       e outro para a sintese ({@value #FAILURES_TO_OPEN} falhas seguidas cada): a fala e opcional e suas falhas nunca
+ *       derrubam a transcricao;</li>
  *   <li>a transcricao e entrada nao confiavel: entra como pergunta comum, nunca como instrucao do sistema;</li>
  *   <li>a falha da sintese nunca derruba a resposta: volta o texto com audio nulo;</li>
  *   <li>nada de audio ou transcricao em disco, banco ou log (no log: tamanho, duracao e resultado);</li>
@@ -72,8 +74,31 @@ public class VoiceAssistantService {
     private final AuditLogService audit;
     private final AiQuota quota;
     private final Clock clock;
-    private final AtomicInteger consecutiveFailures = new AtomicInteger();
-    private final AtomicReference<Instant> openUntil = new AtomicReference<>(Instant.MIN);
+    /** Transcricao: aberto, a voz responde 503 (sem ela nao ha pergunta). */
+    private final Breaker transcription = new Breaker();
+    /** Sintese: aberto, a resposta segue so em texto. */
+    private final Breaker speech = new Breaker();
+
+    /** Disjuntor simples: {@value #FAILURES_TO_OPEN} falhas seguidas abrem por {@link #OPEN_FOR}. */
+    private final class Breaker {
+        private final AtomicInteger consecutiveFailures = new AtomicInteger();
+        private final AtomicReference<Instant> openUntil = new AtomicReference<>(Instant.MIN);
+
+        boolean open() {
+            return clock.instant().isBefore(openUntil.get());
+        }
+
+        void ok() {
+            consecutiveFailures.set(0);
+        }
+
+        void failed() {
+            if (consecutiveFailures.incrementAndGet() >= FAILURES_TO_OPEN) {
+                openUntil.set(clock.instant().plus(OPEN_FOR));
+                consecutiveFailures.set(0);
+            }
+        }
+    }
 
     @Autowired
     public VoiceAssistantService(ObjectProvider<SpeechToTextClient> stt, ObjectProvider<TextToSpeechClient> tts,
@@ -109,7 +134,7 @@ public class VoiceAssistantService {
         if (!assistantSettings.isEnabled(familyId) || !voiceSettings.isEnabled(familyId)) {
             throw new ForbiddenException("A voz do assistente está desativada para a sua família.");
         }
-        if (circuitOpen()) {
+        if (transcription.open()) {
             throw VoiceException.unavailable("A voz está instável agora. Tente de novo em instantes ou digite a pergunta.");
         }
         if (!quota.tryAcquire(familyId)) {
@@ -120,9 +145,11 @@ public class VoiceAssistantService {
         try {
             transcript = AssistantService.sanitize(transcriber.transcribe(clip.bytes(), clip.mimeType(), clip.filename()),
                     AssistantService.MAX_QUESTION);
-            providerOk();
+            transcription.ok();
         } catch (RuntimeException e) {
-            providerFailed();
+            transcription.failed();
+            // A familia nao paga pela falha do provedor (transcricao vazia, abaixo, continua contando)
+            quota.release(familyId);
             logOutcome(clip, "falha na transcricao (" + e.getClass().getSimpleName() + ")");
             throw VoiceException.notUnderstood("Não consegui transcrever o áudio. Tente de novo ou digite a pergunta.");
         }
@@ -143,15 +170,15 @@ public class VoiceAssistantService {
     private AudioReply speak(String answer) {
         TextToSpeechClient synthesizer = tts.getIfAvailable();
         String text = speakable(answer);
-        if (synthesizer == null || text.isBlank() || circuitOpen()) {
+        if (synthesizer == null || text.isBlank() || speech.open()) {
             return null;
         }
         try {
             byte[] mp3 = synthesizer.synthesize(text);
-            providerOk();
+            speech.ok();
             return mp3 == null || mp3.length == 0 ? null : new AudioReply("audio/mpeg", Base64.getEncoder().encodeToString(mp3));
         } catch (RuntimeException e) {
-            providerFailed();
+            speech.failed();
             log.warn("voz: sintese falhou ({}); resposta segue so em texto", e.getClass().getSimpleName());
             return null;
         }
@@ -202,21 +229,6 @@ public class VoiceAssistantService {
         }
         int space = cut.lastIndexOf(' ');
         return (space > 0 ? cut.substring(0, space) : cut) + "...";
-    }
-
-    private boolean circuitOpen() {
-        return clock.instant().isBefore(openUntil.get());
-    }
-
-    private void providerOk() {
-        consecutiveFailures.set(0);
-    }
-
-    private void providerFailed() {
-        if (consecutiveFailures.incrementAndGet() >= FAILURES_TO_OPEN) {
-            openUntil.set(clock.instant().plus(OPEN_FOR));
-            consecutiveFailures.set(0);
-        }
     }
 
     /** So metadados: o audio e a transcricao nunca vao para o log. */
