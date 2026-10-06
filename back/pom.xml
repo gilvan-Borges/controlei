@@ -24,7 +24,21 @@
 		<tomcat.version>11.0.25</tomcat.version>
 		<jackson-2-bom.version>2.21.7</jackson-2-bom.version>
 		<jackson-bom.version>3.1.7</jackson-bom.version>
+
+		<!-- Spring AI 2.0.x: primeira linha estavel sobre o Spring Framework 7 / Spring Boot 4 (docs/decisao-spring-ai-voz.md) -->
+		<spring-ai.version>2.0.1</spring-ai.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -49,6 +63,11 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<!-- Voz do assistente (transcricao e fala). So o modulo, sem o starter: nada se configura sozinho -->
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-openai</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>br.com.controlei</groupId>
