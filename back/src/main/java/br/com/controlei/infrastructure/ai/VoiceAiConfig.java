@@ -24,8 +24,9 @@ import java.util.Locale;
  * <p>Os modelos sao montados aqui, a mao, e nao pelo starter do Spring AI: nada se configura sozinho por existir no
  * classpath.
  *
- * <p>{@code controlei.voice.provider}: com {@code openrouter} (padrao, o provedor da IA), a transcricao usa o formato
- * proprio do OpenRouter (JSON com base64) e a fala usa o Spring AI; com {@code openai}, as duas usam o Spring AI.
+ * <p>{@code controlei.voice.provider}: com {@code openrouter} (padrao, o provedor da IA), transcricao e fala vao por
+ * RestClient no formato do OpenRouter, com {@code data_collection=deny} (o Spring AI nao deixa incluir esse campo, e a
+ * transcricao dele manda multipart, que o OpenRouter nao aceita); com {@code openai}, as duas usam o Spring AI.
  */
 @Configuration
 @ConditionalOnProperty(name = "controlei.voice.enabled", havingValue = "true")
@@ -64,10 +65,8 @@ public class VoiceAiConfig {
                 .build();
     }
 
-    @Bean
-    public OpenAiAudioSpeechModel voiceSpeechModel(
-            @Value("${controlei.voice.tts-model:openai/gpt-4o-mini-tts-2025-12-15}") String model,
-            @Value("${controlei.voice.tts-voice:alloy}") String voice) {
+    /** Fala pelo Spring AI (formato da OpenAI). Usada com {@code controlei.voice.provider=openai}. */
+    public OpenAiAudioSpeechModel voiceSpeechModel(String model, String voice) {
         return OpenAiAudioSpeechModel.builder()
                 .options(OpenAiAudioSpeechOptions.builder()
                         .apiKey(apiKey)
@@ -90,7 +89,12 @@ public class VoiceAiConfig {
     }
 
     @Bean
-    public TextToSpeechClient textToSpeechClient(OpenAiAudioSpeechModel voiceSpeechModel) {
-        return new SpringAiTextToSpeechClient(voiceSpeechModel);
+    public TextToSpeechClient textToSpeechClient(
+            ObjectMapper mapper,
+            @Value("${controlei.voice.tts-model:openai/gpt-4o-mini-tts-2025-12-15}") String model,
+            @Value("${controlei.voice.tts-voice:alloy}") String voice) {
+        return openRouter
+                ? new OpenRouterTextToSpeechClient(mapper, apiKey, baseUrl, model, voice)
+                : new SpringAiTextToSpeechClient(voiceSpeechModel(model, voice));
     }
 }

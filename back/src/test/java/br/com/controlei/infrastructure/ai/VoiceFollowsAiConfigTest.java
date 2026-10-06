@@ -43,6 +43,7 @@ class VoiceFollowsAiConfigTest {
             assertEquals("https://provedor.exemplo/api/v1", env.getProperty("controlei.voice.base-url"));
             assertEquals("openai/whisper-large-v3-turbo", env.getProperty("controlei.voice.stt-model"));
             assertTrue(stt.getIfAvailable() instanceof OpenRouterSpeechToTextClient, "o OpenRouter usa o formato proprio dele");
+            assertTrue(tts.getIfAvailable() instanceof OpenRouterTextToSpeechClient, "a fala tambem leva data_collection=deny");
         }
     }
 

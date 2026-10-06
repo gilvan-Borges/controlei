@@ -57,6 +57,7 @@ class VoiceAiAdaptersTest {
             exchange.close();
         });
         server.createContext("/v1/audio/speech", exchange -> {
+            received.put("tts.type", String.valueOf(exchange.getRequestHeaders().getFirst("Content-Type")));
             received.put("tts.body", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             exchange.getResponseHeaders().add("Content-Type", "audio/mpeg");
             exchange.sendResponseHeaders(200, MP3.length);
@@ -88,6 +89,24 @@ class VoiceAiAdaptersTest {
         assertEquals("pt", json.path("language").asString());
         assertEquals("webm", json.path("input_audio").path("format").asString());
         assertArrayEquals(audio, java.util.Base64.getDecoder().decode(json.path("input_audio").path("data").asString()));
+        assertEquals("deny", json.path("provider").path("data_collection").asString(), "o audio nao pode ser guardado pelo provedor");
+    }
+
+    @Test
+    void openRouterSpeechSendsJsonWithDataCollectionDenyAndReturnsMp3() throws Exception {
+        TextToSpeechClient tts = openRouter.textToSpeechClient(new tools.jackson.databind.ObjectMapper(),
+                "openai/gpt-4o-mini-tts-2025-12-15", "alloy");
+
+        byte[] audio = tts.synthesize("Você gastou R$ 50,00.");
+
+        assertArrayEquals(MP3, audio);
+        assertTrue(received.get("tts.type").startsWith("application/json"));
+        var json = new tools.jackson.databind.ObjectMapper().readTree(received.get("tts.body"));
+        assertEquals("openai/gpt-4o-mini-tts-2025-12-15", json.path("model").asString());
+        assertEquals("Você gastou R$ 50,00.", json.path("input").asString());
+        assertEquals("alloy", json.path("voice").asString());
+        assertEquals("mp3", json.path("response_format").asString());
+        assertEquals("deny", json.path("provider").path("data_collection").asString(), "a resposta falada tambem nao fica no provedor");
     }
 
     @Test
@@ -106,14 +125,14 @@ class VoiceAiAdaptersTest {
     }
 
     @Test
-    void synthesizesMp3WithTheConfiguredVoice() {
-        TextToSpeechClient tts = openRouter.textToSpeechClient(openRouter.voiceSpeechModel("openai/gpt-4o-mini-tts-2025-12-15", "alloy"));
+    void springAiSynthesizesMp3WithTheConfiguredVoiceForProviderOpenai() {
+        TextToSpeechClient tts = config.textToSpeechClient(new tools.jackson.databind.ObjectMapper(), "gpt-4o-mini-tts", "alloy");
 
         byte[] audio = tts.synthesize("Você gastou R$ 50,00.");
 
         assertArrayEquals(MP3, audio);
         String body = received.get("tts.body");
-        assertTrue(body.contains("\"openai/gpt-4o-mini-tts-2025-12-15\""));
+        assertTrue(body.contains("\"gpt-4o-mini-tts\""));
         assertTrue(body.contains("\"alloy\""));
         assertTrue(body.contains("mp3"));
         assertTrue(body.contains("Você gastou R$ 50,00."));
