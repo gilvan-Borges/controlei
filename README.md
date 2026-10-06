@@ -299,16 +299,16 @@ flowchart LR
   SW -->|não| E403["403"]
   SW --> QC{"Cota e disjuntor<br/>da voz ok?"}
   QC -->|não| E429["429 / 503"]
-  QC --> STT["SpeechToTextClient<br/>Spring AI · Whisper · pt"]
+  QC --> STT["SpeechToTextClient<br/>OpenRouter · Whisper V3 Turbo · pt"]
   STT -->|"vazio ou falha"| E422["422"]
   STT --> AG["AssistantService.ask<br/>o MESMO agente do texto<br/>tool calling · confirmação"]
-  AG --> TTS["TextToSpeechClient<br/>Spring AI · TTS · MP3<br/>≈600 caracteres, sem markdown"]
+  AG --> TTS["TextToSpeechClient<br/>Spring AI · gpt-4o-mini-tts · MP3<br/>≈600 caracteres, sem markdown"]
   TTS -->|falhou| TXT["Resposta só em texto<br/>audio: null"]
   TTS --> OUT["transcript + answer +<br/>actions + áudio"]
   OUT --> CARD["Cartões de confirmação<br/>/actions/{id}/confirm"]
 ```
 
-- **Portas na aplicação, Spring AI na infraestrutura.** `SpeechToTextClient` e `TextToSpeechClient` ficam em `application/contracts`; os adapters (`OpenAiAudioTranscriptionModel` e `OpenAiAudioSpeechModel`, Spring AI 2.0.1) ficam em `infrastructure/ai` e só existem com `CONTROLEI_VOICE_ENABLED=true`. Sem eles, a rota responde 503 e o chat de texto segue igual. A escolha da versão está em [docs/decisao-spring-ai-voz.md](docs/decisao-spring-ai-voz.md).
+- **Portas na aplicação, Spring AI na infraestrutura.** `SpeechToTextClient` e `TextToSpeechClient` ficam em `application/contracts`; os adapters (`OpenAiAudioTranscriptionModel` e `OpenAiAudioSpeechModel`, Spring AI 2.0.1) ficam em `infrastructure/ai` e só existem com a IA ligada no servidor: a voz não tem variável própria, usa a mesma chave e o mesmo provedor da IA, o OpenRouter (`controlei.voice.*` no `application.properties`). A fala usa o `OpenAiAudioSpeechModel` do Spring AI, porque o `/audio/speech` do OpenRouter segue o formato da OpenAI. A transcrição usa um adapter com `RestClient`, porque o `/audio/transcriptions` do OpenRouter recebe JSON com o áudio em base64, e não o multipart que o Spring AI envia. Com `controlei.voice.provider=openai`, a transcrição também passa pelo Spring AI. Sem eles, a rota responde 503 e o chat de texto segue igual. A escolha da versão está em [docs/decisao-spring-ai-voz.md](docs/decisao-spring-ai-voz.md).
 - **Upload validado pelo conteúdo:** até 2 MB; WebM, OGG, MP3, WAV ou MP4, conferidos pelos *magic bytes* (o `Content-Type` do navegador não prova nada). Duração: exata no WAV (cabeçalho); nos formatos comprimidos, vale a duração declarada pelo navegador, o teto de tamanho e o corte de 60 s do gravador.
 - **Custo e disponibilidade próprios:** cota diária de voz por família (20 por padrão), disjuntor próprio (3 falhas seguidas do provedor abrem por 60 s), chamadas ao provedor fora de qualquer transação do banco. Se a síntese falhar, a resposta volta em texto; a falha da voz nunca derruba a resposta.
 - **Nada fica guardado:** o áudio vive só na memória da requisição; nunca vai para disco, banco ou log. No log entram só tamanho, tipo, duração e resultado.
@@ -369,12 +369,8 @@ Principais variáveis (veja `.env.example` e `.env.vps.example`):
 | `CONTROLEI_AI_MODEL` | modelo | `google/gemini-2.5-flash` |
 | `CONTROLEI_AI_DAILY_LIMIT` | leituras de comprovante por família por dia | 30 |
 | `controlei.ai.assistant-daily-limit-per-family` | perguntas ao assistente por família por dia | 40 |
-| `CONTROLEI_VOICE_ENABLED` | liga a voz do assistente no servidor (cada família ainda ativa) | `false` |
-| `CONTROLEI_VOICE_API_KEY` | chave do provedor de voz (obrigatória com a voz ligada) | vazio |
-| `CONTROLEI_VOICE_BASE_URL` | API compatível com `/audio/transcriptions` e `/audio/speech` da OpenAI | `https://api.openai.com/v1` |
-| `CONTROLEI_VOICE_STT_MODEL` / `CONTROLEI_VOICE_TTS_MODEL` | modelos de transcrição e de fala | `whisper-1` / `tts-1` |
-| `CONTROLEI_VOICE_TTS_VOICE` | voz da resposta | `alloy` |
-| `CONTROLEI_VOICE_DAILY_LIMIT` (`controlei.ai.voice-daily-limit-per-family`) | perguntas por voz por família por dia | 20 |
+| `controlei.voice.*` (no `application.properties`, sem variável própria) | voz do assistente: segue `CONTROLEI_AI_ENABLED`, usa a mesma chave (`CONTROLEI_AI_API_KEY`) e o mesmo provedor (OpenRouter); transcrição `openai/whisper-large-v3-turbo`, fala `openai/gpt-4o-mini-tts-2025-12-15`, voz `alloy` | ligada junto com a IA; cada família ainda ativa |
+| `controlei.ai.voice-daily-limit-per-family` | perguntas por voz por família por dia | 20 |
 | `OPENFINANCE_WEBHOOK_SECRET` | assinatura HMAC do webhook | vazio (nenhum webhook aceito) |
 
 Ligar a IA no servidor **não** a ativa para as famílias: cada família precisa do aceite do responsável no próprio assistente.

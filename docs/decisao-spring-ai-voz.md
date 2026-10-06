@@ -21,8 +21,25 @@ A voz do assistente precisa de duas coisas de um provedor externo: transcrição
 Usar o **Spring AI 2.0.1** pelo BOM oficial (`spring-ai-bom`), importando **só o módulo** `spring-ai-openai`, sem o `spring-ai-starter-model-openai`.
 
 - **Por que a 2.0.1:** é a versão estável mais nova, feita sobre o Spring Framework 7 (o mesmo do Boot 4.1). A 2.1.0 ainda é milestone.
-- **Por que sem o starter:** o starter configura modelos de chat, embeddings e áudio a partir de `spring.ai.openai.*` só por estar no classpath. Aqui os dois modelos são montados à mão em `VoiceAiConfig`, que só existe com `CONTROLEI_VOICE_ENABLED=true`, usa uma chave própria da voz e falha na subida se a chave faltar. O chat de texto continua no provedor e na chave dele.
+- **Por que sem o starter:** o starter configura modelos de chat, embeddings e áudio a partir de `spring.ai.openai.*` só por estar no classpath. Aqui os dois modelos são montados à mão em `VoiceAiConfig`, que só existe com a voz ligada e falha na subida se a chave faltar.
 - **Onde fica:** só em `infrastructure/ai`. A aplicação conhece apenas as portas `SpeechToTextClient` e `TextToSpeechClient` (`application/contracts`); trocar de provedor ou voltar ao plano B (`RestClient`) não muda nada fora da infraestrutura.
+
+## Configuração: sem variáveis próprias
+
+A voz não ganhou variáveis de ambiente. Em `application.properties`, `controlei.voice.enabled`, `controlei.voice.api-key` e `controlei.voice.base-url` apontam para `controlei.ai.enabled`, `controlei.ai.api-key` e `controlei.ai.base-url`: a voz liga junto com a IA do servidor e usa a mesma chave e o mesmo provedor. Modelos (`whisper-1`, `tts-1`), voz (`alloy`) e a cota (20/dia por família) ficam fixos no arquivo.
+
+### OpenRouter: fala pelo Spring AI, transcrição por adapter próprio
+
+O provedor da IA é o OpenRouter, que tem as duas rotas de áudio, mas só uma no formato da OpenAI:
+
+| Rota | Formato no OpenRouter | Adapter |
+|---|---|---|
+| `/audio/speech` | igual ao da OpenAI (JSON `model`, `input`, `voice`, `response_format`; resposta em bytes de áudio) | `OpenAiAudioSpeechModel` do **Spring AI** |
+| `/audio/transcriptions` | **diferente:** JSON com `input_audio: { data (base64), format }`, `model`, `language`; resposta `{ text, usage }` | `OpenRouterSpeechToTextClient` com **RestClient** (o Spring AI manda multipart, que o OpenRouter não aceita) |
+
+Modelos, escolhidos no catálogo do OpenRouter: **`openai/whisper-large-v3-turbo`** para transcrever (aceita webm, ogg, mp3, mp4 e wav; 99+ idiomas; US$ 0,000003/s, cerca de 33 vezes mais barato que o `openai/whisper-1`) e **`openai/gpt-4o-mini-tts-2025-12-15`** para falar (MP3, voz `alloy`). `controlei.voice.provider=openai` volta a transcrição para o Spring AI, para um provedor OpenAI de verdade.
+
+Se o provedor recusar alguma das rotas, a transcrição falha com 422, o disjuntor da voz abre depois de 3 falhas e o chat de texto segue normal.
 
 ## Detalhe descoberto no teste
 

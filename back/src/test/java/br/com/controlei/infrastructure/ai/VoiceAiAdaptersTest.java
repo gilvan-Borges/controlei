@@ -30,12 +30,24 @@ class VoiceAiAdaptersTest {
     private HttpServer server;
     private final Map<String, String> received = new ConcurrentHashMap<>();
     private VoiceAiConfig config;
+    private VoiceAiConfig openRouter;
 
     @BeforeEach
     void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v1/audio/transcriptions", exchange -> {
             received.put("stt.auth", exchange.getRequestHeaders().getFirst("Authorization"));
+            received.put("stt.type", String.valueOf(exchange.getRequestHeaders().getFirst("Content-Type")));
+            if (received.get("stt.type").startsWith("application/json")) {
+                // Formato do OpenRouter: JSON com base64, resposta {text}
+                received.put("stt.body", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+                byte[] json = "{\"text\":\"quanto gastei no mercado?\",\"usage\":{\"seconds\":2}}".getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, json.length);
+                exchange.getResponseBody().write(json);
+                exchange.close();
+                return;
+            }
             received.put("stt.body", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.ISO_8859_1));
             // O Spring AI pede response_format=text; nesse formato a API devolve o texto puro, sem JSON
             byte[] body = "quanto gastei no mercado?\n".getBytes(StandardCharsets.UTF_8);
@@ -52,7 +64,9 @@ class VoiceAiAdaptersTest {
             exchange.close();
         });
         server.start();
-        config = new VoiceAiConfig("chave-de-teste", "http://127.0.0.1:" + server.getAddress().getPort() + "/v1");
+        String base = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1";
+        config = new VoiceAiConfig("chave-de-teste", base, "openai");
+        openRouter = new VoiceAiConfig("chave-de-teste", base, "openrouter");
     }
 
     @AfterEach
@@ -61,8 +75,24 @@ class VoiceAiAdaptersTest {
     }
 
     @Test
+    void openRouterTranscriptionSendsJsonWithBase64AndReadsText() throws Exception {
+        SpeechToTextClient stt = openRouter.speechToTextClient(new tools.jackson.databind.ObjectMapper(), "openai/whisper-1");
+        byte[] audio = {0x1A, 0x45, (byte) 0xDF, (byte) 0xA3};
+
+        String text = stt.transcribe(audio, "audio/webm", "pergunta.webm");
+
+        assertEquals("quanto gastei no mercado?", text);
+        assertEquals("Bearer chave-de-teste", received.get("stt.auth"));
+        var json = new tools.jackson.databind.ObjectMapper().readTree(received.get("stt.body"));
+        assertEquals("openai/whisper-1", json.path("model").asString());
+        assertEquals("pt", json.path("language").asString());
+        assertEquals("webm", json.path("input_audio").path("format").asString());
+        assertArrayEquals(audio, java.util.Base64.getDecoder().decode(json.path("input_audio").path("data").asString()));
+    }
+
+    @Test
     void transcribesInPortugueseSendingTheAudioWithItsExtension() {
-        SpeechToTextClient stt = config.speechToTextClient(config.voiceTranscriptionModel("whisper-1"));
+        SpeechToTextClient stt = config.speechToTextClient(new tools.jackson.databind.ObjectMapper(), "whisper-1");
 
         String text = stt.transcribe(new byte[]{0x1A, 0x45, (byte) 0xDF, (byte) 0xA3}, "audio/webm", "pergunta.webm");
 
@@ -77,13 +107,13 @@ class VoiceAiAdaptersTest {
 
     @Test
     void synthesizesMp3WithTheConfiguredVoice() {
-        TextToSpeechClient tts = config.textToSpeechClient(config.voiceSpeechModel("tts-1", "alloy"));
+        TextToSpeechClient tts = openRouter.textToSpeechClient(openRouter.voiceSpeechModel("openai/gpt-4o-mini-tts-2025-12-15", "alloy"));
 
         byte[] audio = tts.synthesize("Você gastou R$ 50,00.");
 
         assertArrayEquals(MP3, audio);
         String body = received.get("tts.body");
-        assertTrue(body.contains("\"tts-1\""));
+        assertTrue(body.contains("\"openai/gpt-4o-mini-tts-2025-12-15\""));
         assertTrue(body.contains("\"alloy\""));
         assertTrue(body.contains("mp3"));
         assertTrue(body.contains("Você gastou R$ 50,00."));
@@ -98,6 +128,6 @@ class VoiceAiAdaptersTest {
 
     @Test
     void refusesToStartWithoutAKey() {
-        assertThrows(IllegalStateException.class, () -> new VoiceAiConfig(" ", "http://localhost/v1"));
+        assertThrows(IllegalStateException.class, () -> new VoiceAiConfig(" ", "http://localhost/v1", "openrouter"));
     }
 }
