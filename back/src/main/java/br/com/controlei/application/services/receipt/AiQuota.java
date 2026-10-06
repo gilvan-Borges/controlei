@@ -52,4 +52,14 @@ public class AiQuota {
         }
         return granted[0];
     }
+
+    /**
+     * Devolve uma unidade reservada hoje: o provedor falhou antes de entregar o resultado, entao a familia nao deve
+     * pagar por ela. Nunca fica abaixo de zero nem mexe em dia anterior.
+     */
+    public void release(UUID familyId) {
+        LocalDate today = LocalDate.now(clock);
+        usage.computeIfPresent(familyId, (id, day) ->
+                day.date().equals(today) && day.used() > 0 ? new Day(today, day.used() - 1) : day);
+    }
 }
