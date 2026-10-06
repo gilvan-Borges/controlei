@@ -6,17 +6,21 @@ import br.com.controlei.domain.exceptions.DomainRuleException;
 import br.com.controlei.application.exceptions.ForbiddenException;
 import br.com.controlei.application.exceptions.NotFoundException;
 import br.com.controlei.application.exceptions.UnauthorizedException;
+import br.com.controlei.application.exceptions.VoiceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -111,6 +115,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /** Campo de arquivo obrigatorio ausente num multipart (ex.: "audio" na rota de voz). */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiError> handleMissingPartException(
+            MissingServletRequestPartException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                ErrorCode.VALIDATION_ERROR.getCode(),
+                "Arquivo obrigatorio ausente: " + ex.getRequestPartName(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleTypeMismatchException(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
@@ -135,6 +153,16 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /** Erros da rota de voz em ProblemDetail (RFC 9457); "message" repete o detalhe para o front mostrar como os demais. */
+    @ExceptionHandler(VoiceException.class)
+    public ResponseEntity<ProblemDetail> handleVoiceException(VoiceException ex, HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(ex.getStatus()), ex.getMessage());
+        problem.setTitle(ex.getTitle());
+        problem.setInstance(java.net.URI.create(request.getRequestURI()));
+        problem.setProperty("message", ex.getMessage());
+        return ResponseEntity.status(ex.getStatus()).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem);
     }
 
     /** Regra de negocio violada, venha da aplicacao (BusinessException) ou direto do dominio (DomainRuleException). */
