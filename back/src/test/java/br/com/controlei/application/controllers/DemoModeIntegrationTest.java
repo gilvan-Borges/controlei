@@ -128,7 +128,7 @@ class DemoModeIntegrationTest {
                                 {"enabled":false,"acknowledged":true}"""))
                 .andExpect(status().isForbidden());
 
-        // A voz manda audio a um provedor externo: o visitante nao liga
+        // A voz ja vem ligada na demonstracao; o visitante nao mexe no interruptor
         mockMvc.perform(put("/api/v1/assistant/voice/settings").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

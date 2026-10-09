@@ -1,6 +1,7 @@
 package br.com.controlei.application.services;
 
 import br.com.controlei.application.contracts.FamilyDataCleaner;
+import br.com.controlei.application.contracts.VoiceSettingsRepository;
 import br.com.controlei.application.exceptions.NotFoundException;
 import br.com.controlei.domain.contracts.PasswordHasher;
 import br.com.controlei.domain.contracts.repositories.AccountRepositoryPort;
@@ -67,6 +68,7 @@ public class DemoService {
     private final BudgetRepositoryPort budgets;
     private final FinancialGoalRepositoryPort goals;
     private final AssistantSettingsRepositoryPort assistantSettings;
+    private final VoiceSettingsRepository voiceSettings;
     private final FamilyDefaultsService familyDefaults;
     private final FamilyDataCleaner cleaner;
     private final PasswordHasher passwordHasher;
@@ -84,6 +86,7 @@ public class DemoService {
                        BudgetRepositoryPort budgets,
                        FinancialGoalRepositoryPort goals,
                        AssistantSettingsRepositoryPort assistantSettings,
+                       VoiceSettingsRepository voiceSettings,
                        FamilyDefaultsService familyDefaults,
                        FamilyDataCleaner cleaner,
                        PasswordHasher passwordHasher) {
@@ -96,6 +99,7 @@ public class DemoService {
         this.budgets = budgets;
         this.goals = goals;
         this.assistantSettings = assistantSettings;
+        this.voiceSettings = voiceSettings;
         this.familyDefaults = familyDefaults;
         this.cleaner = cleaner;
         this.passwordHasher = passwordHasher;
@@ -138,6 +142,9 @@ public class DemoService {
         seed(familyId, visitor.getId(), member.getId());
         // Dados ficticios: o assistente pode receber a pergunta, desde que a IA esteja ligada na instancia.
         assistantSettings.setEnabled(familyId, true, visitor.getId());
+        // O visitante nao liga a voz (o guard barra o PUT), entao ela ja nasce ligada para poder ser testada.
+        // Sem provedor de voz no servidor, a tela continua sem o microfone (voiceAvailable=false).
+        voiceSettings.setEnabled(familyId, true, visitor.getId());
 
         demoFamilyId = familyId;
         log.info("modo demonstracao: dados da familia de visitantes recriados");
