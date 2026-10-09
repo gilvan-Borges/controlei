@@ -33,7 +33,7 @@
           </div>
           <div class="col-6">
             <small class="text-muted d-block">Status</small>
-            <span class="badge" [ngClass]="getDebtStatusBadgeClass(debt.status)">{{ debt.status }}</span>
+            <span class="badge" [ngClass]="getDebtStatusBadgeClass(debt.status)">{{ debtStatusLabel(debt.status) }}</span>
           </div>
         </div>
         @if (debt.notes) {

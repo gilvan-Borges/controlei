@@ -127,4 +127,22 @@ describe('ErrorInterceptor: renovação transparente da sessão', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
     httpMock.expectNone(`${environment.apiUrl}/auth/refresh`);
   });
+
+  it('403 de recurso fechado na demonstração mostra a mensagem do servidor e não sai da tela', () => {
+    let erro: { status: number; message: string } | undefined;
+    http.post(`${environment.apiUrl}/bank-connections`, {}).subscribe({ error: (e) => (erro = e) });
+    httpMock.expectOne(`${environment.apiUrl}/bank-connections`).flush(
+      { message: 'Indisponível na demonstração. Crie sua própria instância para usar este recurso.' },
+      { status: 403, statusText: 'Forbidden' }
+    );
+    expect(erro?.message).toContain('Indisponível na demonstração');
+    expect(router.navigate).not.toHaveBeenCalledWith(['/access-denied']);
+    expect(alert.toast).toHaveBeenCalledWith(expect.stringContaining('demonstração'), 'info');
+  });
+
+  it('403 comum continua indo para a tela de acesso negado', () => {
+    http.get(`${environment.apiUrl}/users`).subscribe({ error: () => undefined });
+    httpMock.expectOne(`${environment.apiUrl}/users`).flush({ message: 'Acesso negado' }, { status: 403, statusText: 'Forbidden' });
+    expect(router.navigate).toHaveBeenCalledWith(['/access-denied']);
+  });
 });

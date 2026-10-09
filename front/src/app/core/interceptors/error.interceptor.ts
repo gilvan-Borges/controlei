@@ -68,6 +68,10 @@ export class ErrorInterceptor implements HttpInterceptor {
     return this.refreshing$;
   }
 
+  private isDemoBlock(error: HttpErrorResponse): boolean {
+    return typeof error.error?.message === 'string' && /demonstra[çc][ãa]o/i.test(error.error.message);
+  }
+
   private handleError(error: HttpErrorResponse, req: HttpRequest<unknown>): Observable<never> {
     let message = 'Erro inesperado. Tente novamente.';
 
@@ -84,6 +88,10 @@ export class ErrorInterceptor implements HttpInterceptor {
         message = 'Sessão expirada. Faça login novamente.';
         this.alertService.toast(message, 'warning');
       }
+    } else if (error.status === 403 && this.isDemoBlock(error)) {
+      // Recurso fechado na demonstração: a mensagem do servidor explica, e a pessoa continua na tela em que estava
+      message = error.error.message;
+      this.alertService.toast(message, 'info');
     } else if (error.status === 403) {
       message = 'Você não tem permissão para acessar este recurso.';
       this.router.navigate(['/access-denied']);
