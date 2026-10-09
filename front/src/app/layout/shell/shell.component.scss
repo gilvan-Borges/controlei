@@ -619,3 +619,23 @@
     }
   }
 }
+
+/* Aviso do modo demonstracao (visitante sem cadastro) */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: var(--c-radius, 12px);
+  border: 1px solid rgba(var(--c-primary-rgb), 0.35);
+  background: rgba(var(--c-primary-rgb), 0.1);
+  color: var(--c-text);
+  font-size: 0.85rem;
+  line-height: 1.4;
+
+  i {
+    color: var(--c-primary);
+    flex-shrink: 0;
+  }
+}

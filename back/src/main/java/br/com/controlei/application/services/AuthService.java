@@ -14,6 +14,7 @@ import br.com.controlei.domain.contracts.repositories.UserRepositoryPort;
 import br.com.controlei.domain.models.dtos.auth.AuthenticatedUser;
 import br.com.controlei.domain.models.dtos.auth.LoginRequest;
 import br.com.controlei.domain.models.dtos.auth.LoginResponse;
+import br.com.controlei.domain.models.dtos.auth.PublicAuthConfig;
 import br.com.controlei.domain.models.dtos.auth.RegisterFamilyRequest;
 import br.com.controlei.domain.models.dtos.user.UserResponse;
 import br.com.controlei.domain.models.entities.Family;
@@ -41,6 +42,7 @@ public class AuthService {
     private final LoginAttemptTracker loginAttempts;
     private final boolean registrationEnabled;
     private final FamilyDefaultsService familyDefaults;
+    private final DemoService demo;
     /** Hash de uma senha qualquer, para gastar o mesmo tempo de BCrypt quando o e-mail nao existe. */
     private final String dummyHash;
 
@@ -53,6 +55,7 @@ public class AuthService {
                        LoginAttemptTracker loginAttempts,
                        @Value("${app.registration.enabled:true}") boolean registrationEnabled,
                        FamilyDefaultsService familyDefaults,
+                       DemoService demo,
                        @Value("${jwt.refresh-expiration-days:7}") long refreshTokenExpirationDays) {
         this.userRepository = userRepository;
         this.familyRepository = familyRepository;
@@ -64,6 +67,7 @@ public class AuthService {
         this.loginAttempts = loginAttempts;
         this.registrationEnabled = registrationEnabled;
         this.familyDefaults = familyDefaults;
+        this.demo = demo;
         this.dummyHash = passwordHasher.hash("senha-ficticia-para-igualar-o-tempo");
     }
 
@@ -113,24 +117,7 @@ public class AuthService {
         // Categorias comuns e uma conta "Carteira": a familia ja pode lancar a primeira despesa
         familyDefaults.createFor(savedFamily.getId(), savedResponsible.getId());
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                savedResponsible.getId(),
-                savedFamily.getId(),
-                savedResponsible.getEmail(),
-                savedResponsible.getRole()
-        );
-
-        String accessToken = tokenProvider.generateToken(authenticatedUser);
-        String refreshToken = createRefreshToken(savedResponsible.getId());
-        UserResponse userResponse = userMapper.toResponse(savedResponsible);
-
-        return new LoginResponse(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                tokenProvider.getExpirationSeconds(),
-                userResponse
-        );
+        return sessionFor(savedResponsible);
     }
 
     @Transactional
@@ -150,25 +137,18 @@ public class AuthService {
             throw new UnauthorizedException("Credenciais invalidas");
         }
         loginAttempts.recordSuccess(email);
+        return sessionFor(user);
+    }
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                user.getId(),
-                user.getFamilyId(),
-                user.getEmail(),
-                user.getRole()
-        );
+    /** Entrada sem senha na familia de demonstracao. Com o modo desligado, responde 404 como rota inexistente. */
+    @Transactional
+    public LoginResponse loginAsDemoVisitor() {
+        return sessionFor(demo.visitor());
+    }
 
-        String accessToken = tokenProvider.generateToken(authenticatedUser);
-        String refreshToken = createRefreshToken(user.getId());
-        UserResponse userResponse = userMapper.toResponse(user);
-
-        return new LoginResponse(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                tokenProvider.getExpirationSeconds(),
-                userResponse
-        );
+    /** O que a tela de login precisa saber antes de qualquer login. */
+    public PublicAuthConfig publicConfig() {
+        return new PublicAuthConfig(registrationEnabled, demo.isEnabled());
     }
 
     @Transactional
@@ -199,24 +179,7 @@ public class AuthService {
             throw new UnauthorizedException("Usuario inativo");
         }
 
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                user.getId(),
-                user.getFamilyId(),
-                user.getEmail(),
-                user.getRole()
-        );
-
-        String newAccessToken = tokenProvider.generateToken(authenticatedUser);
-        String newRefreshToken = createRefreshToken(user.getId());
-        UserResponse userResponse = userMapper.toResponse(user);
-
-        return new LoginResponse(
-                newAccessToken,
-                newRefreshToken,
-                "Bearer",
-                tokenProvider.getExpirationSeconds(),
-                userResponse
-        );
+        return sessionFor(user);
     }
 
     @Transactional
@@ -227,6 +190,23 @@ public class AuthService {
                 refreshTokenRepository.save(t);
             });
         }
+    }
+
+    private LoginResponse sessionFor(User user) {
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+                user.getId(),
+                user.getFamilyId(),
+                user.getEmail(),
+                user.getRole()
+        );
+        UserResponse userResponse = userMapper.toResponse(user);
+        return new LoginResponse(
+                tokenProvider.generateToken(authenticatedUser),
+                createRefreshToken(user.getId()),
+                "Bearer",
+                tokenProvider.getExpirationSeconds(),
+                userResponse
+        );
     }
 
     /** Devolve o token em claro (vai so para o cliente); no banco fica apenas o hash. */

@@ -5,6 +5,15 @@ import { User } from '../models/user.model';
 import { AuthResponse } from '../models/auth-response.model';
 import { environment } from '../../../environments/environment';
 
+/** O que a tela de login precisa saber antes de qualquer login (GET /auth/config, publico). */
+export interface PublicAuthConfig {
+  registrationEnabled: boolean;
+  demoEnabled: boolean;
+}
+
+/** Os usuarios da familia de demonstracao usam este dominio (ver DemoService no back). */
+const DEMO_EMAIL_DOMAIN = '@demo.controlei';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,6 +37,11 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  /** Visitante do modo demonstracao: o app mostra o aviso e esconde o que o back recusaria. */
+  get isDemoVisitor(): boolean {
+    return !!this.currentUser?.email?.endsWith(DEMO_EMAIL_DOMAIN);
+  }
+
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
@@ -38,6 +52,19 @@ export class AuthService {
 
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
+      tap(response => {
+        this.saveSession(response.accessToken, response.refreshToken, response.user);
+      })
+    );
+  }
+
+  getPublicConfig(): Observable<PublicAuthConfig> {
+    return this.http.get<PublicAuthConfig>(`${environment.apiUrl}/auth/config`);
+  }
+
+  /** Entrada sem senha na familia de demonstracao (so existe com o modo demonstracao ligado no back). */
+  loginAsVisitor(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/demo`, {}).pipe(
       tap(response => {
         this.saveSession(response.accessToken, response.refreshToken, response.user);
       })

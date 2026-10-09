@@ -28,6 +28,12 @@
     </header>
 
     <main class="mobile-content">
+      @if (isDemoVisitor) {
+        <div class="demo-banner" role="status">
+          <i class="bi bi-stars" aria-hidden="true"></i>
+          <span><strong>Modo demonstração.</strong> Fique à vontade: crie, edite e apague. Os dados de exemplo voltam ao início todo dia.</span>
+        </div>
+      }
       <router-outlet></router-outlet>
     </main>
 
@@ -188,6 +194,12 @@
       </header>
 
       <main class="page-content-area">
+        @if (isDemoVisitor) {
+          <div class="demo-banner" role="status">
+            <i class="bi bi-stars" aria-hidden="true"></i>
+            <span><strong>Modo demonstração.</strong> Fique à vontade: crie, edite e apague. Os dados de exemplo voltam ao início todo dia.</span>
+          </div>
+        }
         <router-outlet></router-outlet>
       </main>
     </div>

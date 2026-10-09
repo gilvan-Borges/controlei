@@ -48,7 +48,7 @@ jobs:
       - name: PWA gerado (service worker, manifest e ícones) e sem handlers inline
         working-directory: front
         run: |
-          for f in ngsw.json ngsw-worker.js manifest.webmanifest icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
+          for f in ngsw.json ngsw-worker.js manifest.webmanifest favicon.ico icons/favicon.svg icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
             test -f "dist/front/browser/$f" || { echo "O build nao gerou $f"; exit 1; }
           done
           node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('dist/front/browser/manifest.webmanifest','utf8'));
@@ -109,6 +109,14 @@ jobs:
               echo "O compose da VPS deveria exigir $var" && exit 1
             fi
           done
+      - name: Gateway libera o microfone so para o proprio site (voz do assistente)
+        run: |
+          # microphone=() bloqueia o getUserMedia atras do gateway e a voz para de funcionar so em producao
+          policy=$(grep -o 'Permissions-Policy "[^"]*"' nginx/nginx.conf)
+          echo "$policy"
+          echo "$policy" | grep -q 'microphone=(self)' || { echo "Permissions-Policy precisa de microphone=(self)"; exit 1; }
+          echo "$policy" | grep -q 'camera=()' || { echo "camera deve continuar bloqueada"; exit 1; }
+          echo "$policy" | grep -q 'geolocation=()' || { echo "geolocation deve continuar bloqueada"; exit 1; }
       - name: Configuracao do gateway e do front passa no nginx -t
         run: |
           # Os upstreams se chamam back e front; fora do Compose eles nao resolvem, entao apontam para o loopback

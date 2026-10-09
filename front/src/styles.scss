@@ -246,6 +246,16 @@ a {
   overflow: hidden;
 }
 
+/* Espacamento padrao do cartao: sem ele, titulo, icone e textos encostavam na borda. Cartoes com padding proprio
+   (classe da tela ou utilitario p-*) continuam valendo, porque tem precedencia sobre esta regra. */
+.card-luxury {
+  padding: 1.25rem;
+
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
 .hover-lift {
   transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 

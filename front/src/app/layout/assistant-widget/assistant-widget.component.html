@@ -96,6 +96,31 @@
       </div>
     }
 
+    @if (canOfferVoice) {
+      <div class="assistant-banner voice-banner" role="region" aria-label="Perguntas por voz">
+        @if (!voiceConsentOpen) {
+          <p><i class="bi bi-mic" aria-hidden="true"></i> Quer <strong>perguntar por voz</strong>? A resposta também volta falada.</p>
+          <button type="button" class="primary" (click)="openVoiceConsent()">Ativar voz</button>
+        } @else {
+          <p class="consent-title"><strong>Antes de ativar a voz, saiba:</strong></p>
+          <ul class="consent-list">
+            <li>O áudio gravado é enviado a um provedor externo para virar texto, e a resposta é convertida em voz por ele.</li>
+            <li>O Controlei não grava o áudio: ele só passa pelo servidor durante a pergunta.</li>
+            <li>Vale para todos os membros da família. Pedidos de alteração continuam pedindo confirmação na tela.</li>
+            <li>Você pode desativar a qualquer momento.</li>
+          </ul>
+          <label class="consent-check">
+            <input type="checkbox" [checked]="voiceAcknowledged" (change)="voiceAcknowledged = !voiceAcknowledged" />
+            <span>Estou ciente de que o áudio vai para um provedor externo</span>
+          </label>
+          <div class="assistant-banner-buttons">
+            <button type="button" class="primary" (click)="setVoiceEnabled(true)" [disabled]="!voiceAcknowledged || savingSettings">Ativar voz</button>
+            <button type="button" (click)="closeVoiceConsent()">Agora não</button>
+          </div>
+        }
+      </div>
+    }
+
     <div #list class="assistant-messages" tabindex="0" role="log" aria-live="polite" aria-relevant="additions">
       @for (m of messages; track $index) {
         <div class="assistant-row" [class.user]="m.from === 'user'">
@@ -104,6 +129,9 @@
           }
           <div class="assistant-msg" [class.user]="m.from === 'user'">
             <span class="sr-only">{{ m.from === 'user' ? 'Você:' : 'Assistente:' }}</span>
+            @if (m.voice) {
+              <span class="voice-tag"><i class="bi bi-mic-fill" aria-hidden="true"></i> por voz</span>
+            }
             @for (b of format(m.text); track $index) {
               @if (b.type === 'li') {
                 <p class="li">
@@ -129,6 +157,17 @@
                   }
                 </p>
               }
+            }
+            @if (m.audioSrc) {
+              <audio
+                class="voice-player"
+                controls
+                preload="auto"
+                [src]="m.audioSrc"
+                [autoplay]="m.autoplay"
+                (ended)="m.autoplay = false"
+                aria-label="Ouvir a resposta"
+              ></audio>
             }
             @for (a of m.actions ?? []; track a.id) {
               <div class="assistant-action" [class.destructive]="a.destructive" [attr.data-state]="a.state">
@@ -180,6 +219,9 @@
     @if (settings && settings.enabled && settings.canManage) {
       <div class="assistant-manage">
         <button type="button" (click)="setEnabled(false)" [disabled]="savingSettings">Desativar assistente com IA</button>
+        @if (voiceSettings?.enabled) {
+          <button type="button" (click)="setVoiceEnabled(false)" [disabled]="savingSettings">Desativar voz</button>
+        }
       </div>
     }
 
@@ -196,10 +238,34 @@
         (keydown)="onKey($event, field)"
         (input)="onInput(field)"
       ></textarea>
+      @if (canUseVoice) {
+        <button
+          type="button"
+          class="mic"
+          [class.recording]="micState === 'recording'"
+          (click)="toggleRecording()"
+          [disabled]="micState === 'processing' || (loading && micState !== 'recording')"
+          [attr.aria-pressed]="micState === 'recording'"
+          [attr.aria-label]="micState === 'recording' ? 'Parar e enviar a pergunta gravada' : 'Perguntar por voz'"
+          [title]="micState === 'recording' ? 'Parar e enviar' : 'Perguntar por voz (até 60 s)'"
+        >
+          <i [class]="micState === 'recording' ? 'bi bi-stop-fill' : 'bi bi-mic-fill'" aria-hidden="true"></i>
+          @if (micState === 'recording') {
+            <span class="mic-time" aria-hidden="true">{{ recordedSeconds }}s</span>
+          }
+        </button>
+      }
       <button type="submit" [disabled]="loading" aria-label="Enviar">
         <i class="bi bi-send-fill" aria-hidden="true"></i>
       </button>
     </form>
+    <p class="sr-only" aria-live="assertive">{{ voiceStatus }}</p>
+    @if (voiceSettings?.enabled && settings?.enabled && (!micSupported || micDenied)) {
+      <p class="assistant-note voice-note">
+        <i class="bi bi-mic-mute" aria-hidden="true"></i>
+        {{ micDenied ? 'Microfone bloqueado neste navegador: libere a permissão para perguntar por voz.' : 'Este navegador não grava áudio aqui; use o texto.' }}
+      </p>
+    }
     <p class="assistant-note">
       Consulto seus dados para responder e só altero algo depois da sua confirmação. Não envie senhas.
       @if (typed > maxLength - 80) {

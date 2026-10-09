@@ -65,7 +65,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equalsIgnoreCase(method)) {
             return false;
         }
-        return path.endsWith("/api/v1/auth/login") || path.endsWith("/api/v1/auth/register-family");
+        // A entrada de visitante emite sessao sem senha: limitada como o login, para ninguem gerar tokens em massa
+        return path.endsWith("/api/v1/auth/login") || path.endsWith("/api/v1/auth/register-family")
+                || path.endsWith("/api/v1/auth/demo");
     }
 
     private boolean isRateLimitExceeded(String clientIp) {

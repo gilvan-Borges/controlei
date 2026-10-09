@@ -133,6 +133,8 @@ services:
       APP_CORS_ALLOWED_ORIGINS: ${PUBLIC_URL:-https://controlei.gilvanborges.com.br}
       APP_SEED_ENABLED: "false"
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
+      # Modo demonstracao (botao "Entrar como visitante"): desligado a menos que o .env ligue
+      DEMO_MODE: ${DEMO_MODE:-false}
       OPENFINANCE_WEBHOOK_SECRET: ${OPENFINANCE_WEBHOOK_SECRET:-}
       CONTROLEI_AI_ENABLED: ${CONTROLEI_AI_ENABLED:-false}
       CONTROLEI_AI_API_KEY: ${CONTROLEI_AI_API_KEY:-}

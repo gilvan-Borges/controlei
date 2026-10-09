@@ -38,6 +38,7 @@ Em produção: **https://controlei.gilvanborges.com.br** (projeto público de es
 | Dashboard individual e familiar, relatórios (CSV), notificações | Pronto |
 | Eventos: **Transactional Outbox** → Kafka → consumidor idempotente (+ DLT) | Pronto; verificado com H2 e dublês, **não com Postgres/Kafka reais** |
 | **Assistente de IA** (consulta, lança, edita, exclui, com confirmação) | Pronto. Desligado por padrão em cada família; o responsável ativa depois de aceitar um aviso |
+| **Voz do assistente** (pergunta falada, resposta em áudio) | Pronto. Spring AI (Whisper + TTS) sobre o **mesmo** agente; desligada no servidor e em cada família por padrão, com aceite próprio do responsável |
 | **Leitura de comprovantes por IA** | Pronto, desligada por padrão |
 | **PWA** (instalável no celular, abre offline) | Pronto. Só a "casca" do app fica em cache; **os dados financeiros nunca** |
 | Acessibilidade | Auditado com axe-core (WCAG 2.1 AA) nas telas principais |
@@ -241,6 +242,8 @@ sequenceDiagram
 | `POST /api/v1/assistant/actions/{id}/confirm` | executa a ação preparada (uso único, só o dono) |
 | `POST /api/v1/assistant/actions/{id}/cancel` | descarta a ação |
 | `GET` / `PUT /api/v1/assistant/settings` | estado do interruptor / ligar ou desligar (só o responsável, com aceite) |
+| `POST /api/v1/assistant/voice` | `multipart/form-data`: `audio` (arquivo), `history` (JSON opcional, igual ao do `/ask`) e `durationMs` (opcional). Devolve `{ transcript, answer, ai, actions[], audio: { mimeType: "audio/mpeg", base64 } \| null }`; as ações são confirmadas pelo mesmo `/actions/{id}/confirm` |
+| `GET` / `PUT /api/v1/assistant/voice/settings` | estado do interruptor da voz / ligar ou desligar (só o responsável, com aceite próprio) |
 
 **Na tela:** janela de 28×40 rem (ampliável no computador, tela cheia no celular), respostas formatadas (parágrafos, listas e negrito, sem `innerHTML`), indicador de "digitando", caixa de texto que cresce (Enter envia, Shift+Enter quebra a linha), lista tocável do que o assistente sabe fazer e botão de nova conversa. Acessível: botão com rótulo, painel como diálogo, Esc fecha e devolve o foco, respostas anunciadas por `aria-live`, alvos de toque de 44 px e respeito a `prefers-reduced-motion`.
 
@@ -282,12 +285,44 @@ O app é **instalável** (Android, iOS e desktop) e abre offline.
 - o nginx do front nunca deixa `ngsw-worker.js`, `ngsw.json` e o manifest em cache "immutable" (senão o app instalado jamais atualizaria);
 - a CSP (`script-src 'self'`) bloqueia handlers inline; o CI confere o PWA gerado e a ausência deles.
 
+### Voz: perguntar falando, ouvir a resposta
+
+A voz **só muda como a pergunta entra e como a resposta sai**. O áudio vira texto e entra no **mesmo** `AssistantService.ask` do chat: mesmas ferramentas, mesmo isolamento por família, mesmos papéis, mesma cota de perguntas, mesmo limite de 5 rodadas e a **mesma confirmação**. "Gastei 50 no mercado", dito em voz alta, devolve o cartão de confirmação como no texto; só o clique executa. A transcrição é tratada como entrada não confiável, igual a qualquer texto digitado.
+
+```mermaid
+flowchart LR
+  MIC["Microfone<br/>MediaRecorder · até 60 s"] --> UP["POST /assistant/voice<br/>multipart"]
+  UP --> GW["nginx<br/>10/min · 3 MB"]
+  GW --> V{"AudioClip<br/>2 MB · tipo · magic bytes · 60 s"}
+  V -->|inválido| E400["400 / 413<br/>ProblemDetail"]
+  V --> SW{"Voz e assistente<br/>ligados na família?"}
+  SW -->|não| E403["403"]
+  SW --> QC{"Cota e disjuntor<br/>da voz ok?"}
+  QC -->|não| E429["429 / 503"]
+  QC --> STT["SpeechToTextClient<br/>OpenRouter · Whisper V3 Turbo · pt"]
+  STT -->|"vazio ou falha"| E422["422"]
+  STT --> AG["AssistantService.ask<br/>o MESMO agente do texto<br/>tool calling · confirmação"]
+  AG --> TTS["TextToSpeechClient<br/>OpenRouter · gpt-4o-mini-tts · MP3<br/>≈600 caracteres, sem markdown"]
+  TTS -->|falhou| TXT["Resposta só em texto<br/>audio: null"]
+  TTS --> OUT["transcript + answer +<br/>actions + áudio"]
+  OUT --> CARD["Cartões de confirmação<br/>/actions/{id}/confirm"]
+```
+
+- **Portas na aplicação, adapters na infraestrutura.** `SpeechToTextClient` e `TextToSpeechClient` ficam em `application/contracts`; os adapters ficam em `infrastructure/ai` e só existem com a IA ligada no servidor: a voz não tem variável própria, usa a mesma chave e o mesmo provedor da IA, o OpenRouter (`controlei.voice.*` no `application.properties`). Com o OpenRouter (o padrão), transcrição e fala vão por `RestClient`, no formato dele e com `data_collection=deny`: o `/audio/transcriptions` dele recebe JSON com o áudio em base64 (não o multipart que o Spring AI envia), e o `OpenAiAudioSpeechModel` do Spring AI não deixa incluir esse campo de privacidade. Com `controlei.voice.provider=openai`, as duas passam pelo **Spring AI 2.0.1** (`OpenAiAudioTranscriptionModel` e `OpenAiAudioSpeechModel`), também testados. Sem adapters, a rota responde 503 e o chat de texto segue igual. A escolha da versão está em [docs/decisao-spring-ai-voz.md](docs/decisao-spring-ai-voz.md).
+- **Upload validado pelo conteúdo:** até 2 MB; WebM, OGG, MP3, WAV ou MP4, conferidos pelos *magic bytes* (o `Content-Type` do navegador não prova nada). Duração: exata no WAV (cabeçalho); nos formatos comprimidos, vale a duração declarada pelo navegador, o teto de tamanho e o corte de 60 s do gravador.
+- **Custo e disponibilidade próprios:** cota diária de voz por família (20 por padrão), devolvida quando o provedor falha na transcrição (áudio sem fala continua contando). **Dois disjuntores**, um para a transcrição e outro para a fala (3 falhas seguidas abrem por 60 s): com o da fala aberto, a pergunta ainda é transcrita e respondida em texto, porque a fala é opcional e nunca derruba a transcrição. Chamadas ao provedor fora de qualquer transação do banco.
+- **Nada fica guardado:** o áudio vive só na memória da requisição; nunca vai para disco, banco ou log. No log entram só tamanho, tipo, duração e resultado. As duas chamadas ao OpenRouter (transcrição e fala) vão com `data_collection=deny`, como o chat e os comprovantes.
+- **Microfone liberado só para o próprio site:** o gateway envia `Permissions-Policy: microphone=(self)` (câmera e geolocalização continuam bloqueadas); o CI confere o cabeçalho, porque com `microphone=()` o navegador bloqueia a gravação e a voz quebra só em produção.
+- **Na tela:** botão de microfone ao lado do enviar (um toque grava, outro envia; corta sozinho em 60 s), a transcrição aparece como mensagem do usuário ("por voz"), a resposta ganha um player e toca sozinha só logo depois de a pessoa gravar. `aria-pressed` no botão, "Gravando"/"Processando" anunciados por `aria-live`, pulsação desligada com `prefers-reduced-motion`. Sem permissão de microfone, sem `MediaRecorder` ou com a voz desligada, o botão some ou uma nota explica o motivo.
+
+**Consentimento da voz.** Ligar a voz manda o **áudio** da pessoa para um provedor externo de transcrição e fala, o que é diferente de mandar texto. Por isso a voz tem **interruptor próprio por família, desligado por padrão**, e só funciona com o assistente também ligado. Só o **responsável** liga, depois de aceitar um aviso específico ("o áudio vai para um provedor externo"); o servidor recusa a ativação sem o aceite, e a mudança vai para a auditoria. O áudio e a resposta falada vão ao provedor com `data_collection=deny` (o provedor não guarda nem treina com eles). No modo demonstração, o visitante não consegue ligar a voz.
+
 ## Segurança
 
 - Senha de 10 a 72 caracteres, BCrypt custo 12; login com bloqueio por e-mail (5 falhas, 15 min) e tempo de resposta igual para conta existente ou não.
 - Access token de 15 min; refresh token rotativo, guardado como SHA-256, revogado na troca de senha; renovação com *single-flight* no front.
 - `JWT_SECRET` e `DB_PASSWORD` obrigatórios, sem valor padrão; em produção o segredo de exemplo é recusado.
-- Gateway com limites por rota (API 30 req/s; login e cadastro 5/min; comprovantes 10/min; assistente 20/min), CSP sem `unsafe-inline` em scripts, `server_tokens off`, IP real só da rede de borda.
+- Gateway com limites por rota (API 30 req/s; login e cadastro 5/min; comprovantes 10/min; assistente 20/min; voz 10/min com corpo de até 3 MB), CSP sem `unsafe-inline` em scripts, `server_tokens off`, IP real só da rede de borda.
 - Compose com **uma única porta publicada** (e nenhuma no compose da VPS); Postgres, Redis e Kafka só na rede interna; o CI confere isso.
 - Webhook do Open Finance com assinatura HMAC; sem segredo configurado, nenhum webhook é aceito.
 - Cadastro de famílias controlado por `REGISTRATION_ENABLED` (fechado por padrão no exemplo da VPS).
@@ -335,6 +370,8 @@ Principais variáveis (veja `.env.example` e `.env.vps.example`):
 | `CONTROLEI_AI_MODEL` | modelo | `google/gemini-2.5-flash` |
 | `CONTROLEI_AI_DAILY_LIMIT` | leituras de comprovante por família por dia | 30 |
 | `controlei.ai.assistant-daily-limit-per-family` | perguntas ao assistente por família por dia | 40 |
+| `controlei.voice.*` (no `application.properties`, sem variável própria) | voz do assistente: segue `CONTROLEI_AI_ENABLED`, usa a mesma chave (`CONTROLEI_AI_API_KEY`) e o mesmo provedor (OpenRouter); transcrição `openai/whisper-large-v3-turbo`, fala `openai/gpt-4o-mini-tts-2025-12-15`, voz `alloy` | ligada junto com a IA; cada família ainda ativa |
+| `controlei.ai.voice-daily-limit-per-family` | perguntas por voz por família por dia | 20 |
 | `OPENFINANCE_WEBHOOK_SECRET` | assinatura HMAC do webhook | vazio (nenhum webhook aceito) |
 
 Ligar a IA no servidor **não** a ativa para as famílias: cada família precisa do aceite do responsável no próprio assistente.
@@ -363,10 +400,10 @@ Números da última execução: **236 testes no back** e **61 no front**.
 
 | Tipo | O que cobre |
 |---|---|
-| Unitários e por propriedade | `SplitCalculator`, `DebtSimplifier`, extratores de comprovante, cota, disjuntor, `PendingActions`, `AssistantService` |
-| Integração (MockMvc + H2) | autenticação, isolamento entre famílias, transações, orçamentos, metas, outbox, assistente de ponta a ponta (preparar, confirmar uma única vez, 404 entre famílias, interruptor, exclusão por descrição) |
+| Unitários e por propriedade | `SplitCalculator`, `DebtSimplifier`, extratores de comprovante, cota, disjuntor, `PendingActions`, `VoiceAssistantService` (fluxo, transcrição vazia, falha da fala, cota, disjuntor, escrita só preparada), validação do áudio por *magic bytes*, `AssistantService` |
+| Integração (MockMvc + H2) | autenticação, isolamento entre famílias, transações, orçamentos, metas, outbox, voz de ponta a ponta (interruptores, papéis, aceite, confirmação de uso único, isolamento, uploads inválidos), assistente de ponta a ponta (preparar, confirmar uma única vez, 404 entre famílias, interruptor, exclusão por descrição) |
 | Arquitetura | `ArchitectureTest` (ArchUnit): camadas, portas, controllers, entidades JPA, injeção por campo |
-| Front (Vitest) | login, interceptors, shell, widget do assistente (cartões, cancelamento, histórico, aceite, exclusão) |
+| Front (Vitest) | login, interceptors, shell, widget do assistente (cartões, cancelamento, histórico, aceite, exclusão, microfone, gravação, player, permissão negada) |
 | Acessibilidade | axe-core nas telas, contraste, ordem de títulos, rótulos |
 
 O assistente também foi exercitado **com o modelo real** contra uma instância local (lançar, receber, editar, excluir, boleto pendente, categoria, orçamento, meta, aporte, perguntas analíticas), e esse teste revelou quatro defeitos que foram corrigidos (promessa de ação sem chamar a ferramenta, perguntas desnecessárias, lançamentos pendentes que zeravam os totais, e busca de lançamento feita pelo modelo).
@@ -386,6 +423,11 @@ O assistente também foi exercitado **com o modelo real** contra uma instância 
 | PWA em vez de app nativo agora | Começar pelo app Kotlin | Uma base de código, instalável e offline; a API nunca vai ao cache |
 | Cadastro aberto e projeto público | Manter privado atrás do Cloudflare Access | Decisão do dono (projeto de estudo); mitigação por limites e cotas |
 | Fallback sem IA, cota e disjuntor | Depender sempre do modelo | Custo limitado e disponibilidade |
+| Voz reutiliza o mesmo agente (áudio → texto → `AssistantService.ask` → fala) | Um segundo agente só para voz, com ferramentas próprias | Um caminho só de execução: as regras de família, papel, confirmação e cota valem igual, e o que for corrigido no agente vale para as duas entradas |
+| Spring AI só na voz, com portas próprias | Migrar o agente para o `ChatClient` do Spring AI | O agente já tem tool calling testado com o provedor atual; trocar agora seria reescrever o caminho que a voz reutiliza |
+| Voz pelo OpenRouter com `RestClient`; Spring AI para provedor OpenAI | Spring AI também com o OpenRouter | O OpenRouter transcreve com JSON + base64 (não multipart) e o Spring AI não deixa mandar `data_collection=deny`; a privacidade do áudio vale mais que usar a biblioteca |
+| Disjuntores separados para transcrição e fala | Um disjuntor para a voz toda | A fala é opcional: falhas dela não podem derrubar a transcrição |
+| Interruptor de voz separado do da IA | Um interruptor só | Mandar áudio é diferente de mandar texto: pede um aceite próprio |
 | Postgres com Flyway imutável; H2 só nos testes | Editar migrations aplicadas; Testcontainers desde o início | Migration aplicada nunca muda; H2 deixa a suíte rápida |
 
 ## Estrutura do repositório
@@ -409,6 +451,7 @@ O que a ementa pede e o projeto **ainda não tem**, sem maquiagem:
 - **DDD estratégico:** há um só contexto delimitado, com fronteiras implícitas.
 - **Testes:** Testcontainers (Postgres, Kafka, Redis) para validar as migrations, o relay e o consumidor de verdade; teste de ponta a ponta no Docker.
 - **Operação:** backup do Postgres e CAPTCHA no cadastro público.
+- **Voz:** duração exata em WebM/OGG/MP3/MP4 exigiria decodificar o áudio no servidor (ffmpeg); hoje vale a duração declarada, o teto de 2 MB e o corte de 60 s do gravador. O agente ainda não usa o `ChatClient` do Spring AI (o desafio da DIO pede ChatClient + Tool Calling; aqui o tool calling é o do agente próprio). Resposta em *streaming* (falar enquanto gera) não foi feita.
 - **Produto:** Open Finance real, leitura de PDF pelo modelo, app Android, paginação das demais listagens e o N+1 do dashboard.
 
 A lista completa e priorizada está na spec 07 do JavAI.
@@ -416,3 +459,7 @@ A lista completa e priorizada está na spec 07 do JavAI.
 ## Autor
 
 Gilvan Borges. Projeto pessoal; parte do código foi escrita com assistente de IA sob minha revisão.
+
+## Licença
+
+[MIT](LICENSE): pode usar, copiar e modificar, mantendo o aviso de copyright.

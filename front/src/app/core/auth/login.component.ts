@@ -8,7 +8,7 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-login',
   standalone: false,
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss', './auth-brand.scss']
 })
 export class LoginComponent implements OnInit {
   isRegister = false;
@@ -23,8 +23,15 @@ export class LoginComponent implements OnInit {
   registerError = '';
   registerSuccess = '';
 
+  /** Vem do back (GET /auth/config). Comeca fechado para a aba "Criar conta" nao piscar numa instancia fechada. */
+  registrationEnabled = false;
+  demoEnabled = false;
+  visitorLoading = false;
+
   showPassword = false;
   showRegPassword = false;
+  capsLockOn = false;
+  isDark = true;
 
   constructor(
     private fb: FormBuilder,
@@ -47,13 +54,43 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initTheme();
     // Check initial route to set mode
     this.checkCurrentRoute();
+    this.loadPublicConfig();
 
     this.route.queryParams.subscribe(params => {
       if (params['registered'] === 'true') {
         this.loginSuccess = 'Conta criada com sucesso! Faça login para continuar.';
         this.isRegister = false;
+      }
+    });
+  }
+
+  private loadPublicConfig(): void {
+    this.authService.getPublicConfig().subscribe({
+      next: config => {
+        this.registrationEnabled = config.registrationEnabled;
+        this.demoEnabled = config.demoEnabled;
+        if (!this.registrationEnabled && this.isRegister) {
+          this.goToLogin();
+        }
+      },
+      // Back antigo (sem a rota) ou fora do ar: mantem o comportamento de antes, com o cadastro visivel
+      error: () => {
+        this.registrationEnabled = true;
+      }
+    });
+  }
+
+  enterAsVisitor(): void {
+    this.visitorLoading = true;
+    this.loginError = '';
+    this.authService.loginAsVisitor().subscribe({
+      next: () => this.router.navigate(['/app/dashboard']),
+      error: (err) => {
+        this.visitorLoading = false;
+        this.loginError = err?.message || 'Não foi possível abrir a demonstração. Tente novamente.';
       }
     });
   }
@@ -69,6 +106,9 @@ export class LoginComponent implements OnInit {
 
   goToRegister(event?: Event): void {
     if (event) event.preventDefault();
+    if (!this.registrationEnabled) {
+      return;
+    }
     this.isRegister = true;
     this.loginError = '';
     this.loginSuccess = '';
@@ -91,12 +131,85 @@ export class LoginComponent implements OnInit {
     this.showRegPassword = !this.showRegPassword;
   }
 
+  /** Mesma chave e mesma regra do shell: o tema escolhido aqui continua valendo depois do login. */
+  private initTheme(): void {
+    this.isDark = localStorage.getItem('controlei-theme') !== 'light';
+    this.applyTheme();
+  }
+
+  toggleTheme(): void {
+    this.isDark = !this.isDark;
+    localStorage.setItem('controlei-theme', this.isDark ? 'dark' : 'light');
+    this.applyTheme();
+  }
+
+  private applyTheme(): void {
+    if (this.isDark) {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }
+
+  checkCapsLock(event: Event): void {
+    if (event instanceof KeyboardEvent && typeof event.getModifierState === 'function') {
+      this.capsLockOn = event.getModifierState('CapsLock');
+    }
+  }
+
+  isInvalid(form: FormGroup, control: string): boolean {
+    const c = form.get(control);
+    return !!c && c.invalid && c.touched;
+  }
+
+  get confirmMismatch(): boolean {
+    const c = this.registerForm.get('confirmPassword');
+    return !!c && c.touched && c.hasError('mismatch');
+  }
+
+  get confirmMatches(): boolean {
+    const { password, confirmPassword } = this.registerForm.value;
+    return !!password && password === confirmPassword && !this.registerForm.get('password')?.invalid;
+  }
+
+  /**
+   * Indicador visual apenas: a regra que vale e a do formulario (10 a 72 caracteres). Ele so orienta a escolher uma
+   * senha melhor que o minimo.
+   */
+  get passwordStrength(): { level: number; label: string } {
+    const value: string = this.registerForm.get('password')?.value ?? '';
+    if (!value) {
+      return { level: 0, label: 'Use 10 caracteres ou mais, misturando letras, números e símbolos.' };
+    }
+    if (value.length < 10) {
+      return { level: 1, label: `Faltam ${10 - value.length} caractere${10 - value.length === 1 ? '' : 's'}` };
+    }
+    let variety = 0;
+    if (/[a-z]/.test(value)) variety++;
+    if (/[A-Z]/.test(value)) variety++;
+    if (/\d/.test(value)) variety++;
+    if (/[^A-Za-z0-9]/.test(value)) variety++;
+    if (value.length >= 14 && variety >= 3) {
+      return { level: 4, label: 'Senha forte' };
+    }
+    if (variety >= 3 || (value.length >= 14 && variety >= 2)) {
+      return { level: 3, label: 'Senha boa' };
+    }
+    return { level: 2, label: 'Senha razoável: misture maiúsculas, números ou símbolos' };
+  }
+
   private passwordsMatch(group: FormGroup): { [key: string]: boolean } | null {
     const password = group.get('password')?.value;
-    const confirm = group.get('confirmPassword')?.value;
+    const confirmControl = group.get('confirmPassword');
+    const confirm = confirmControl?.value;
     if (password && confirm && password !== confirm) {
-      group.get('confirmPassword')?.setErrors({ mismatch: true });
+      confirmControl?.setErrors({ ...confirmControl.errors, mismatch: true });
       return { mismatch: true };
+    }
+    // Corrigir a SENHA (e nao a confirmacao) tambem precisa apagar o "nao conferem", senao o formulario fica preso.
+    if (confirmControl?.hasError('mismatch')) {
+      const { mismatch, ...rest } = confirmControl.errors ?? {};
+      confirmControl.setErrors(Object.keys(rest).length ? rest : null);
     }
     return null;
   }
