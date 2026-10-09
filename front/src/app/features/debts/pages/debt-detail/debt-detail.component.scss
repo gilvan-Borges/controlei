@@ -1,3 +1,14 @@
 :host {
   display: block;
 }
+
+// O Bootstrap puro escurece o texto do .card e deixa o .list-group-item branco: no tema escuro a tela ficava ilegivel
+.card {
+  color: var(--c-text);
+}
+
+.list-group-item {
+  background: var(--c-surface-card);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}

@@ -71,6 +71,11 @@ export class DebtDetailComponent implements OnInit {
     return map[status] || 'bg-secondary';
   }
 
+  debtStatusLabel(status: string): string {
+    const map: Record<string, string> = { PENDING: 'Pendente', PAID: 'Quitada', CANCELED: 'Cancelada' };
+    return map[status] || status;
+  }
+
   getDebtStatusBadgeClass(status: string): string {
     const map: Record<string, string> = {
       PENDING: 'bg-warning text-dark',
